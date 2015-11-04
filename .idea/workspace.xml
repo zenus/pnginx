@@ -28,8 +28,8 @@
       <file leaf-file-name="pnginx.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pnginx.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.35135135" vertical-offset="2185" max-vertical-offset="5727">
-              <caret line="108" column="43" selection-start-line="108" selection-start-column="43" selection-end-line="108" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.4054054" vertical-offset="276" max-vertical-offset="5727">
+              <caret line="27" column="29" selection-start-line="27" selection-start-column="29" selection-end-line="27" selection-end-column="29" />
               <folding />
             </state>
           </provider>
@@ -38,11 +38,9 @@
       <file leaf-file-name="ngx_regex.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_regex.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.46875" vertical-offset="0" max-vertical-offset="368">
-              <caret line="9" column="0" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-              <folding>
-                <element signature="e#6#95#0#PHP" expanded="true" />
-              </folding>
+            <state vertical-scroll-proportion="-3.59375" vertical-offset="0" max-vertical-offset="368">
+              <caret line="5" column="13" selection-start-line="5" selection-start-column="13" selection-end-line="5" selection-end-column="13" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -50,10 +48,10 @@
       <file leaf-file-name="ngx_process_cycle.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_process_cycle.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-19.8125" vertical-offset="286" max-vertical-offset="1150">
-              <caret line="40" column="23" selection-start-line="40" selection-start-column="23" selection-end-line="40" selection-end-column="23" />
+            <state vertical-scroll-proportion="1.75" vertical-offset="286" max-vertical-offset="1150">
+              <caret line="10" column="32" selection-start-line="10" selection-start-column="32" selection-end-line="10" selection-end-column="32" />
               <folding>
-                <element signature="e#6#95#0#PHP" expanded="true" />
+                <element signature="e#6#97#0#PHP" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -62,8 +60,8 @@
       <file leaf-file-name="ngx_string.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_string.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-5.03125" vertical-offset="0" max-vertical-offset="437">
-              <caret line="7" column="29" selection-start-line="7" selection-start-column="29" selection-end-line="7" selection-end-column="29" />
+            <state vertical-scroll-proportion="-7.90625" vertical-offset="0" max-vertical-offset="437">
+              <caret line="11" column="34" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -72,11 +70,9 @@
       <file leaf-file-name="ngx_cycle.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_cycle.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-7.1875" vertical-offset="0" max-vertical-offset="368">
-              <caret line="10" column="22" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
-              <folding>
-                <element signature="e#6#95#0#PHP" expanded="true" />
-              </folding>
+            <state vertical-scroll-proportion="-2.15625" vertical-offset="0" max-vertical-offset="368">
+              <caret line="3" column="18" selection-start-line="3" selection-start-column="18" selection-end-line="3" selection-end-column="18" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -84,8 +80,8 @@
       <file leaf-file-name="ngx_core.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_core.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-10.78125" vertical-offset="0" max-vertical-offset="529">
-              <caret line="15" column="17" selection-start-line="15" selection-start-column="17" selection-end-line="15" selection-end-column="17" />
+            <state vertical-scroll-proportion="-2.15625" vertical-offset="0" max-vertical-offset="529">
+              <caret line="3" column="20" selection-start-line="3" selection-start-column="20" selection-end-line="3" selection-end-column="20" />
               <folding />
             </state>
           </provider>
@@ -94,8 +90,8 @@
       <file leaf-file-name="ngx_log.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_log.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-9.34375" vertical-offset="0" max-vertical-offset="782">
-              <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
+            <state vertical-scroll-proportion="-3.59375" vertical-offset="0" max-vertical-offset="805">
+              <caret line="5" column="23" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -104,8 +100,8 @@
       <file leaf-file-name="ngx_files.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ngx_files.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-12.9375" vertical-offset="0" max-vertical-offset="575">
-              <caret line="18" column="0" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
+            <state vertical-scroll-proportion="-6.46875" vertical-offset="0" max-vertical-offset="575">
+              <caret line="9" column="17" selection-start-line="9" selection-start-column="17" selection-end-line="9" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -116,14 +112,14 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/ngx_core.php" />
-        <option value="$PROJECT_DIR$/ngx_process_cycle.php" />
-        <option value="$PROJECT_DIR$/ngx_string.php" />
-        <option value="$PROJECT_DIR$/ngx_files.php" />
-        <option value="$PROJECT_DIR$/ngx_log.php" />
-        <option value="$PROJECT_DIR$/ngx_cycle.php" />
-        <option value="$PROJECT_DIR$/ngx_regex.php" />
         <option value="$PROJECT_DIR$/pnginx.php" />
+        <option value="$PROJECT_DIR$/ngx_string.php" />
+        <option value="$PROJECT_DIR$/ngx_regex.php" />
+        <option value="$PROJECT_DIR$/ngx_process_cycle.php" />
+        <option value="$PROJECT_DIR$/ngx_log.php" />
+        <option value="$PROJECT_DIR$/ngx_files.php" />
+        <option value="$PROJECT_DIR$/ngx_core.php" />
+        <option value="$PROJECT_DIR$/ngx_cycle.php" />
       </list>
     </option>
   </component>
@@ -339,70 +335,66 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_core.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-10.78125" vertical-offset="0" max-vertical-offset="529">
-          <caret line="15" column="17" selection-start-line="15" selection-start-column="17" selection-end-line="15" selection-end-column="17" />
+        <state vertical-scroll-proportion="-2.15625" vertical-offset="0" max-vertical-offset="529">
+          <caret line="3" column="20" selection-start-line="3" selection-start-column="20" selection-end-line="3" selection-end-column="20" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_cycle.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-7.1875" vertical-offset="0" max-vertical-offset="368">
-          <caret line="10" column="22" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
-          <folding>
-            <element signature="e#6#95#0#PHP" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="-2.15625" vertical-offset="0" max-vertical-offset="368">
+          <caret line="3" column="18" selection-start-line="3" selection-start-column="18" selection-end-line="3" selection-end-column="18" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_files.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-12.9375" vertical-offset="0" max-vertical-offset="575">
-          <caret line="18" column="0" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
+        <state vertical-scroll-proportion="-6.46875" vertical-offset="0" max-vertical-offset="575">
+          <caret line="9" column="17" selection-start-line="9" selection-start-column="17" selection-end-line="9" selection-end-column="17" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_log.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-9.34375" vertical-offset="0" max-vertical-offset="782">
-          <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
+        <state vertical-scroll-proportion="-3.59375" vertical-offset="0" max-vertical-offset="805">
+          <caret line="5" column="23" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_process_cycle.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-19.8125" vertical-offset="286" max-vertical-offset="1150">
-          <caret line="40" column="23" selection-start-line="40" selection-start-column="23" selection-end-line="40" selection-end-column="23" />
+        <state vertical-scroll-proportion="1.75" vertical-offset="286" max-vertical-offset="1150">
+          <caret line="10" column="32" selection-start-line="10" selection-start-column="32" selection-end-line="10" selection-end-column="32" />
           <folding>
-            <element signature="e#6#95#0#PHP" expanded="true" />
+            <element signature="e#6#97#0#PHP" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ngx_string.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-5.03125" vertical-offset="0" max-vertical-offset="437">
-          <caret line="7" column="29" selection-start-line="7" selection-start-column="29" selection-end-line="7" selection-end-column="29" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_regex.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.46875" vertical-offset="0" max-vertical-offset="368">
-          <caret line="9" column="0" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-          <folding>
-            <element signature="e#6#95#0#PHP" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="-3.59375" vertical-offset="0" max-vertical-offset="368">
+          <caret line="5" column="13" selection-start-line="5" selection-start-column="13" selection-end-line="5" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ngx_string.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-7.90625" vertical-offset="0" max-vertical-offset="437">
+          <caret line="11" column="34" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pnginx.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.35135135" vertical-offset="2185" max-vertical-offset="5727">
-          <caret line="108" column="43" selection-start-line="108" selection-start-column="43" selection-end-line="108" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.4054054" vertical-offset="276" max-vertical-offset="5727">
+          <caret line="27" column="29" selection-start-line="27" selection-start-column="29" selection-end-line="27" selection-end-column="29" />
           <folding />
         </state>
       </provider>

@@ -6,7 +6,7 @@ define('NGX_LINEFEED',"\x0a");
 include_once 'ngx_core.php';
 /**
  * Created by PhpStorm.
- * User: lb@carisok.com
+ * User: zenus@github.com
  * Date: 2015/11/4
  * Time: 12:30
  * @param $p

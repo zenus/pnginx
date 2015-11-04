@@ -1,4 +1,5 @@
 <?php
+
 include_once 'ngx_files.php';
 
 function ngx_log_stderr($no, $fmt, $var = array()){
