@@ -16,3 +16,27 @@ define('NGX_ABORT',-6);
 define('LF','\n');
 define('CR','\r');
 define('CRLF',"\r\n");
+
+class ngx_open_file_s {
+
+    private $fd = null;
+    private $name = '';
+    private $data;
+
+    public function flush(ngx_open_file_s $file, ngx_log_s $log){
+
+    }
+
+    public function set_fd($fd){
+       $this->fd = $fd;
+    }
+    public function get_fd(){
+       return $this->fd;
+    }
+    public function set_name($name){
+       $this->name = $name;
+    }
+    public function get_name(){
+       return $this->name;
+    }
+}

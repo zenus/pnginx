@@ -7,5 +7,5 @@
  */
 
 function ngx_regex_init(){
-
+    //set malloc and free function here
 }

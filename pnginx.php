@@ -4,16 +4,21 @@ include_once 'ngx_log.php';
 include_once 'ngx_string.php';
 include_once 'ngx_process_cycle.php';
 include_once 'ngx_cycle.php';
+include_once 'ngx_process.php';
 
 define('DS',DIRECTORY_SEPARATOR);
-define('nginx_version',1000000);
+define('pnginx_version',1000000);
 define('NGINX_VERSION',"1.0.0");
-define('NGINX_VER',"nginx/".NGINX_VERSION);
+define('NGINX_VER',"pnginx/".NGINX_VERSION);
 define('NGINX_VER_BUILD',NGINX_VER);
 define('NGINX_VAR',"NGINX");
 define('NGX_OLDPID_EXT',".oldbin");
 define('NGX_CONF_PATH',__DIR__.DS.'conf'.DS.'pnginx.conf');
+define('NGX_ERROR_LOG_PATH',__DIR__.DS.'log'.DS.'error.log');
 define('NGX_CONFIGURE','');
+
+
+
 
 /**
  * Created by PhpStorm.
@@ -102,6 +107,14 @@ function main($argc, array $argv){
     if (extension_loaded('pcre')){
         ngx_regex_init();
     }
+
+    if (!extension_loaded('posix')){
+        ngx_write_stderr("pnginx need --enable-posix" .NGX_LINEFEED);
+    }
+
+    ngx_cfg('ngx_pid',ngx_getpid());
+
+
 
 }
 
