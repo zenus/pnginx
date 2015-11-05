@@ -15,6 +15,11 @@ define('NGX_FILE_OWNER_ACCESS',   0600);
 
 //define('NGX_FILE_NONBLOCK',        O_NONBLOCK);
 
+define('NGX_INVALID_FILE',FALSE);
+#define NGX_FILE_ERROR
+
+define('ngx_open_file_n',"open()");
+
 include_once 'ngx_core.php';
 /**
  * Created by PhpStorm.

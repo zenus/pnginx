@@ -78,6 +78,11 @@ function ngx_log_init(){
     $ngx_log->set_file($ngx_log_file);
     $ngx_log->set_level(NGX_LOG_NOTICE);
     $fd = ngx_open_file(NGX_ERROR_LOG_PATH, NGX_FILE_APPEND, NGX_FILE_DEFAULT_ACCESS);
+    if($fd == NGX_INVALID_FILE){
+        ngx_log_stderr(ngx_errno,
+            "[alert] could not open error log file: ".
+                       ngx_open_file_n." \"%s\" failed", NGX_ERROR_LOG_PATH);
+    }
     $ngx_log_file->set_fd($fd);
 
 
