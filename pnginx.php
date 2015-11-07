@@ -20,6 +20,8 @@ define('NGX_CONFIGURE','');
 
 
 
+
+
 /**
  * Created by PhpStorm.
  * User: zenus@github.com
@@ -55,6 +57,10 @@ function ngx_cfg($ngx_cfg,$value = null){
 
 function main($argc, array $argv){
 
+
+    /***ngx_log_s***/ $log = null;
+
+    /***ngx_cycle_s***/ $cycle = null; $init_cycle = null;
 
     /***
      * TODO
@@ -113,6 +119,18 @@ function main($argc, array $argv){
     }
 
     ngx_cfg('ngx_pid',ngx_getpid());
+    $log = ngx_log_init();
+    if($log == null){
+        return 1;
+    }
+    //TODO
+    //ngx_ssl_init();
+    $init_cycle = new ngx_cycle_s();
+    $init_cycle->set_log($log);
+    $ngx_cycle = &$init_cycle;
+    if (ngx_save_argv($argc, $argv) != NGX_OK) {
+        return 1;
+    }
 
 
 
@@ -245,6 +263,58 @@ function ngx_get_options($argc ,array $argv)
         next:
         continue;
     }
+    return NGX_OK;
+}
+
+function ngx_save_argv( $argc, $argv)
+{
+
+    ngx_cfg('ngx_os_argv',$argv);
+    ngx_cfg('ngx_argc', $argc);
+    ngx_cfg('ngx_argv', $argv);
+
+    if (empty($argv)) {
+        return NGX_ERROR;
+    }
+
+    //todo
+    //ngx_os_environ = environ;
+
+    return NGX_OK;
+}
+
+
+function ngx_process_options(ngx_cycle_s &$cycle)
+{
+    if ($conf_file = ngx_cfg('ngx_conf_file')) {
+        $cycle->conf_file = $conf_file;
+    } else {
+        $cycle->conf_file = NGX_CONF_PATH;
+    }
+
+    //to do test conf path
+//    if (ngx_conf_full_name(cycle, &cycle->conf_file, 0) != NGX_OK) {
+//    return NGX_ERROR;
+//}
+
+    for ($p = strlen($cycle->conf_file) - 1;
+         $p >= 0;
+         $p--)
+    {
+        if (ngx_path_separator($cycle->conf_file[$p])) {
+            $cycle->conf_prefix = substr($cycle->conf_file,0,$p);
+            break;
+        }
+    }
+
+    if ($conf_params = ngx_cfg('ngx_conf_params')) {
+        $cycle->conf_param = $conf_params;
+    }
+
+    if (ngx_cfg('ngx_test_config')) {
+        $cycle->get_log()->log_level = NGX_LOG_INFO;
+    }
+
     return NGX_OK;
 }
 
