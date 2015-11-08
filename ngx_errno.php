@@ -5,6 +5,7 @@
  * Date: 15-11-6
  * Time: 上午7:17
  */
+define('EPUND',0);  /* php not define */
 define('EPERM',1);  /* Operation not permitted */
 define('ENOENT',2);  /* No such file or directory */
 define('ESRCH',3);  /* No such process */
@@ -148,6 +149,8 @@ define('ENOTRECOVERABLE',131); /* State not recoverable */
 define('ERFKILL',132); /* Operation not possible due to RF-kill */
 
 define('EHWPOISON',133); /* Memory page has hardware error */
+
+define('NGX_FERROR',180); /*file error */
 
 define('NGX_EPERM',EPERM);
 define('NGX_ENOENT',ENOENT);

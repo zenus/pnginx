@@ -35,10 +35,10 @@ define('NGX_CONFIGURE','');
  * @internal param array $argv
  */
 
-function ngx_cfg($ngx_cfg,$value = null){
-    static $cfg = array();
-    return  is_null($value) ? (isset($cfg[$ngx_cfg]) ? $cfg[$ngx_cfg] : false) : $cfg[$ngx_cfg] = $value;
-}
+//function ngx_cfg($ngx_cfg,$value = null){
+//    static $cfg = array();
+//    return  is_null($value) ? (isset($cfg[$ngx_cfg]) ? $cfg[$ngx_cfg] : false) : $cfg[$ngx_cfg] = $value;
+//}
 //static $ngx_show_version = 0;
 //static $ngx_show_help = 0;
 //static $ngx_show_configure = 0;
@@ -129,6 +129,10 @@ function main($argc, array $argv){
     $init_cycle->set_log($log);
     $ngx_cycle = &$init_cycle;
     if (ngx_save_argv($argc, $argv) != NGX_OK) {
+        return 1;
+    }
+
+    if (ngx_os_init($log) != NGX_OK) {
         return 1;
     }
 

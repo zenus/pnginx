@@ -39,3 +39,8 @@ function ngx_open_file($file,$mode,$access){
     chmod($file, $access);
     return $fp;
 }
+
+function ngx_path_separator($c){
+
+    return (($c) == '/');
+}
