@@ -62,12 +62,9 @@ function main($argc, array $argv){
 
     /***ngx_cycle_s***/ $cycle = null; $init_cycle = null;
 
-    /***
-     * TODO
     if (ngx_strerror_init() != NGX_OK) {
         return 1;
     }
-     * */
 
     if(ngx_get_options($argc,$argv) != NGX_OK){
        return 1;
@@ -135,6 +132,25 @@ function main($argc, array $argv){
     if (ngx_os_init($log) != NGX_OK) {
         return 1;
     }
+
+    if (ngx_add_inherited_sockets($init_cycle) != NGX_OK) {
+        return 1;
+    }
+
+//    ngx_max_module = 0;
+//    for (i = 0; ngx_modules[i]; i++) {
+//        ngx_modules[i]->index = ngx_max_module++;
+//    }
+//
+//    cycle = ngx_init_cycle(&init_cycle);
+//    if (cycle == NULL) {
+//        if (ngx_test_config) {
+//            ngx_log_stderr(0, "configuration file %s test failed",
+//                init_cycle.conf_file.data);
+//        }
+//
+//        return 1;
+//    }
 
 
 
@@ -320,6 +336,58 @@ function ngx_process_options(ngx_cycle_s &$cycle)
     }
 
     return NGX_OK;
+}
+
+
+function ngx_add_inherited_sockets(ngx_cycle_s $cycle)
+{
+//u_char           *p, *v, *inherited;
+//    ngx_int_t         s;
+//    ngx_listening_t  *ls;
+//
+//    inherited = (u_char *) getenv(NGINX_VAR);
+//
+//    if (inherited == NULL) {
+//        return NGX_OK;
+//    }
+//
+//    ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
+//                  "using inherited sockets from \"%s\"", inherited);
+//
+//    if (ngx_array_init(&cycle->listening, cycle->pool, 10,
+//                       sizeof(ngx_listening_t))
+//        != NGX_OK)
+//    {
+//        return NGX_ERROR;
+//    }
+//
+//    for (p = inherited, v = p; *p; p++) {
+//    if (*p == ':' || *p == ';') {
+//        s = ngx_atoi(v, p - v);
+//        if (s == NGX_ERROR) {
+//            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
+//                              "invalid socket number \"%s\" in " NGINX_VAR
+//                              " environment variable, ignoring the rest"
+//                              " of the variable", v);
+//                break;
+//            }
+//
+//        v = p + 1;
+//
+//        ls = ngx_array_push(&cycle->listening);
+//            if (ls == NULL) {
+//                return NGX_ERROR;
+//            }
+//
+//            ngx_memzero(ls, sizeof(ngx_listening_t));
+//
+//            ls->fd = (ngx_socket_t) s;
+//        }
+//    }
+//
+//    ngx_inherited = 1;
+//
+//    return ngx_set_inherited_sockets(cycle);
 }
 
 
