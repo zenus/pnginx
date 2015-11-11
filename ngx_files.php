@@ -35,12 +35,19 @@ function ngx_linefeed(&$p)
     return  $p.LF;
 }
 function ngx_open_file($file,$mode,$access){
+
     $fp =  fopen($file,$mode);
     chmod($file, $access);
+
     return $fp;
 }
 
 function ngx_path_separator($c){
 
     return (($c) == '/');
+}
+
+function ngx_write_fd($fd, $p)
+{
+    return fwrite($fd, $p);
 }

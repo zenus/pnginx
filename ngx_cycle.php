@@ -47,13 +47,21 @@ class ngx_cycle_s {
     /**ngx_str_t**/        private         $lock_file;
     /**ngx_str_t**/        private         $hostname;
 
-    public function set_log(ngx_log_s &$log){
-        if($log instanceof ngx_log_s){
-           $this->log = $log;
+
+    public function __set($property, $value){
+        if($property == 'log' && $value instanceof ngx_log){
+            $this->log = $value;
+        }elseif($property == 'listening' && $value instanceof ngx_listening_s){
+            $this->listening[] =  $value;
+        }
+        else{
+            $this->$property = $value;
         }
     }
-    public function get_log(){
-        return $this->log;
+
+    public function __get($property){
+       return $this->$property;
     }
+
 
 };

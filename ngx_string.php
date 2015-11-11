@@ -12,6 +12,18 @@ function ngx_strhas($s,$i){
    return isset($s[$i])&&!empty($s[$i]);
 }
 
+function ngx_sprintf($s, $fmt, $args)
+{
+    $p = ngx_vslprintf($s, $fmt, $args);
+
+    return $p;
+}
+
+function ngx_atoi($str){
+
+   return intval($str);
+}
+
 
 function ngx_slprintf($s,  $fmt, array $args = array())
 {

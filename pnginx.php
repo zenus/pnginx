@@ -341,53 +341,36 @@ function ngx_process_options(ngx_cycle_s &$cycle)
 
 function ngx_add_inherited_sockets(ngx_cycle_s $cycle)
 {
-//u_char           *p, *v, *inherited;
-//    ngx_int_t         s;
-//    ngx_listening_t  *ls;
-//
-//    inherited = (u_char *) getenv(NGINX_VAR);
-//
-//    if (inherited == NULL) {
-//        return NGX_OK;
-//    }
-//
-//    ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
-//                  "using inherited sockets from \"%s\"", inherited);
-//
-//    if (ngx_array_init(&cycle->listening, cycle->pool, 10,
-//                       sizeof(ngx_listening_t))
-//        != NGX_OK)
-//    {
-//        return NGX_ERROR;
-//    }
-//
-//    for (p = inherited, v = p; *p; p++) {
-//    if (*p == ':' || *p == ';') {
-//        s = ngx_atoi(v, p - v);
-//        if (s == NGX_ERROR) {
-//            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-//                              "invalid socket number \"%s\" in " NGINX_VAR
-//                              " environment variable, ignoring the rest"
-//                              " of the variable", v);
-//                break;
-//            }
-//
-//        v = p + 1;
-//
-//        ls = ngx_array_push(&cycle->listening);
-//            if (ls == NULL) {
-//                return NGX_ERROR;
-//            }
-//
-//            ngx_memzero(ls, sizeof(ngx_listening_t));
-//
-//            ls->fd = (ngx_socket_t) s;
-//        }
-//    }
-//
-//    ngx_inherited = 1;
-//
-//    return ngx_set_inherited_sockets(cycle);
+    $inherited =  getenv(NGINX_VAR);
+
+    if (empty($inherited)) {
+        return NGX_OK;
+    }
+
+    ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0,
+                  "using inherited sockets from \"%s\"", $inherited);
+
+    for ($p = 0, $v = $p; $inherited[$p]; $p++) {
+    if ($inherited[$p] == ':' || $inherited[$p] == ';') {
+        $s = ngx_atoi(substr($inherited,$v,$p));
+        if ($s == NGX_ERROR) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, 0,
+                              "invalid socket number \"%s\" in ". NGINX_VAR.
+                              " environment variable, ignoring the rest".
+                              " of the variable", $inherited);
+                break;
+            }
+
+        $v = $p + 1;
+        $ls= new ngx_listening_s();
+        $ls->fd = $s;
+        $cycle->listening = &$ls;
+
+        }
+
+    ngx_cfg('ngx_inherited', 1);
+
+    return ngx_set_inherited_sockets($cycle);
 }
 
 

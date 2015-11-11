@@ -27,18 +27,28 @@ class ngx_open_file_s {
 
     }
 
-    public function set_fd($fd){
-       $this->fd = $fd;
+    public function __set($property_name, $value){
+
+        $this->$property_name = $value;
     }
-    public function get_fd(){
-       return $this->fd;
+
+    public function __get($property_name){
+
+        return $this->$property_name;
     }
-    public function set_name($name){
-       $this->name = $name;
-    }
-    public function get_name(){
-       return $this->name;
-    }
+
+//    public function set_fd($fd){
+//       $this->fd = $fd;
+//    }
+//    public function get_fd(){
+//       return $this->fd;
+//    }
+//    public function set_name($name){
+//       $this->name = $name;
+//    }
+//    public function get_name(){
+//       return $this->name;
+//    }
 }
 
 function ngx_cfg($ngx_cfg,$value = null){
