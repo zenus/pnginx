@@ -137,12 +137,12 @@ function main($argc, array $argv){
         return 1;
     }
 
-//    ngx_max_module = 0;
-//    for (i = 0; ngx_modules[i]; i++) {
-//        ngx_modules[i]->index = ngx_max_module++;
-//    }
-//
-//    cycle = ngx_init_cycle(&init_cycle);
+    $ngx_max_module = 0;
+    $ngx_modules = ngx_cfg('ngx_modules');
+    for ($i = 0; $ngx_modules[$i]; $i++) {
+        $ngx_modules[$i]->index = $ngx_max_module++;
+    }
+    $cycle = ngx_init_cycle($init_cycle);
 //    if (cycle == NULL) {
 //        if (ngx_test_config) {
 //            ngx_log_stderr(0, "configuration file %s test failed",
@@ -351,22 +351,22 @@ function ngx_add_inherited_sockets(ngx_cycle_s $cycle)
                   "using inherited sockets from \"%s\"", $inherited);
 
     for ($p = 0, $v = $p; $inherited[$p]; $p++) {
-    if ($inherited[$p] == ':' || $inherited[$p] == ';') {
-        $s = ngx_atoi(substr($inherited,$v,$p));
-        if ($s == NGX_ERROR) {
-            ngx_log_error(NGX_LOG_EMERG, $cycle->log, 0,
-                              "invalid socket number \"%s\" in ". NGINX_VAR.
-                              " environment variable, ignoring the rest".
-                              " of the variable", $inherited);
+        if ($inherited[$p] == ':' || $inherited[$p] == ';') {
+            $s = ngx_atoi(substr($inherited, $v, $p));
+            if ($s == NGX_ERROR) {
+                ngx_log_error(NGX_LOG_EMERG, $cycle->log, 0,
+                    "invalid socket number \"%s\" in " . NGINX_VAR .
+                    " environment variable, ignoring the rest" .
+                    " of the variable", $inherited);
                 break;
             }
 
-        $v = $p + 1;
-        $ls= new ngx_listening_s();
-        $ls->fd = $s;
-        $cycle->listening = &$ls;
-
+            $v = $p + 1;
+            $ls = new ngx_listening_s();
+            $ls->fd = $s;
+            $cycle->listening = &$ls;
         }
+    }
 
     ngx_cfg('ngx_inherited', 1);
 

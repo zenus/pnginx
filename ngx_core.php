@@ -55,3 +55,7 @@ function ngx_cfg($ngx_cfg,$value = null){
     static $cfg = array();
     return  is_null($value) ? (isset($cfg[$ngx_cfg]) ? $cfg[$ngx_cfg] : false) : $cfg[$ngx_cfg] = $value;
 }
+
+function ngx_abs($number){
+    return abs($number);
+}
