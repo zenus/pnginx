@@ -425,171 +425,189 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
     $quoted = 0;
     $s_quoted = 0;
     $d_quoted = 0;
+    $pos = 0;
+
 //
     //cf->args->nelts = 0;
     //todo know pos and last?
     $b = $cf->conf_file->buffer;
     $dump = $cf->conf_file->dump;
-    //start = b->pos;
+    $start = $pos;
     $start_line = $cf->conf_file->line;
 
     $file_size = ngx_file_size($cf->conf_file->file->info);
 
+    $n = ngx_read_file($cf->conf_file->file, $b, $file_size,
+        $cf->conf_file->file->offset);
+    if ($n == NGX_ERROR) {
+        return NGX_ERROR;
+    }
+
+    if ($n != $file_size) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            ngx_read_file_n ." returned ".
+            "only %z bytes instead of %z",
+            array($n, $file_size));
+        return NGX_ERROR;
+    }
+    if ($dump) {
+        $dump = $b;
+    }
     for ( ;; ) {
 
-        if ($b->pos >= $b->last) {
+        //if ($b['pos'] >= $b['last']) {
 
-            if ($cf->conf_file->file->offset >= $file_size) {
+//            if ($cf->conf_file->file->offset >= $file_size) {
+//
+//                if (count($cf->args)>0 || !$last_space) {
+//
+//                    if ($cf->conf_file->file->fd == NGX_INVALID_FILE) {
+//                        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+//                            "unexpected end of parameter, ".
+//                                           "expecting \";\"");
+//                        return NGX_ERROR;
+//                    }
+//
+//                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+//                        "unexpected end of file, ".
+//                                  "expecting \";\" or \"}\"");
+//                    return NGX_ERROR;
+//                }
 
-                if (count($cf->args)>0 || !$last_space) {
-
-                    if ($cf->conf_file->file->fd == NGX_INVALID_FILE) {
-                        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-                            "unexpected end of parameter, ".
-                                           "expecting \";\"");
-                        return NGX_ERROR;
-                    }
-
-                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-                        "unexpected end of file, ".
-                                  "expecting \";\" or \"}\"");
-                    return NGX_ERROR;
-                }
-
-                return NGX_CONF_FILE_DONE;
-            }
+         //       return NGX_CONF_FILE_DONE;
+          //  }
 
 //            len = b->pos - start;
-              $len = strlen($b);
+           //   $len = strlen($b);
 
-            if ($len == NGX_CONF_BUFFER) {
-                $cf->conf_file->line = $start_line;
-
-                if ($d_quoted) {
-                    $ch = '"';
-
-                } else if ($s_quoted) {
-                    $ch = '\'';
-
-                } else {
-                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-                        "too long parameter \"%*s...\" started",
-                        array(10, $b));
-                    return NGX_ERROR;
-                }
-
-                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-                    "too long parameter, probably ".
-                                   "missing terminating \"%c\" character", $ch);
-                return NGX_ERROR;
-            }
+//            if ($len == NGX_CONF_BUFFER) {
+//                $cf->conf_file->line = $start_line;
+//
+//                if ($d_quoted) {
+//                    $ch = '"';
+//
+//                } else if ($s_quoted) {
+//                    $ch = '\'';
+//
+//                } else {
+//                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+//                        "too long parameter \"%*s...\" started",
+//                        array(10, $b));
+//                    return NGX_ERROR;
+//                }
+//
+//                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+//                    "too long parameter, probably ".
+//                                   "missing terminating \"%c\" character", $ch);
+//                return NGX_ERROR;
+//            }
 
 //            if (len) {
 //                ngx_memmove(b->start, start, len);
 //            }
 
-            $size = $file_size - $cf->conf_file->file->offset;
+            //$size = $file_size - $cf->conf_file->file->offset;
 
 //            if ($size > $b->end - ($b->start + $len)) {
 //                $size = $b->end - ($b->start + $len);
 //            }
 
-            $n = ngx_read_file($cf->conf_file->file, $b, $size,
-                              $cf->conf_file->file->offset);
+//            $n = ngx_read_file($cf->conf_file->file, $b, $file_size,
+//                              $cf->conf_file->file->offset);
 
-            if ($n == NGX_ERROR) {
-                return NGX_ERROR;
-            }
-
-            if ($n != $size) {
-                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-                    ngx_read_file_n ." returned ".
-                                   "only %z bytes instead of %z",
-                                   array($n, $size));
-                return NGX_ERROR;
-            }
+//            if ($n == NGX_ERROR) {
+//                return NGX_ERROR;
+//            }
+//
+//            if ($n != $file_size) {
+//                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+//                    ngx_read_file_n ." returned ".
+//                                   "only %z bytes instead of %z",
+//                                   array($n, $file_size));
+//                return NGX_ERROR;
+//            }
 
 //            b->pos = b->start + len;
 //            b->last = b->pos + n;
 //            start = b->start;
 
-            if ($dump) {
-                dump->last = ngx_cpymem(dump->last, b->pos, size);
+//            if ($dump) {
+//                $dump = $b;
+//            }
+        //}
+
+        $ch = $b[$pos++];
+
+        if ($ch == LF) {
+            $cf->conf_file->line++;
+
+            if ($sharp_comment) {
+                $sharp_comment = 0;
             }
         }
 
-        ch = *b->pos++;
-
-        if (ch == LF) {
-            cf->conf_file->line++;
-
-            if (sharp_comment) {
-                sharp_comment = 0;
-            }
-        }
-
-        if (sharp_comment) {
+        if ($sharp_comment) {
             continue;
         }
 
-        if (quoted) {
-            quoted = 0;
+        if ($quoted) {
+            $quoted = 0;
             continue;
         }
 
-        if (need_space) {
-            if (ch == ' ' || ch == '\t' || ch == CR || ch == LF) {
-                last_space = 1;
-                need_space = 0;
+        if ($need_space) {
+            if ($ch == ' ' || $ch == '\t' || $ch == CR || $ch == LF) {
+                $last_space = 1;
+                $need_space = 0;
                 continue;
             }
 
-            if (ch == ';') {
+            if ($ch == ';') {
                 return NGX_OK;
             }
 
-            if (ch == '{') {
+            if ($ch == '{') {
                 return NGX_CONF_BLOCK_START;
             }
 
-            if (ch == ')') {
-                last_space = 1;
-                need_space = 0;
+            if ($ch == ')') {
+                $last_space = 1;
+                $need_space = 0;
 
             } else {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                    "unexpected \"%c\"", ch);
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                    "unexpected \"%c\"", $ch);
                 return NGX_ERROR;
             }
         }
 
-        if (last_space) {
-            if (ch == ' ' || ch == '\t' || ch == CR || ch == LF) {
+        if ($last_space) {
+            if ($ch == ' ' || $ch == '\t' || $ch == CR || $ch == LF) {
                 continue;
             }
 
-            start = b->pos - 1;
-            start_line = cf->conf_file->line;
+            $start = $pos - 1;
+            $start_line = $cf->conf_file->line;
 
-            switch (ch) {
+            switch ($ch) {
 
                 case ';':
                 case '{':
-                    if (cf->args->nelts == 0) {
+                    if (count($cf->args)) {
                     ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                        "unexpected \"%c\"", ch);
+                        "unexpected \"%c\"", $ch);
                     return NGX_ERROR;
                 }
 
-                if (ch == '{') {
+                if ($ch == '{') {
                     return NGX_CONF_BLOCK_START;
                 }
 
                 return NGX_OK;
 
                 case '}':
-                    if (cf->args->nelts != 0) {
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                    if (count($cf->args)!= 0) {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                         "unexpected \"}\"");
                     return NGX_ERROR;
                 }
@@ -597,112 +615,115 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
                 return NGX_CONF_BLOCK_DONE;
 
                 case '#':
-                    sharp_comment = 1;
+                    $sharp_comment = 1;
                     continue;
 
                 case '\\':
-                    quoted = 1;
-                    last_space = 0;
+                    $quoted = 1;
+                    $last_space = 0;
                     continue;
 
                 case '"':
-                    start++;
-                    d_quoted = 1;
-                    last_space = 0;
+                    $start++;
+                    $d_quoted = 1;
+                    $last_space = 0;
                     continue;
 
                 case '\'':
-                    start++;
-                    s_quoted = 1;
-                    last_space = 0;
+                    $start++;
+                    $s_quoted = 1;
+                    $last_space = 0;
                     continue;
 
                 default:
-                    last_space = 0;
+                    $last_space = 0;
             }
 
         } else {
-            if (ch == '{' && variable) {
+            if ($ch == '{' && $variable) {
                 continue;
             }
 
-            variable = 0;
+            $variable = 0;
 
-            if (ch == '\\') {
-                quoted = 1;
+            if ($ch == '\\') {
+                $quoted = 1;
                 continue;
             }
 
-            if (ch == '$') {
-                variable = 1;
+            if ($ch == '$') {
+                $variable = 1;
                 continue;
             }
 
-            if (d_quoted) {
-                if (ch == '"') {
-                    d_quoted = 0;
-                    need_space = 1;
-                    found = 1;
+            if ($d_quoted) {
+                if ($ch == '"') {
+                    $d_quoted = 0;
+                    $need_space = 1;
+                    $found = 1;
                 }
 
-            } else if (s_quoted) {
-                if (ch == '\'') {
-                    s_quoted = 0;
-                    need_space = 1;
-                    found = 1;
+            } else if ($s_quoted) {
+                if ($ch == '\'') {
+                    $s_quoted = 0;
+                    $need_space = 1;
+                    $found = 1;
                 }
 
-            } else if (ch == ' ' || ch == '\t' || ch == CR || ch == LF
-                || ch == ';' || ch == '{')
+            } else if ($ch == ' ' || $ch == '\t' || $ch == CR || $ch == LF
+                || $ch == ';' || $ch == '{')
             {
-                last_space = 1;
-                found = 1;
+                $last_space = 1;
+                $found = 1;
             }
 
-            if (found) {
-                word = ngx_array_push(cf->args);
-                if (word == NULL) {
-                    return NGX_ERROR;
-                }
+            if ($found) {
+//                word = ngx_array_push(cf->args);
+//                if (word == NULL) {
+//                    return NGX_ERROR;
+//                }
+//
+//                word->data = ngx_pnalloc(cf->pool, b->pos - 1 - start + 1);
+//                if (word->data == NULL) {
+//                    return NGX_ERROR;
+//                }
+                $word = '';
+                $cf->args[] = &$word;
 
-                word->data = ngx_pnalloc(cf->pool, b->pos - 1 - start + 1);
-                if (word->data == NULL) {
-                    return NGX_ERROR;
-                }
-
-                for (dst = word->data, src = start, len = 0;
-                     src < b->pos - 1;
-                     len++)
+                $pr = 0;
+                for ($dst = $word, $src = $start, $len = 0;
+                     $src < $pos - 1;
+                     $len++)
                 {
-                    if (*src == '\\') {
-                    switch ($src[1]) {
+                    if ($b[$src] == '\\') {
+                    switch ($b[$src+1]) {
                     case '"':
                         case '\'':
                         case '\\':
-                            src++;
+                            $src++;
                             break;
 
                         case 't':
-                            *dst++ = '\t';
-                            src += 2;
+                            $dst[$pr++] = '\t';
+                            $src += 2;
                             continue;
 
                         case 'r':
-                            *dst++ = '\r';
-                            src += 2;
+                            $dst[$pr++] = '\r';
+                            $src += 2;
                             continue;
 
                         case 'n':
-                            *dst++ = '\n';
-                            src += 2;
+                            $dst[$pr++] = '\n';
+                            $src += 2;
                             continue;
                         }
 
                     }
-                    *dst++ = *src++;
+                    $dst[$pr++] = $b[$src++];
                 }
-                *dst = '\0';
-                $word->len = $len;
+               // $dst[$pr] = '\0';
+                //$word->len = $len;
 
                 if ($ch == ';') {
                     return NGX_OK;

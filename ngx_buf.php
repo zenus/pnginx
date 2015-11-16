@@ -8,11 +8,11 @@
 class ngx_buf_t {
 /** u_char **/ private $pos;
 /** u_char **/ private $last;
-/** off_t **/ private $file_pos; 
-/** off_t **/ private $file_last; 
+/** off_t **/ private $file_pos;
+/** off_t **/ private $file_last;
 /** u_char **/ private $start;          /* start of buffer */
 /** u_char **/ private $end;            /* end of buffer */
-/** ngx_buf_tag_t **/ private $tag; 
+/** ngx_buf_tag_t **/ private $tag;
 /** ngx_file_t **/ private $file;
 /** ngx_buf_t **/ private $shadow;
 

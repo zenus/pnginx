@@ -63,7 +63,7 @@ function ngx_file_size($sb){
     return $sb['size'];
 }
 
-function ngx_read_file(ngx_file_t &$file, $buf, $size, $offset)
+function ngx_read_file(ngx_file_t &$file, &$buf, $size, $offset)
 {
 
     ngx_log_debug4(NGX_LOG_DEBUG_CORE, $file->log, 0,
