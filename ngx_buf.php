@@ -6,6 +6,7 @@
  * Time: 下午12:31
  */
 class ngx_buf_t {
+    /** u_char **/ private $data;
 /** u_char **/ private $pos;
 /** u_char **/ private $last;
 /** off_t **/ private $file_pos;

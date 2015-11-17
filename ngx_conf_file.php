@@ -17,6 +17,10 @@ define('NGX_CONF_BLOCK_START', 1);
 define('NGX_CONF_BLOCK_DONE',2);
 define('NGX_CONF_FILE_DONE',3);
 define('NGX_CONF_BUFFER',4096);
+define('parse_file',0);
+define('parse_block',1);
+define('parse_param',2);
+
 
 
 
@@ -96,7 +100,7 @@ class ngx_conf_t {
     }
 }
 
-function ngx_conf_param(ngx_conf_t &$cf)
+function ngx_conf_param(ngx_conf_t $cf)
 {
 //char             *rv;
 //ngx_str_t        *param;
@@ -113,20 +117,20 @@ function ngx_conf_param(ngx_conf_t &$cf)
     $conf_file = new ngx_conf_file_t();
 
     //ngx_memzero(&b, sizeof(ngx_buf_t));
-//    $b = new ngx_buf_t();
-//
-//    $b->start = $param->data;
-//    $b->pos = $param->data;
-//    $b->last = $param->data + $param->len;
-//    $b->end = b.last;
-//    $b->temporary = 1;
+    $b = new ngx_buf_t();
+
+    $b->start = $param->data;
+    $b->pos = $param->data;
+    $b->last = $param->data + $param->len;
+    $b->end = $b->last;
+    $b->temporary = 1;
 
     $conf_file->file->fd = NGX_INVALID_FILE;
     $conf_file->file->name = NULL;
     $conf_file->line = 0;
 
     $cf->conf_file = $conf_file;
-//    $cf->conf_file->buffer = &b;
+    $cf->conf_file->buffer = $b;
 
     $rv = ngx_conf_parse($cf, NULL);
 
@@ -139,7 +143,7 @@ class ngx_conf_file_t {
     /**  ngx_file_t **/     private     $file;
 /**    ngx_buf_t   **/      private   $buffer;
 /**    ngx_buf_t   **/      private   $dump;
-   /**  ngx_uint_t **/      private        $line;
+   /**  ngx_uint_t **/      private   $line;
     public function __set($property,$value){
         if($property == 'file' && $value instanceof ngx_file_t){
             $this->file = $value;
@@ -188,31 +192,47 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
         $prev = $cf->conf_file;
 
         $conf_file = new ngx_conf_file_t();
-        $cf->conf_file = &$conf_file;
+        $buf = new ngx_buf_t();
+        $cf->conf_file = $conf_file;
 
         if ($cf->conf_file->file->info = ngx_fd_info($fd) == NGX_FILE_ERROR) {
             ngx_log_error(NGX_LOG_EMERG, $cf->log, NGX_FERROR,
                           ngx_fd_info_n ." \"%s\" failed", $filename);
         }
 
-//        $cf->conf_file->buffer = &buf;
+        $cf->conf_file->buffer = $buf;
 //
 //        buf.start = ngx_alloc(NGX_CONF_BUFFER, cf->log);
 //        if (buf.start == NULL) {
 //            goto failed;
 //        }
 
-//        buf.pos = buf.start;
-//        buf.last = buf.start;
-//        buf.end = buf.last + NGX_CONF_BUFFER;
-//        buf.temporary = 1;
+        $file_size = ngx_file_size($cf->conf_file->file->info);
+
+        $n = ngx_read_file($cf->conf_file->file, $buf->data, $file_size,
+            $cf->conf_file->file->offset);
+        if ($n == NGX_ERROR) {
+            return NGX_ERROR;
+        }
+
+        if ($n != $file_size) {
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                ngx_read_file_n ." returned ".
+                "only %z bytes instead of %z",
+                array($n, $file_size));
+            return NGX_ERROR;
+        }
+        $buf->pos = $buf->start = 0;
+        $buf->last = $n-1;
+        $buf->end = $n-1;
+        $buf->temporary = 1;
 
         $cf->conf_file->file->fd = $fd;
         $cf->conf_file->file->name = $filename;
         $cf->conf_file->file->log = $cf->log;
         $cf->conf_file->line = 1;
 
-        $type = 0;
+        $type = parse_file;
 
         if (ngx_cfg('ngx_dump_config'))
         {
@@ -227,6 +247,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
 //            if (tbuf == NULL) {
 //                goto failed;
 //            }
+            $tbuf = new ngx_buf_t();
 
             $cd = new ngx_conf_dump_t();
              $cf->cycle->config_dump[] = $cd;
@@ -235,18 +256,19 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
             $cd->name =  $filename;
             //cd->buffer = tbuf;
 
-            //cf->conf_file->dump = tbuf;
+            $cf->conf_file->dump = $tbuf;
+            $tbuf->last = $n;
 
         } else {
-        //    cf->conf_file->dump = NULL;
+            $cf->conf_file->dump = NULL;
         }
 
     } else if ($cf->conf_file->file->fd != NGX_INVALID_FILE) {
 
-    $type = 1;
+    $type = parse_block;
 
 } else {
-    $type = 2;
+    $type = parse_param;
 }
 
 
@@ -364,14 +386,14 @@ done:
 
 class ngx_conf_dump_t {
   /**  ngx_str_t **/     private       $name;
- //   ngx_buf_t            *buffer;
+ /**  ngx_buf_t  ***/   private       $buffer;
     public function __set($property, $name){
        $this->$property = $name;
     }
 }
 
 
-function ngx_conf_log_error($level, ngx_conf_t &$cf, $err, $fmt, array $args = array())
+function ngx_conf_log_error($level, ngx_conf_t $cf, $err, $fmt, array $args = array())
 {
 //    u_char   errstr[NGX_MAX_CONF_ERRSTR], *p, *last;
 //    va_list  args;
@@ -406,7 +428,7 @@ function ngx_conf_log_error($level, ngx_conf_t &$cf, $err, $fmt, array $args = a
     ngx_log_error($level, $cf->log, 0, "%*s in %s:%ui",$args);
 }
 
-function ngx_conf_read_token(ngx_conf_t &$cf)
+function ngx_conf_read_token(ngx_conf_t $cf)
 {
 //u_char      *start, ch, *src, *dst;
 //    off_t        file_size;
@@ -425,57 +447,37 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
     $quoted = 0;
     $s_quoted = 0;
     $d_quoted = 0;
-    $pos = 0;
 
-//
-    //cf->args->nelts = 0;
-    //todo know pos and last?
     $b = $cf->conf_file->buffer;
-    $dump = $cf->conf_file->dump;
-    $start = $pos;
+    $start = $b->pos;
     $start_line = $cf->conf_file->line;
+
 
     $file_size = ngx_file_size($cf->conf_file->file->info);
 
-    $n = ngx_read_file($cf->conf_file->file, $b, $file_size,
-        $cf->conf_file->file->offset);
-    if ($n == NGX_ERROR) {
-        return NGX_ERROR;
-    }
-
-    if ($n != $file_size) {
-        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-            ngx_read_file_n ." returned ".
-            "only %z bytes instead of %z",
-            array($n, $file_size));
-        return NGX_ERROR;
-    }
-    if ($dump) {
-        $dump = $b;
-    }
     for ( ;; ) {
 
-        //if ($b['pos'] >= $b['last']) {
+        if ($b->pos >= $b->last) {
 
-//            if ($cf->conf_file->file->offset >= $file_size) {
-//
-//                if (count($cf->args)>0 || !$last_space) {
-//
-//                    if ($cf->conf_file->file->fd == NGX_INVALID_FILE) {
-//                        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-//                            "unexpected end of parameter, ".
-//                                           "expecting \";\"");
-//                        return NGX_ERROR;
-//                    }
-//
-//                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-//                        "unexpected end of file, ".
-//                                  "expecting \";\" or \"}\"");
-//                    return NGX_ERROR;
-//                }
+            if ($cf->conf_file->file->offset >= $file_size) {
 
-         //       return NGX_CONF_FILE_DONE;
-          //  }
+                if (count($cf->args)>0 || !$last_space) {
+
+                    if ($cf->conf_file->file->fd == NGX_INVALID_FILE) {
+                        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                            "unexpected end of parameter, ".
+                                           "expecting \";\"");
+                        return NGX_ERROR;
+                    }
+
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                        "unexpected end of file, ".
+                                  "expecting \";\" or \"}\"");
+                    return NGX_ERROR;
+                }
+
+                return NGX_CONF_FILE_DONE;
+            }
 
 //            len = b->pos - start;
            //   $len = strlen($b);
@@ -534,11 +536,12 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
 //            if ($dump) {
 //                $dump = $b;
 //            }
-        //}
+       }
 
-        $ch = $b[$pos++];
+        $ch = $b->data[$b->pos++];
 
         if ($ch == LF) {
+
             $cf->conf_file->line++;
 
             if ($sharp_comment) {
@@ -586,7 +589,7 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
                 continue;
             }
 
-            $start = $pos - 1;
+            $start = $b->pos - 1;
             $start_line = $cf->conf_file->line;
 
             switch ($ch) {
@@ -594,7 +597,7 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
                 case ';':
                 case '{':
                     if (count($cf->args)) {
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                         "unexpected \"%c\"", $ch);
                     return NGX_ERROR;
                 }
@@ -678,52 +681,40 @@ function ngx_conf_read_token(ngx_conf_t &$cf)
             }
 
             if ($found) {
-//                word = ngx_array_push(cf->args);
-//                if (word == NULL) {
-//                    return NGX_ERROR;
-//                }
-//
-//                word->data = ngx_pnalloc(cf->pool, b->pos - 1 - start + 1);
-//                if (word->data == NULL) {
-//                    return NGX_ERROR;
-//                }
-                $word = '';
-                $cf->args[] = &$word;
-
-                $pr = 0;
-                for ($dst = $word, $src = $start, $len = 0;
-                     $src < $pos - 1;
+                $k = 0;
+                for ($dst = '', $p = $start, $len = 0;
+                     $p < $b->pos - 1;
                      $len++)
                 {
-                    if ($b[$src] == '\\') {
-                    switch ($b[$src+1]) {
+                    if ($b->data[$p] == '\\') {
+                    switch ($b->data[$p+1]) {
                     case '"':
                         case '\'':
                         case '\\':
-                            $src++;
+                            $p++;
                             break;
 
                         case 't':
-                            $dst[$pr++] = '\t';
-                            $src += 2;
+                            $dst[$k++] = '\t';
+                            $p += 2;
                             continue;
 
                         case 'r':
-                            $dst[$pr++] = '\r';
-                            $src += 2;
+                            $dst[$k++] = '\r';
+                            $p += 2;
                             continue;
 
                         case 'n':
-                            $dst[$pr++] = '\n';
-                            $src += 2;
+                            $dst[$k++] = '\n';
+                            $p += 2;
                             continue;
                         }
 
                     }
-                    $dst[$pr++] = $b[$src++];
+                    $dst[$k++] = $b->data[$p++];
                 }
-               // $dst[$pr] = '\0';
-                //$word->len = $len;
+
+                $cf->args[] = $dst;
 
                 if ($ch == ';') {
                     return NGX_OK;
