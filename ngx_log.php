@@ -147,12 +147,6 @@ class ngx_log_s {
     private $wdata;
     private $action;
 
-//    public function set_file(ngx_open_file_s &$file){
-//        if($file instanceof ngx_open_file_s){
-//            $this->file = $file;
-//        }
-//    }
-
     public function __set($property_name, $value){
         if($property_name == 'file'){
             if($value instanceof ngx_open_file_s){
@@ -186,34 +180,6 @@ class ngx_log_s {
             return $this->$property_name;
     }
 
-//    public function get_file(){
-//
-//        return $this->file;
-//    }
-//
-//    public function set_level($level){
-//        $this->log_level = $level;
-//    }
-//
-//    public function set_log_handler(Closure $callback){
-//
-//        $this->handler = $callback;
-//    }
-//
-//    public function set_log_writer(Closure $callback){
-//
-//        $this->writer = $callback;
-//    }
-//
-//    public function get_log_writer(){
-//
-//        return $this->writer;
-//    }
-//
-//    public function get_log_handler(){
-//
-//       return  $this->handler;
-//    }
 
     public function handle($log, $s){
 

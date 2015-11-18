@@ -13,6 +13,17 @@ define('NGX_CONF_MODULE',0x464E4F43);  /* "CONF" */
 define('NGX_CONF_OK',NULL);
 define('NGX_CONF_ERROR',-1);
 
+define('NGX_CONF_NOARGS',0x00000001);
+define('NGX_CONF_TAKE1',0x00000002);
+define('NGX_CONF_TAKE2',0x00000004);
+define('NGX_CONF_TAKE3',0x00000008);
+define('NGX_CONF_TAKE4',0x00000010);
+define('NGX_CONF_TAKE5',0x00000020);
+define('NGX_CONF_TAKE6',0x00000040);
+define('NGX_CONF_TAKE7',0x00000080);
+
+define('NGX_CONF_MAX_ARGS',8);
+
 define('NGX_CONF_BLOCK_START', 1);
 define('NGX_CONF_BLOCK_DONE',2);
 define('NGX_CONF_FILE_DONE',3);
@@ -20,6 +31,19 @@ define('NGX_CONF_BUFFER',4096);
 define('parse_file',0);
 define('parse_block',1);
 define('parse_param',2);
+
+define('NGX_CONF_ARGS_NUMBER',0x000000ff);
+define('NGX_CONF_BLOCK',0x00000100);
+define('NGX_CONF_FLAG',0x00000200);
+define('NGX_CONF_ANY',0x00000400);
+define('NGX_CONF_1MORE',0x00000800);
+define('NGX_CONF_2MORE',0x00001000);
+define('NGX_CONF_MULTI',0x00000000);  /* compatibility */
+
+define('NGX_DIRECT_CONF',0x00010000);
+
+define('NGX_MAIN_CONF',0x01000000);
+define('NGX_ANY_CONF',0x0F000000);
 
 
 
@@ -90,13 +114,54 @@ class ngx_conf_t {
             $this->conf_file = $value;
         }elseif($property == 'log' && $value instanceof ngx_log){
             $this->log = $value;
-        }
-        else{
+        }elseif($property == 'handler') {
+
+                if($value instanceof Closure){
+                    $this->handler = $value ;
+                }else{
+                    die('ngx_conf_t  handler type');
+                }
+
+        } else{
             $this->$property = $value;
         }
     }
     public function __get($property){
        return $this->$property;
+    }
+
+    public function handle(ngx_conf_t $cf, ngx_command_t $cmd ,$s){
+
+        return call_user_func($this->handler,$cf,$cmd,$s);
+    }
+}
+
+class ngx_command_t {
+/** ngx_str_t **/ private $name; 
+/** ngx_uint_t **/ private $type; 
+/**    char  **/   private $set;/*(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);*/
+/** ngx_uint_t **/ private $conf; 
+/** ngx_uint_t **/ private $offset; 
+/** void **/ private $post;
+
+    public function __set($property, $value){
+        if($property == 'set'){
+            if($value instanceof Closure){
+                $this->set = $value ;
+            }else{
+                die('ngx_command_t handler type');
+            }
+        }else{
+            $this->$property = $value;
+        }
+    }
+    public function __get($property){
+       return $this->$property;
+    }
+
+    public function handle(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+
+        return call_user_func($this->set,$cf,$cmd,$conf);
     }
 }
 
@@ -201,11 +266,6 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
         }
 
         $cf->conf_file->buffer = $buf;
-//
-//        buf.start = ngx_alloc(NGX_CONF_BUFFER, cf->log);
-//        if (buf.start == NULL) {
-//            goto failed;
-//        }
 
         $file_size = ngx_file_size($cf->conf_file->file->info);
 
@@ -236,25 +296,14 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
 
         if (ngx_cfg('ngx_dump_config'))
         {
-//            p = ngx_pstrdup(cf->cycle->pool, filename);
-//            if (p == NULL) {
-//                goto failed;
-//            }
 
-            $size = ngx_file_size($cf->conf_file->file->info);
 
-//            tbuf = ngx_create_temp_buf(cf->cycle->pool, (size_t) size);
-//            if (tbuf == NULL) {
-//                goto failed;
-//            }
             $tbuf = new ngx_buf_t();
 
             $cd = new ngx_conf_dump_t();
              $cf->cycle->config_dump[] = $cd;
 
-            //cd->name.len = filename->len;
             $cd->name =  $filename;
-            //cd->buffer = tbuf;
 
             $cf->conf_file->dump = $tbuf;
             $tbuf->last = $n;
@@ -291,7 +340,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
 
         if ($rc == NGX_CONF_BLOCK_DONE) {
 
-            if ($type != 1) {
+            if ($type != parse_block) {
                 ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0, "unexpected \"}\"");
                 goto failed;
             }
@@ -301,7 +350,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
 
         if ($rc == NGX_CONF_FILE_DONE) {
 
-            if ($type == 1) {
+            if ($type == parse_block) {
                 ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                     "unexpected end of file, expecting \"}\"");
                 goto failed;
@@ -312,7 +361,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
 
         if ($rc == NGX_CONF_BLOCK_START) {
 
-            if ($type == 2) {
+            if ($type == parse_param) {
                 ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                     "block directives are not supported ".
                                    "in -g option");
@@ -334,7 +383,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
                 goto failed;
             }
 
-            $rv = (*cf->handler)(cf, NULL, cf->handler_conf);
+            $rv = $cf->handle($cf, NULL, $cf->handler_conf);
             if ($rv == NGX_CONF_OK) {
                 continue;
             }
@@ -363,8 +412,9 @@ failed:
 done:
 
     if ($filename) {
-        if ($cf->conf_file->buffer->start) {
-            ngx_free($cf->conf_file->buffer->start);
+        if (!empty($cf->conf_file->buffer->data)) {
+            //ngx_free($cf->conf_file->buffer->start);
+            $cf->conf_file->buffer = null;
         }
 
         if (ngx_close_file($fd) == NGX_FILE_ERROR) {
@@ -728,4 +778,152 @@ function ngx_conf_read_token(ngx_conf_t $cf)
             }
         }
     }
+}
+
+function ngx_conf_handler(ngx_conf_t $cf, $last)
+{
+//    char           *rv;
+//    void           *conf, **confp;
+//    ngx_uint_t      i, found;
+//    ngx_str_t      *name;
+//    ngx_command_t  *cmd;
+
+    $name = $cf->args->elts;
+
+    $found = 0;
+
+    $ngx_modules = ngx_cfg('ngx_modules');
+    for ($i = 0; $ngx_modules[$i]; $i++) {
+
+        $cmds = $ngx_modules[$i]->commands;
+        if (empty($cmd)) {
+            continue;
+        }
+
+        //for ( /* void */ ; cmd->name.len; cmd++) {
+        foreach($cmds as $cmd){
+
+        if (strlen($name)!= strlen($cmd->name)) {
+            continue;
+        }
+
+        if (ngx_strcmp($name, $cmd->name) != 0) {
+            continue;
+        }
+
+            $found = 1;
+
+        if ($ngx_modules[$i]->type != NGX_CONF_MODULE
+        && $ngx_modules[$i]->type != $cf->module_type)
+            {
+                continue;
+            }
+
+            /* is the directive's location right ? */
+
+        if (!($cmd->type & $cf->cmd_type)) {
+            continue;
+        }
+
+        if (!($cmd->type & NGX_CONF_BLOCK) && $last != NGX_OK) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            "directive \"%s\" is not terminated by \";\"",
+            $name);
+            return NGX_ERROR;
+        }
+
+        if (($cmd->type & NGX_CONF_BLOCK) && $last != NGX_CONF_BLOCK_START) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            "directive \"%s\" has no opening \"{\"",
+            $name);
+            return NGX_ERROR;
+        }
+
+            /* is the directive's argument count right ? */
+            $argument_number = ngx_cfg('argument_number');
+
+            if (!($cmd->type & NGX_CONF_ANY)) {
+
+            if ($cmd->type & NGX_CONF_FLAG) {
+
+                if (count($cf->args) != 2) {
+                    goto invalid;
+                }
+
+                } else if ($cmd->type & NGX_CONF_1MORE) {
+
+                if (count($cf->args) < 2) {
+                    goto invalid;
+                }
+
+                } else if ($cmd->type & NGX_CONF_2MORE) {
+
+                if (count($cf->args) < 3) {
+                    goto invalid;
+                }
+
+                } else if (count($cf->args) > NGX_CONF_MAX_ARGS) {
+
+                goto invalid;
+
+            } else if (!($cmd->type & $argument_number[count($cf->args) - 1]))
+                {
+                    goto invalid;
+                }
+            }
+
+            /* set up the directive's configuration context */
+
+            $conf = NULL;
+
+            if ($cmd->type & NGX_DIRECT_CONF) {
+                //todo 0 offset is ok?
+            $conf =  $cf->ctx[0][$ngx_modules[$i]->index];
+                //conf = ((void **) cf->ctx)[ngx_modules[i]->index];
+            } else if ($cmd->type & NGX_MAIN_CONF) {
+                //todo  direct_conf and main_conf should use the same offset
+            $conf = $cf->ctx[0][$ngx_modules[$i]->index];
+                //todo should know why use & or not
+                //conf = &((void **) cf->ctx)[ngx_modules[i]->index];
+            } else if ($cf->ctx) {
+            //$confp = $cf->ctx + $cmd->conf;
+            $conf = $cf->ctx[$cmd->conf][$ngx_modules[$i]->ctx_index];
+            }
+
+            $rv = $cmd->handle($cf, $cmd, $conf);
+
+            if ($rv == NGX_CONF_OK) {
+                return NGX_OK;
+            }
+
+            if ($rv == NGX_CONF_ERROR) {
+                return NGX_ERROR;
+            }
+
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                "\"%s\" directive %s", array($name, $rv));
+
+            return NGX_ERROR;
+        }
+    }
+
+    if ($found) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            "\"%s\" directive is not allowed here", (array)$name);
+
+        return NGX_ERROR;
+    }
+
+    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+        "unknown directive \"%s\"", (array)$name);
+
+    return NGX_ERROR;
+
+invalid:
+
+    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+        "invalid number of arguments in \"%s\" directive",
+        (array)$name);
+
+    return NGX_ERROR;
 }

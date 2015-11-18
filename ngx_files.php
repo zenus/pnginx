@@ -63,6 +63,10 @@ function ngx_file_size($sb){
     return $sb['size'];
 }
 
+function  ngx_close_file($fd){
+   fclose($fd);
+}
+
 function ngx_read_file(ngx_file_t $file, &$buf, $size, $offset)
 {
 

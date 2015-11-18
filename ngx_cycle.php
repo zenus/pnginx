@@ -233,6 +233,18 @@ function ngx_init_cycle(ngx_cycle_s &$old_cycle)
 //
 //
 
+
+   $argument_number =array(
+        NGX_CONF_NOARGS,
+        NGX_CONF_TAKE1,
+        NGX_CONF_TAKE2,
+        NGX_CONF_TAKE3,
+        NGX_CONF_TAKE4,
+        NGX_CONF_TAKE5,
+        NGX_CONF_TAKE6,
+        NGX_CONF_TAKE7
+    );
+    ngx_cfg('argument_number',$argument_number);
     $conf = new ngx_conf_t();
     $conf->ctx = $cycle->conf_ctx;
     $conf->cycle = $cycle;
