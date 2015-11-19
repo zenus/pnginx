@@ -8,6 +8,11 @@
 //
 define('NGX_CORE_MODULE',0x45524F43);  /* "CORE" */
 define('NGX_CONF_MODULE',0x464E4F43);  /* "CONF" */
+define('NGX_CONF_UNSET',       -1);
+define('NGX_CONF_UNSET_UINT',  -1);
+define('NGX_CONF_UNSET_PTR',    -1);
+define('NGX_CONF_UNSET_SIZE',  -1);
+define('NGX_CONF_UNSET_MSEC', -1) ;
 
 
 define('NGX_CONF_OK',NULL);
@@ -44,6 +49,9 @@ define('NGX_DIRECT_CONF',0x00010000);
 
 define('NGX_MAIN_CONF',0x01000000);
 define('NGX_ANY_CONF',0x0F000000);
+
+//define('NGX_MODULE_V1',  0, 0, 0, 0, 0, 0, 1);
+//define('NGX_MODULE_V1_PADDING',  0, 0, 0, 0, 0, 0, 0, 0);
 
 
 
@@ -108,7 +116,7 @@ class ngx_conf_t {
 /** ngx_conf_handler_pt **/ private $handler; 
 /** char **/ private $handler_conf;
     public function __set($property,$value){
-        if($property == 'cycle' && $value instanceof ngx_cycle_s){
+        if($property == 'cycle' && $value instanceof ngx_cycle_t){
           $this->cycle = $value;
         }elseif($property == 'conf_file' && $value instanceof ngx_conf_file_t){
             $this->conf_file = $value;
@@ -927,3 +935,17 @@ invalid:
 
     return NGX_ERROR;
 }
+
+function ngx_conf_init_value(&$conf, $default){
+    if ($conf == NGX_CONF_UNSET) {
+        $conf = $default;
+    }
+}
+
+function ngx_conf_init_msec_value(&$conf, $default){
+
+    if ($conf == NGX_CONF_UNSET_MSEC) {
+        $conf = $default;
+        }
+}
+

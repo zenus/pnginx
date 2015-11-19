@@ -122,7 +122,7 @@ function main($argc, array $argv){
     }
     //TODO
     //ngx_ssl_init();
-    $init_cycle = new ngx_cycle_s();
+    $init_cycle = new ngx_cycle_t();
     $init_cycle->set_log($log);
     $ngx_cycle = &$init_cycle;
     if (ngx_save_argv($argc, $argv) != NGX_OK) {
@@ -304,7 +304,7 @@ function ngx_save_argv( $argc, $argv)
 }
 
 
-function ngx_process_options(ngx_cycle_s &$cycle)
+function ngx_process_options(ngx_cycle_t &$cycle)
 {
     if ($conf_file = ngx_cfg('ngx_conf_file')) {
         $cycle->conf_file = $conf_file;
@@ -339,7 +339,7 @@ function ngx_process_options(ngx_cycle_s &$cycle)
 }
 
 
-function ngx_add_inherited_sockets(ngx_cycle_s $cycle)
+function ngx_add_inherited_sockets(ngx_cycle_t $cycle)
 {
     $inherited =  getenv(NGINX_VAR);
 
@@ -372,6 +372,207 @@ function ngx_add_inherited_sockets(ngx_cycle_s $cycle)
 
     return ngx_set_inherited_sockets($cycle);
 }
+
+function ngx_core_module()
+{
+
+   static  $ngx_core_module = array(
+    //NGX_MODULE_V1,
+    0, 0, 0, 0, 0, 0, 1,
+    ngx_core_module_ctx(),                  /* module context */
+    ngx_core_commands(),                     /* module directives */
+    NGX_CORE_MODULE,                       /* module type */
+    NULL,                                  /* init master */
+    NULL,                                  /* init module */
+    NULL,                                  /* init process */
+    NULL,                                  /* init thread */
+    NULL,                                  /* exit thread */
+    NULL,                                  /* exit process */
+    NULL,                                  /* exit master */
+    0, 0, 0, 0, 0, 0, 0, 0
+//    NGX_MODULE_V1_PADDING
+    );
+    return $ngx_core_module;
+    }
+
+function ngx_core_module_ctx(){
+
+    static  $ngx_core_module_ctx = array(
+        "core",
+    ngx_core_module_create_conf,
+    ngx_core_module_init_conf
+     );
+}
+
+function ngx_core_module_create_conf(ngx_cycle_t $cycle)
+{
+//ngx_core_conf_t  *ccf;
+//
+//    ccf = ngx_pcalloc(cycle->pool, sizeof(ngx_core_conf_t));
+//    if (ccf == NULL) {
+//        return NULL;
+//    }
+    $ccf = new ngx_core_conf_t();
+
+    /*
+     * set by ngx_pcalloc()
+     *
+     *     ccf->pid = NULL;
+     *     ccf->oldpid = NULL;
+     *     ccf->priority = 0;
+     *     ccf->cpu_affinity_n = 0;
+     *     ccf->cpu_affinity = NULL;
+     */
+
+    $ccf->daemon = NGX_CONF_UNSET;
+    $ccf->master = NGX_CONF_UNSET;
+    $ccf->timer_resolution = NGX_CONF_UNSET_MSEC;
+
+    $ccf->worker_processes = NGX_CONF_UNSET;
+    $ccf->debug_points = NGX_CONF_UNSET;
+
+    $ccf->rlimit_nofile = NGX_CONF_UNSET;
+    $ccf->rlimit_core = NGX_CONF_UNSET;
+
+    $ccf->user =  NGX_CONF_UNSET_UINT;
+    $ccf->group = NGX_CONF_UNSET_UINT;
+
+//    if (ngx_array_init(&ccf->env, cycle->pool, 1, sizeof(ngx_str_t))
+//        != NGX_OK)
+//    {
+//        return NULL;
+//    }
+
+    return $ccf;
+}
+
+function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
+{
+    $ccf = $conf;
+
+    ngx_conf_init_value($ccf->daemon, 1);
+    ngx_conf_init_value($ccf->master, 1);
+    ngx_conf_init_msec_value($ccf->timer_resolution, 0);
+
+    ngx_conf_init_value($ccf->worker_processes, 1);
+    ngx_conf_init_value($ccf->debug_points, 0);
+
+    //todo how to use php find cpu-affinity
+//#if (NGX_HAVE_CPU_AFFINITY)
+//
+//    if (ccf->cpu_affinity_n
+//&& ccf->cpu_affinity_n != 1
+//&& ccf->cpu_affinity_n != (ngx_uint_t) ccf->worker_processes)
+//    {
+//        ngx_log_error(NGX_LOG_WARN, cycle->log, 0,
+//                      "the number of \"worker_processes\" is not equal to "
+//                      "the number of \"worker_cpu_affinity\" masks, "
+//                      "using last mask for remaining worker processes");
+//    }
+//
+//#endif
+
+
+    //todo find NGX_PID_PATH
+//    if (ccf->pid.len == 0) {
+//    ngx_str_set(&ccf->pid, NGX_PID_PATH);
+//    }
+
+    //todo how to save the pid file
+//    if (ngx_conf_full_name(cycle, &ccf->pid, 0) != NGX_OK) {
+//    return NGX_CONF_ERROR;
+//}
+//
+//    ccf->oldpid.len = ccf->pid.len + sizeof(NGX_OLDPID_EXT);
+//
+//    ccf->oldpid.data = ngx_pnalloc(cycle->pool, ccf->oldpid.len);
+//    if (ccf->oldpid.data == NULL) {
+//    return NGX_CONF_ERROR;
+//}
+//
+//    ngx_memcpy(ngx_cpymem(ccf->oldpid.data, ccf->pid.data, ccf->pid.len),
+//               NGX_OLDPID_EXT, sizeof(NGX_OLDPID_EXT));
+
+
+
+    if ($ccf->user == NGX_CONF_UNSET_UINT && posix_geteuid() == 0) {
+//    struct group   *grp;
+//        struct passwd  *pwd;
+
+        //ngx_set_errno(0);
+        $pwd = posix_getpwnam(NGX_USER);
+        if (empty($pwd)) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, posix_get_last_error(),
+                          "getpwnam(\"". NGX_USER ."\") failed");
+            return NGX_CONF_ERROR;
+        }
+
+        $ccf->username = NGX_USER;
+        $ccf->user = $pwd['uid'];
+
+        //ngx_set_errno(0);
+        $grp = posix_getgrnam(NGX_GROUP);
+        if (empty($grp)) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, posix_get_last_error(),
+                          "getgrnam(\"" .NGX_GROUP ."\") failed");
+            return NGX_CONF_ERROR;
+        }
+
+        $ccf->group = $grp['gid'];
+    }
+
+//
+//    if (ccf->lock_file.len == 0) {
+//    ngx_str_set(&ccf->lock_file, NGX_LOCK_PATH);
+//    }
+//
+//    if (ngx_conf_full_name(cycle, &ccf->lock_file, 0) != NGX_OK) {
+//    return NGX_CONF_ERROR;
+//}
+//
+//    {
+//        ngx_str_t  lock_file;
+//
+//    lock_file = cycle->old_cycle->lock_file;
+//
+//    if (lock_file.len) {
+//        lock_file.len--;
+//
+//        if (ccf->lock_file.len != lock_file.len
+//        || ngx_strncmp(ccf->lock_file.data, lock_file.data, lock_file.len)
+//               != 0)
+//        {
+//            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
+//                          "\"lock_file\" could not be changed, ignored");
+//        }
+//
+//        cycle->lock_file.len = lock_file.len + 1;
+//        lock_file.len += sizeof(".accept");
+//
+//        cycle->lock_file.data = ngx_pstrdup(cycle->pool, &lock_file);
+//        if (cycle->lock_file.data == NULL) {
+//            return NGX_CONF_ERROR;
+//        }
+//
+//    } else {
+//        cycle->lock_file.len = ccf->lock_file.len + 1;
+//        cycle->lock_file.data = ngx_pnalloc(cycle->pool,
+//                                      ccf->lock_file.len + sizeof(".accept"));
+//        if (cycle->lock_file.data == NULL) {
+//            return NGX_CONF_ERROR;
+//        }
+//
+//        ngx_memcpy(ngx_cpymem(cycle->lock_file.data, ccf->lock_file.data,
+//                              ccf->lock_file.len),
+//                   ".accept", sizeof(".accept"));
+//    }
+//    }
+
+
+    return NGX_CONF_OK;
+}
+
+
 
 
 main($argc,$argv);

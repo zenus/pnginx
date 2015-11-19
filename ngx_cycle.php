@@ -13,7 +13,7 @@ static $ngx_quiet_mode;
 define('NGX_MAIN_CONF',0x01000000);
 define('NGX_ANY_CONF',0x0F000000);
 
-class ngx_cycle_s {
+class ngx_cycle_t {
     /**void **/        private         /**   ****conf_ctx  ****/ $conf_ctx;
     //ngx_pool_t               *pool;
 
@@ -56,7 +56,7 @@ class ngx_cycle_s {
             $this->log = $value;
         }elseif($property == 'listening' && $value instanceof ngx_listening_s){
             $this->listening[] =  $value;
-        }elseif($property == 'old_cycle' && $value instanceof ngx_cycle_s){
+        }elseif($property == 'old_cycle' && $value instanceof ngx_cycle_t){
             $this->old_cycle =  $value;
         }else{
             $this->$property = $value;
@@ -66,10 +66,40 @@ class ngx_cycle_s {
     public function __get($property){
        return $this->$property;
     }
-};
+}
+
+class ngx_core_conf_t {
+/** ngx_flag_t **/ private $daemon; 
+/** ngx_flag_t **/ private $master; 
+/** ngx_msec_t **/ private $timer_resolution; 
+/** ngx_int_t **/ private $worker_processes; 
+/** ngx_int_t **/ private $debug_points; 
+/** ngx_int_t **/ private $rlimit_nofile; 
+/** off_t **/ private $rlimit_core; 
+/** int **/ private $priority; 
+/** ngx_uint_t **/ private $cpu_affinity_n; 
+/**     uint64_t **/   private            $cpu_affinity;
+/** char **/ private $username;
+/** ngx_uid_t **/ private $user; 
+/** ngx_gid_t **/ private $group; 
+/** ngx_str_t **/ private $working_directory; 
+/** ngx_str_t **/ private $lock_file; 
+/** ngx_str_t **/ private $pid; 
+/** ngx_str_t **/ private $oldpid; 
+/** ngx_array_t **/ private $env; 
+/** char **/ private $environment;
+
+    public function __set($property,$value){
+       $this->$property = $value;
+    }
+    public function __get($property){
+       return $this->$property;
+    }
+}
 
 
-function ngx_init_cycle(ngx_cycle_s &$old_cycle)
+
+function ngx_init_cycle(ngx_cycle_t &$old_cycle)
 {
 //void                *rv;
 //char               **senv, **env;
@@ -99,7 +129,7 @@ function ngx_init_cycle(ngx_cycle_s &$old_cycle)
 
     $log = $old_cycle->log;
 
-    $cycle = new ngx_cycle_s();
+    $cycle = new ngx_cycle_t();
     $cycle->log = $log;
 
     $cycle->old_cycle = $old_cycle;
@@ -233,7 +263,6 @@ function ngx_init_cycle(ngx_cycle_s &$old_cycle)
 //
 //
 
-
    $argument_number =array(
         NGX_CONF_NOARGS,
         NGX_CONF_TAKE1,
@@ -255,44 +284,52 @@ function ngx_init_cycle(ngx_cycle_s &$old_cycle)
 
     if (ngx_conf_param($conf) != NGX_CONF_OK) {
         //environ = senv;
+        unset($conf);
         //ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-//
-//    if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
-//    environ = senv;
-//    ngx_destroy_cycle_pools(&conf);
-//    return NULL;
-//}
-//
-//    if (ngx_test_config && !ngx_quiet_mode) {
-//        ngx_log_stderr(0, "the configuration file %s syntax is ok",
-//            cycle->conf_file.data);
-//    }
-//
-//    for (i = 0; ngx_modules[i]; i++) {
-//    if (ngx_modules[i]->type != NGX_CORE_MODULE) {
-//        continue;
-//    }
-//
-//        module = ngx_modules[i]->ctx;
-//
-//        if (module->init_conf) {
-//        if (module->init_conf(cycle, cycle->conf_ctx[ngx_modules[i]->index])
-//                == NGX_CONF_ERROR)
-//            {
-//                environ = senv;
-//                ngx_destroy_cycle_pools(&conf);
-//                return NULL;
-//            }
-//        }
-//    }
-//
-//    if (ngx_process == NGX_PROCESS_SIGNALLER) {
-//        return cycle;
-//    }
-//
-//    ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
+
+    if (ngx_conf_parse($conf, $cycle->conf_file) != NGX_CONF_OK) {
+        //environ = senv;
+//        ngx_destroy_cycle_pools($conf);
+        unset($conf);
+        return NULL;
+    }
+
+    $ngx_test_config = ngx_cfg('ngx_test_config');
+    $ngx_quiet_mode = ngx_cfg('ngx_quiet_mode');
+
+    if ($ngx_test_config && !$ngx_quiet_mode) {
+        ngx_log_stderr(0, "the configuration file %s syntax is ok",
+            $cycle->conf_file);
+    }
+
+    for ($i = 0; $ngx_modules[$i]; $i++) {
+    if ($ngx_modules[$i]->type != NGX_CORE_MODULE) {
+        continue;
+    }
+
+        $module = $ngx_modules[$i]->ctx;
+
+        if ($module->init_conf) {
+        if ($module->init_conf($cycle, $cycle->conf_ctx[$ngx_modules[$i]->index])
+                == NGX_CONF_ERROR)
+            {
+                //environ = senv;
+                //ngx_destroy_cycle_pools($conf);
+                unset($conf);
+                return NULL;
+            }
+        }
+    }
+
+    $ngx_process = ngx_cfg('ngx_process');
+    if ($ngx_process == NGX_PROCESS_SIGNALLER) {
+        return $cycle;
+    }
+
+    //ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
+//    $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module);
 //
 //    if (ngx_test_config) {
 //
@@ -301,12 +338,12 @@ function ngx_init_cycle(ngx_cycle_s &$old_cycle)
 //        }
 //
 //    } else if (!ngx_is_init_cycle(old_cycle)) {
-//
-//        /*
-//         * we do not create the pid file in the first ngx_init_cycle() call
-//         * because we need to write the demonized process pid
-//         */
-//
+
+        /*
+         * we do not create the pid file in the first ngx_init_cycle() call
+         * because we need to write the demonized process pid
+         */
+
 //        old_ccf = (ngx_core_conf_t *) ngx_get_conf(old_cycle->conf_ctx,
 //                                                   ngx_core_module);
 //        if (ccf->pid.len != old_ccf->pid.len
@@ -320,7 +357,7 @@ function ngx_init_cycle(ngx_cycle_s &$old_cycle)
 //
 //            ngx_delete_pidfile(old_cycle);
 //        }
-//    }
+    }
 //
 //
 //    if (ngx_test_lockfile(cycle->lock_file.data, log) != NGX_OK) {

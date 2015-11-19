@@ -142,7 +142,7 @@ class ngx_listening_s {
  * @param ngx_cycle_s $cycle
  * @return int
  */
-function ngx_set_inherited_sockets(ngx_cycle_s &$cycle)
+function ngx_set_inherited_sockets(ngx_cycle_t &$cycle)
 {
 
     //todo should know how to use this in php
