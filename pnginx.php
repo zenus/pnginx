@@ -399,9 +399,25 @@ function ngx_core_module_ctx(){
 
     static  $ngx_core_module_ctx = array(
         "core",
-    ngx_core_module_create_conf,
-    ngx_core_module_init_conf
+    //ngx_core_module_create_conf,
+        create_core_module_conf('create'),
+    //ngx_core_module_init_conf
+        create_core_module_conf('init'),
      );
+    return $ngx_core_module_ctx;
+}
+
+function create_core_module_conf($type){
+
+    if($type == 'create'){
+       return function(ngx_cycle_t $cycle) {
+           ngx_core_module_create_conf($cycle);
+       };
+    }else{
+        return function(ngx_cycle_t $cycle, ngx_core_conf_t $conf) {
+            ngx_core_module_init_conf($cycle, $conf);
+        };
+    }
 }
 
 function ngx_core_module_create_conf(ngx_cycle_t $cycle)
@@ -496,10 +512,7 @@ function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
 
 
     if ($ccf->user == NGX_CONF_UNSET_UINT && posix_geteuid() == 0) {
-//    struct group   *grp;
-//        struct passwd  *pwd;
 
-        //ngx_set_errno(0);
         $pwd = posix_getpwnam(NGX_USER);
         if (empty($pwd)) {
             ngx_log_error(NGX_LOG_EMERG, $cycle->log, posix_get_last_error(),
@@ -521,58 +534,46 @@ function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
         $ccf->group = $grp['gid'];
     }
 
-//
-//    if (ccf->lock_file.len == 0) {
-//    ngx_str_set(&ccf->lock_file, NGX_LOCK_PATH);
-//    }
-//
-//    if (ngx_conf_full_name(cycle, &ccf->lock_file, 0) != NGX_OK) {
-//    return NGX_CONF_ERROR;
-//}
-//
-//    {
-//        ngx_str_t  lock_file;
-//
-//    lock_file = cycle->old_cycle->lock_file;
-//
-//    if (lock_file.len) {
-//        lock_file.len--;
-//
-//        if (ccf->lock_file.len != lock_file.len
-//        || ngx_strncmp(ccf->lock_file.data, lock_file.data, lock_file.len)
-//               != 0)
-//        {
-//            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-//                          "\"lock_file\" could not be changed, ignored");
-//        }
-//
-//        cycle->lock_file.len = lock_file.len + 1;
-//        lock_file.len += sizeof(".accept");
-//
-//        cycle->lock_file.data = ngx_pstrdup(cycle->pool, &lock_file);
-//        if (cycle->lock_file.data == NULL) {
-//            return NGX_CONF_ERROR;
-//        }
-//
-//    } else {
-//        cycle->lock_file.len = ccf->lock_file.len + 1;
-//        cycle->lock_file.data = ngx_pnalloc(cycle->pool,
-//                                      ccf->lock_file.len + sizeof(".accept"));
-//        if (cycle->lock_file.data == NULL) {
-//            return NGX_CONF_ERROR;
-//        }
-//
-//        ngx_memcpy(ngx_cpymem(cycle->lock_file.data, ccf->lock_file.data,
-//                              ccf->lock_file.len),
-//                   ".accept", sizeof(".accept"));
-//    }
-//    }
 
+    if ($ccf->lock_file == '') {
+          $ccf->lock_file = NGX_LOCK_PATH;
+        }
+
+    if (ngx_conf_full_name($cycle, $ccf->lock_file, 0) != NGX_OK) {
+        return NGX_CONF_ERROR;
+        }
+
+    {
+
+    $lock_file = $cycle->old_cycle->lock_file;
+
+    if ($lock_file) {
+        //todo find why should --
+        //lock_file.len--;
+
+        if ($ccf->lock_file= $lock_file
+        || ngx_strcmp($ccf->lock_file, $lock_file)
+               != 0)
+        {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, 0,
+                          "\"lock_file\" could not be changed, ignored");
+        }
+
+        //todo why should add .accept
+        //lock_file.len += sizeof(".accept");
+
+        $cycle->lock_file= $lock_file;
+
+    } else {
+
+        $cycle->lock_file = $ccf->lock_file.'.accept';
+
+    }
+
+    }
 
     return NGX_CONF_OK;
 }
-
-
 
 
 main($argc,$argv);

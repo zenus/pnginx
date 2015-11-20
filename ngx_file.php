@@ -26,4 +26,27 @@ class ngx_file_t {
     public function __get($property){
        return $this->$property;
     }
-};
+}
+
+function ngx_test_full_name($name)
+{
+
+    if ($name[0] == '/') {
+        return NGX_OK;
+    }
+    return NGX_DECLINED;
+}
+function ngx_get_full_name($prefix, $name)
+{
+
+    $rc = ngx_test_full_name($name);
+
+    if ($rc == NGX_OK) {
+        return $rc;
+    }
+
+    $name = $prefix.$name;
+
+    return NGX_OK;
+}
+

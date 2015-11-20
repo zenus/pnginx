@@ -8,6 +8,11 @@
 function ngx_strcmp($s1, $s2){
    return strcmp($s1,$s2);
 }
+
+function ngx_strncmp($s1, $s2, $n)
+{
+    return strncmp($s1, $s2, $n);
+}
 function ngx_strhas($s,$i){
    return isset($s[$i])&&!empty($s[$i]);
 }

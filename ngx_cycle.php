@@ -46,7 +46,7 @@ class ngx_cycle_t {
     /**ngx_str_t**/        private         $conf_file;
     /**ngx_str_t**/        private         $conf_param;
     /**ngx_str_t**/        private         $conf_prefix;
-   // /**ngx_str_t**/        private         $prefix;
+    /**ngx_str_t**/        private         $prefix;
     /**ngx_str_t**/        private         $lock_file;
     /**ngx_str_t**/        private         $hostname;
 
@@ -357,7 +357,7 @@ function ngx_init_cycle(ngx_cycle_t &$old_cycle)
 //
 //            ngx_delete_pidfile(old_cycle);
 //        }
-    }
+    //}
 //
 //
 //    if (ngx_test_lockfile(cycle->lock_file.data, log) != NGX_OK) {

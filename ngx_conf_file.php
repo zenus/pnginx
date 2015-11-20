@@ -949,3 +949,11 @@ function ngx_conf_init_msec_value(&$conf, $default){
         }
 }
 
+function ngx_conf_full_name(ngx_cycle_t $cycle, $name, $conf_prefix)
+{
+
+    //todo where prefix come from
+    $prefix = $conf_prefix ? $cycle->conf_prefix : $cycle->prefix;
+
+    return ngx_get_full_name($prefix, $name);
+}
