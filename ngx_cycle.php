@@ -10,8 +10,11 @@ static $ngx_test_config = 'hi';
 static $ngx_dump_config;
 static $ngx_quiet_mode;
 
-define('NGX_MAIN_CONF',0x01000000);
-define('NGX_ANY_CONF',0x0F000000);
+define('NGX_DEBUG_POINTS_STOP',   1);
+define('NGX_DEBUG_POINTS_ABORT',  2);
+
+//define('NGX_MAIN_CONF',0x01000000);
+//define('NGX_ANY_CONF',0x0F000000);
 
 class ngx_cycle_t {
     /**void **/        private         /**   ****conf_ctx  ****/ $conf_ctx;

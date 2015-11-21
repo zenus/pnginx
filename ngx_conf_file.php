@@ -957,3 +957,224 @@ function ngx_conf_full_name(ngx_cycle_t $cycle, $name, $conf_prefix)
 
     return ngx_get_full_name($prefix, $name);
 }
+
+function ngx_conf_set_flag_slot_closure(){
+   return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+      ngx_conf_set_flag_slot($cf,$cmd,$conf);
+   };
+}
+
+function ngx_conf_set_flag_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//char  *p = conf;
+    $p = $conf;
+
+//ngx_str_t        *value;
+//ngx_flag_t       *fp;
+//ngx_conf_post_t  *post;
+
+    //todo know why should do this
+//fp = (ngx_flag_t *) (p + cmd->offset);
+  $fp =  $p[$cmd->offset];
+
+    if ($fp != NGX_CONF_UNSET) {
+    return "is duplicate";
+    }
+
+    $value = $cf->args;
+
+    if (ngx_strcasecmp($value[1], "on") == 0) {
+            $fp = 1;
+    } else if (ngx_strcasecmp($value[1], "off") == 0) {
+        $fp = 0;
+
+    } else {
+    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+        "invalid value \"%s\" in \"%s\" directive, ".
+                     "it must be \"on\" or \"off\"",
+                     array($value[1], $cmd->name));
+        return NGX_CONF_ERROR;
+    }
+
+    if ($cmd->post) {
+    $post = $cmd->post;
+        //todo how to do this
+        return $post->post_handler($cf, $post, $fp);
+    }
+
+    return NGX_CONF_OK;
+}
+
+function offsetof( $obj,$property){
+    //return $obj->$property;
+}
+
+function ngx_conf_set_msec_slot_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+        ngx_conf_set_msec_slot($cf,$cmd,$conf);
+    };
+}
+function ngx_conf_set_msec_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+   $p = $conf;
+//msp = (ngx_msec_t *) (p + cmd->offset);
+    $msp =  $p[$cmd->offset];
+    if ($msp != NGX_CONF_UNSET_MSEC) {
+    return "is duplicate";
+     }
+
+    $value = $cf->args;
+
+    $msp = ngx_parse_time($value[1], 0);
+    if ($msp == NGX_ERROR) {
+    return "invalid value";
+     }
+
+    if ($cmd->post) {
+        $post = $cmd->post;
+        return $post->post_handler($cf, $post, $msp);
+    }
+    return NGX_CONF_OK;
+}
+
+function ngx_conf_set_str_slot_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+        ngx_conf_set_str_slot($cf,$cmd,$conf);
+    };
+}
+
+function ngx_conf_set_str_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+      $p = $conf;
+
+//    field = (ngx_str_t *) (p + cmd->offset);
+      $field = $p[$cmd->offset];
+
+    if (!empty($field)) {
+    return "is duplicate";
+       }
+
+    $value = $cf->args;
+
+    $field = $value[1];
+
+    if ($cmd->post) {
+    $post = $cmd->post;
+        return $post->post_handler($cf, $post, $field);
+    }
+    return NGX_CONF_OK;
+}
+
+function ngx_conf_set_enum_slot_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+        ngx_conf_set_enum_slot($cf,$cmd,$conf);
+    };
+}
+
+function ngx_conf_set_enum_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+    $p = $conf;
+
+//ngx_uint_t       *np, i;
+//    ngx_str_t        *value;
+//    ngx_conf_enum_t  *e;
+
+//    np = (ngx_uint_t *) (p + cmd->offset);
+      $np = $p[$cmd->offset];
+
+    if ($np != NGX_CONF_UNSET_UINT) {
+        return "is duplicate";
+        }
+
+    $value = $cf->args;
+    $e = $cmd->post;
+
+    for ($i = 0; $e[$i]; $i++) {
+    if (ngx_strcasecmp($e[$i]->name, $value[1]) != 0)
+        {
+            continue;
+        }
+
+        $np = $e[$i]->value;
+        return NGX_CONF_OK;
+    }
+
+    ngx_conf_log_error(NGX_LOG_WARN, $cf, 0,
+        "invalid value \"%s\"", $value[1]);
+
+    return NGX_CONF_ERROR;
+}
+
+function ngx_conf_set_num_slot_closure(){
+   return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+        ngx_conf_set_num_slot($cf,  $cmd, $conf);
+   } ;
+}
+
+function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//char  *p = conf;
+      $p = $conf;
+
+//ngx_int_t        *np;
+//ngx_str_t        *value;
+//ngx_conf_post_t  *post;
+
+
+    //np = (ngx_int_t *) (p + cmd->offset);
+    $np = $p[$cmd->offset];
+
+    if ($np != NGX_CONF_UNSET) {
+         return "is duplicate";
+       }
+
+    $value = $cf->args;
+    $np = ngx_atoi($value[1]);
+    if ($np == NGX_ERROR) {
+    return "invalid number";
+    }
+
+    if ($cmd->post) {
+        $post = $cmd->post;
+        return $post->post_handler($cf, $post, $np);
+    }
+
+    return NGX_CONF_OK;
+}
+
+function ngx_conf_set_off_slot_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+        ngx_conf_set_off_slot( $cf,  $cmd, $conf);
+    };
+}
+
+function ngx_conf_set_off_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//char  *p = conf;
+    $p = $conf;
+
+//off_t            *op;
+//ngx_str_t        *value;
+//ngx_conf_post_t  *post;
+
+
+    //op = (off_t *) (p + cmd->offset);
+    $op = $p[$cmd->offset];
+    if ($op != NGX_CONF_UNSET) {
+        return "is duplicate";
+    }
+
+    $value = $cf->args;
+
+    $op = ngx_parse_offset($value[1]);
+    if ($op == NGX_ERROR) {
+    return "invalid value";
+    }
+
+    if ($cmd->post) {
+    $post = $cmd->post;
+        return $post->post_handler($cf, $post, $op);
+    }
+
+    return NGX_CONF_OK;
+}

@@ -9,6 +9,11 @@ function ngx_strcmp($s1, $s2){
    return strcmp($s1,$s2);
 }
 
+function ngx_strcasecmp($s1, $s2)
+{
+    return strcasecmp($s1,$s2);
+}
+
 function ngx_strncmp($s1, $s2, $n)
 {
     return strncmp($s1, $s2, $n);
@@ -27,6 +32,11 @@ function ngx_sprintf($s, $fmt, $args)
 function ngx_atoi($str){
 
    return intval($str);
+}
+
+function ngx_atoof($line)
+{
+    return intval($line);
 }
 
 

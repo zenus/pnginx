@@ -320,7 +320,7 @@ function ngx_process_options(ngx_cycle_t &$cycle)
     for ($p = strlen($cycle->conf_file) - 1;
          $p >= 0;
          $p--)
-    {
+array(
         if (ngx_path_separator($cycle->conf_file[$p])) {
             $cycle->conf_prefix = substr($cycle->conf_file,0,$p);
             break;
@@ -394,6 +394,116 @@ function ngx_core_module()
     );
     return $ngx_core_module;
     }
+
+function ngx_core_commands()
+{
+
+    static $ngx_core_commands = array(
+
+        array(
+            "daemon",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_FLAG,
+            ngx_conf_set_flag_slot_closure(),
+            0,
+            //todo if it really need do this
+//      //offsetof(ngx_core_conf_t, daemon),
+            NULL),
+
+        array("master_process",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_FLAG,
+            ngx_conf_set_flag_slot_closure(),
+            0,
+            ////offsetof(ngx_core_conf_t, master),
+            NULL),
+
+        array("timer_resolution",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_msec_slot_closure(),
+            0,
+            ////offsetof(ngx_core_conf_t, timer_resolution),
+            NULL),
+
+        array("pid",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_str_slot_closure(),
+            0,
+            //offsetof(ngx_core_conf_t, pid),
+            NULL),
+
+        array("lock_file",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_str_slot_closure(),
+            0,
+            //offsetof(ngx_core_conf_t, lock_file),
+            NULL),
+
+        array("worker_processes",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_set_worker_processes_closure(),
+            0,
+            0,
+            NULL),
+
+        array("debug_points",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_enum_slot_closure(),
+            0,
+            //offsetof(ngx_core_conf_t, debug_points),
+            ngx_debug_points()),
+
+        array("user",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE12,
+            ngx_set_user_closure(),
+            0,
+            0,
+            NULL),
+
+        array("worker_priority",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_set_priority_closure(),
+            0,
+            0,
+            NULL),
+
+        array("worker_cpu_affinity",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_1MORE,
+            ngx_set_cpu_affinity_closure(),
+            0,
+            0,
+            NULL),
+
+        array("worker_rlimit_nofile",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_num_slot_closure(),
+            0,
+            //offsetof(ngx_core_conf_t, rlimit_nofile),
+            NULL),
+
+        array("worker_rlimit_core",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_off_slot_closure(),
+            0,
+            //offsetof(ngx_core_conf_t, rlimit_core),
+            NULL),
+
+        array("working_directory",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_conf_set_str_slot_closure(),
+            0,
+            //offsetof(ngx_core_conf_t, working_directory),
+            NULL),
+
+        array("env",
+            NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
+            ngx_set_env_closure(),
+            0,
+            0,
+            NULL),
+         array( '', 0, NULL, 0, 0, NULL )
+    );
+    return $ngx_core_commands;
+
+}
 
 function ngx_core_module_ctx(){
 
@@ -490,26 +600,16 @@ function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
 
 
     //todo find NGX_PID_PATH
-//    if (ccf->pid.len == 0) {
-//    ngx_str_set(&ccf->pid, NGX_PID_PATH);
-//    }
+    if (empty($ccf->pid)) {
+        $ccf->pid = NGX_PID_PATH;
+    }
 
     //todo how to save the pid file
-//    if (ngx_conf_full_name(cycle, &ccf->pid, 0) != NGX_OK) {
-//    return NGX_CONF_ERROR;
-//}
-//
-//    ccf->oldpid.len = ccf->pid.len + sizeof(NGX_OLDPID_EXT);
-//
-//    ccf->oldpid.data = ngx_pnalloc(cycle->pool, ccf->oldpid.len);
-//    if (ccf->oldpid.data == NULL) {
-//    return NGX_CONF_ERROR;
-//}
-//
-//    ngx_memcpy(ngx_cpymem(ccf->oldpid.data, ccf->pid.data, ccf->pid.len),
-//               NGX_OLDPID_EXT, sizeof(NGX_OLDPID_EXT));
+    if (ngx_conf_full_name($cycle, $ccf->pid, 0) != NGX_OK) {
+          return NGX_CONF_ERROR;
+       }
 
-
+        $ccf->oldpid = $ccf->pid.NGX_OLDPID_EXT;
 
     if ($ccf->user == NGX_CONF_UNSET_UINT && posix_geteuid() == 0) {
 
@@ -544,7 +644,6 @@ function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
         }
 
     {
-
     $lock_file = $cycle->old_cycle->lock_file;
 
     if ($lock_file) {
@@ -569,14 +668,198 @@ function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
         $cycle->lock_file = $ccf->lock_file.'.accept';
 
     }
-
     }
 
     return NGX_CONF_OK;
 }
 
+function ngx_set_worker_processes_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+               ngx_set_worker_processes($cf,$cmd,$conf);
+    };
+}
 
-main($argc,$argv);
+function ngx_set_worker_processes(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//ngx_str_t        *value;
+//    ngx_core_conf_t  *ccf;
+
+    $ccf =  $conf;
+
+    if ($ccf->worker_processes != NGX_CONF_UNSET) {
+    return "is duplicate";
+    }
+
+    $value = $cf->args;
+
+    $ngx_ncpu = ngx_cfg('ngx_ncpu',1);
+
+    if (ngx_strcmp($value[1], "auto") == 0) {
+       $ccf->worker_processes = $ngx_ncpu;
+        return NGX_CONF_OK;
+    }
+
+    $ccf->worker_processes = ngx_atoi($value[1]);
+    if ($ccf->worker_processes == NGX_ERROR) {
+    return "invalid value";
+}
+    return NGX_CONF_OK;
+}
+
+function  ngx_debug_points(){
+    static $ngx_debug_points = array(
+        array( "stop", NGX_DEBUG_POINTS_STOP ),
+        array( "abort", NGX_DEBUG_POINTS_ABORT ),
+        array( '', 0 )
+    );
+    return $ngx_debug_points;
+}
+
+function ngx_set_user_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+        ngx_set_user($cf,$cmd,$conf);
+    };
+}
+
+function ngx_set_user(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+
+    /**ngx_core_conf_t**/  $ccf = $conf;
+
+//    char             *group;
+//    struct passwd    *pwd;
+//    struct group     *grp;
+//    ngx_str_t        *value;
+
+    if ($ccf->user != NGX_CONF_UNSET_UINT) {
+        return "is duplicate";
+       }
+
+    if (posix_geteuid() != 0) {
+        ngx_conf_log_error(NGX_LOG_WARN, $cf, 0,
+            "the \"user\" directive makes sense only ".
+                           "if the master process runs ".
+                           "with super-user privileges, ignored");
+        return NGX_CONF_OK;
+    }
+
+    $value = $cf->args;
+
+    $ccf->username = $value[1];
+
+    $pwd = posix_getpwnam($value[1]);
+    if ($pwd == NULL) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, posix_get_last_error(),
+            "getpwnam(\"%s\") failed", $value[1]);
+        return NGX_CONF_ERROR;
+    }
+
+    $ccf->user = $pwd['uid'];
+
+    $group = count($cf->args) == 2 ? $value[1] : $value[2];
+
+    //ngx_set_errno(0);
+    $grp = posix_getgrnam($group);
+    if ($grp == NULL) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, posix_get_last_error(),
+            "getgrnam(\"%s\") failed", $group);
+        return NGX_CONF_ERROR;
+    }
+
+    $ccf->group = $grp->['gid'];
+
+    return NGX_CONF_OK;
+}
+
+function ngx_set_priority_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+        ngx_set_priority($cf,$cmd,$conf);
+    };
+}
+
+function ngx_set_priority(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+/**ngx_core_conf_t***/  $ccf = $conf;
+
+//    ngx_str_t        *value;
+//    ngx_uint_t        n, minus;
+
+    if ($ccf->priority != 0) {
+        return "is duplicate";
+      }
+
+    $value = $cf->args;
+
+    if ($value[1][0] == '-') {
+        $n = 1;
+        $minus = 1;
+
+    } else if ($value[1][0] == '+') {
+        $n = 1;
+        $minus = 0;
+
+    } else {
+        $n = 0;
+        $minus = 0;
+    }
+
+    $ccf->priority = ngx_atoi($value[1][$n]);
+    if ($ccf->priority == NGX_ERROR) {
+    return "invalid number";
+    }
+    if ($minus) {
+        $ccf->priority = -$ccf->priority;
+    }
+
+    return NGX_CONF_OK;
+}
+
+function ngx_set_cpu_affinity_closure(){
+   return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+       ngx_set_cpu_affinity($cf, $cmd, $conf);
+   } ;
+}
+
+function ngx_set_cpu_affinity(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+    ngx_conf_log_error(NGX_LOG_WARN, $cf, 0,
+        "\"worker_cpu_affinity\" is not supported ".
+                       "on this platform, ignored");
+
+    return NGX_CONF_OK;
+}
+
+function ngx_set_env_closure(){
+    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+        ngx_set_env($cf,  $cmd, $conf);
+    };
+}
+
+function ngx_set_env(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+/**ngx_core_conf_t**/  $ccf = $conf;
+
+//    ngx_str_t   *value, *var;
+//    ngx_uint_t   i;
+
+//    var = ngx_array_push(&ccf->env);
+
+    $value = $cf->args;
+    $ccf->env[] = $value[1];
+    //*var = $value[1];
+
+    for ($i = 0; $i < strlen($value[1]); $i++) {
+
+        if ($value[1][$i] == '=') {
+
+            $ccf->env[] = substr($value[1],0,$i);
+
+            return NGX_CONF_OK;
+        }
+    }
+    return NGX_CONF_OK;
+}
+//main($argc,$argv);
 
 
 

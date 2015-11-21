@@ -366,3 +366,39 @@ function  ngx_log_debug4($level, $log, $err, $fmt, $arg1, $arg2, $arg3, $arg4){
 
 }
 
+
+//ngx_module_t  ngx_errlog_module = {
+//    NGX_MODULE_V1,
+//    &ngx_errlog_module_ctx,                /* module context */
+//    ngx_errlog_commands,                   /* module directives */
+//    NGX_CORE_MODULE,                       /* module type */
+//    NULL,                                  /* init master */
+//    NULL,                                  /* init module */
+//    NULL,                                  /* init process */
+//    NULL,                                  /* init thread */
+//    NULL,                                  /* exit thread */
+//    NULL,                                  /* exit process */
+//    NULL,                                  /* exit master */
+//    NGX_MODULE_V1_PADDING
+//};
+//
+//static ngx_command_t  ngx_errlog_commands[] = {
+//
+//    {ngx_string("error_log"),
+//     NGX_MAIN_CONF|NGX_CONF_1MORE,
+//     ngx_error_log,
+//     0,
+//     0,
+//     NULL},
+//
+//    ngx_null_command
+//};
+//
+//
+//static ngx_core_module_t  ngx_errlog_module_ctx = {
+//    ngx_string("errlog"),
+//    NULL,
+//    NULL
+//};
+
+

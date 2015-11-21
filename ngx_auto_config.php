@@ -162,6 +162,8 @@ define('NGX_HAVE_LITTLE_ENDIAN',1);
 
 
 
+define('NGX_MAX_SIZE_T_VALUE', PHP_INT_MAX);
+define('NGX_MAX_OFF_T_VALUE', PHP_INT_MAX);
 
 
 #define NGX_SIZE_T_LEN  (sizeof("-9223372036854775808") - 1)
