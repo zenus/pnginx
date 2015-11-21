@@ -5,7 +5,7 @@
  * Date: 15-11-7
  * Time: 下午7:16
  */
-class ngx_connection_s {
+class ngx_connection_t {
     /**  void   **/      private       $data;
     /**  ngx_event_t **/ private      $read;
     /**  ngx_event_t **/ private      $write;

@@ -27,6 +27,13 @@ define('NGX_CONF_TAKE5',0x00000020);
 define('NGX_CONF_TAKE6',0x00000040);
 define('NGX_CONF_TAKE7',0x00000080);
 
+define('NGX_CONF_TAKE12',(NGX_CONF_TAKE1|NGX_CONF_TAKE2));
+define('NGX_CONF_TAKE13',(NGX_CONF_TAKE1|NGX_CONF_TAKE3));
+
+define('NGX_CONF_TAKE23',(NGX_CONF_TAKE2|NGX_CONF_TAKE3));
+define('NGX_CONF_TAKE123',(NGX_CONF_TAKE1|NGX_CONF_TAKE2|NGX_CONF_TAKE3));
+define('NGX_CONF_TAKE1234',(NGX_CONF_TAKE1|NGX_CONF_TAKE2|NGX_CONF_TAKE3|NGX_CONF_TAKE4));
+
 define('NGX_CONF_MAX_ARGS',8);
 
 define('NGX_CONF_BLOCK_START', 1);
@@ -1177,4 +1184,69 @@ function ngx_conf_set_off_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     }
 
     return NGX_CONF_OK;
+}
+
+function ngx_conf_open_file(ngx_cycle_t $cycle, $name)
+{
+//ngx_str_t         full;
+//    ngx_uint_t        i;
+//    ngx_list_part_t  *part;
+//    ngx_open_file_t  *file;
+//
+//#if (NGX_SUPPRESS_WARN)
+//    ngx_str_null(&full);
+//#endif
+
+    if (!empty($name)) {
+        $full = $name;
+
+        if (ngx_conf_full_name($cycle, $full, 0) != NGX_OK) {
+            return NULL;
+        }
+
+        /**open_file_s  ngx_list_t**/
+        $part = $cycle->open_files;
+        $part->rewind();
+        //file = part->elts;
+        for ($i = 0; /* void */ ; $i++) {
+            //todo here use a array
+            $files = $part->current();
+            if ($i >= count($files)) {
+                $part->next();
+                $files = $part->current();
+                if (empty($files)) {
+                    break;
+                }
+                $i = 0;
+            }
+
+            if (strlen($full) != strlen($files[$i]->name)) {
+                continue;
+            }
+
+            if (ngx_strcmp($full, $files[$i]->name) == 0) {
+                return $files[$i];
+            }
+        }
+    }
+
+    $file = new ngx_open_file_s();
+//    file = ngx_list_push(&cycle->open_files);
+//    if (file == NULL) {
+//        return NULL;
+//    }
+
+    if (!empty($name)) {
+        $file->fd = NGX_INVALID_FILE;
+        $file->name = $full;
+    } else {
+        $file->fd = ngx_stderr;
+        $file->name = $name;
+    }
+
+    $file->flush_handler = NULL;
+    $file->data = NULL;
+    //todo we evently use array
+    $cycle->open_files->push(array($file));
+    return $file;
 }

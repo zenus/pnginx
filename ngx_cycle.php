@@ -102,7 +102,7 @@ class ngx_core_conf_t {
 
 
 
-function ngx_init_cycle(ngx_cycle_t &$old_cycle)
+function ngx_init_cycle(ngx_cycle_t $old_cycle)
 {
 //void                *rv;
 //char               **senv, **env;

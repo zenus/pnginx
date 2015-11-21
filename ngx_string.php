@@ -14,6 +14,12 @@ function ngx_strcasecmp($s1, $s2)
     return strcasecmp($s1,$s2);
 }
 
+function ngx_strncasecmp($s1, $s2, $n)
+{
+    return strncasecmp($s1,$s2,$n);
+}
+
+
 function ngx_strncmp($s1, $s2, $n)
 {
     return strncmp($s1, $s2, $n);
@@ -46,6 +52,10 @@ function ngx_slprintf($s,  $fmt, array $args = array())
     $p = ngx_vslprintf($s, $fmt, $args);
 
     return $p;
+}
+
+function ngx_strchr($s1, $c){
+   return  strchr($s1, $c, true);
 }
 
 

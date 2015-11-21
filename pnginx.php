@@ -502,7 +502,6 @@ function ngx_core_commands()
          array( '', 0, NULL, 0, 0, NULL )
     );
     return $ngx_core_commands;
-
 }
 
 function ngx_core_module_ctx(){
@@ -859,7 +858,7 @@ function ngx_set_env(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     }
     return NGX_CONF_OK;
 }
-//main($argc,$argv);
+main($argc,$argv);
 
 
 

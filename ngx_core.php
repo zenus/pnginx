@@ -21,15 +21,23 @@ class ngx_open_file_s {
 
     private $fd = null;
     private $name = '';
+    private $flush_handler;
     private $data;
 
     public function flush(ngx_open_file_s $file, ngx_log_s $log){
+
+        return call_user_func($this->flush_handler,$file,$log);
 
     }
 
     public function __set($property_name, $value){
 
-        $this->$property_name = $value;
+        if($property_name == 'flush_handler' && $value instanceof closure){
+            $this->flush_handler = $value;
+        }else{
+
+            $this->$property_name = $value;
+        }
     }
 
     public function __get($property_name){

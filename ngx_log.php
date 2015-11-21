@@ -367,38 +367,131 @@ function  ngx_log_debug4($level, $log, $err, $fmt, $arg1, $arg2, $arg3, $arg4){
 }
 
 
-//ngx_module_t  ngx_errlog_module = {
-//    NGX_MODULE_V1,
-//    &ngx_errlog_module_ctx,                /* module context */
-//    ngx_errlog_commands,                   /* module directives */
-//    NGX_CORE_MODULE,                       /* module type */
-//    NULL,                                  /* init master */
-//    NULL,                                  /* init module */
-//    NULL,                                  /* init process */
-//    NULL,                                  /* init thread */
-//    NULL,                                  /* exit thread */
-//    NULL,                                  /* exit process */
-//    NULL,                                  /* exit master */
-//    NGX_MODULE_V1_PADDING
-//};
-//
-//static ngx_command_t  ngx_errlog_commands[] = {
-//
-//    {ngx_string("error_log"),
-//     NGX_MAIN_CONF|NGX_CONF_1MORE,
-//     ngx_error_log,
-//     0,
-//     0,
-//     NULL},
-//
-//    ngx_null_command
-//};
-//
+function ngx_errlog_module(){
+
+    static $ngx_errlog_module = array(
+        0, 0, 0, 0, 0, 0, 1,
+    ngx_errlog_module_ctx(),                /* module context */
+    ngx_errlog_commands(),                   /* module directives */
+    NGX_CORE_MODULE,                       /* module type */
+    NULL,                                  /* init master */
+    NULL,                                  /* init module */
+    NULL,                                  /* init process */
+    NULL,                                  /* init thread */
+    NULL,                                  /* exit thread */
+    NULL,                                  /* exit process */
+    NULL,                                  /* exit master */
+    0, 0, 0, 0, 0, 0, 0, 0
+);
+    return $ngx_errlog_module;
+}
+
+
+function ngx_errlog_commands(){
+    static $ngx_errlog_commands = array(
+        array(
+              "error_log",
+              NGX_MAIN_CONF|NGX_CONF_1MORE,
+              ngx_error_log,
+              0,
+              0,
+              NULL),
+         array( '', 0, NULL, 0, 0, NULL ),
+          );
+    return $ngx_errlog_commands;
+
+}
+
+static ngx_command_t  ngx_errlog_commands[] = {
+
+    {ngx_string("error_log"),
+     NGX_MAIN_CONF|NGX_CONF_1MORE,
+     ngx_error_log,
+     0,
+     0,
+     NULL},
+
+    ngx_null_command
+};
+
 //
 //static ngx_core_module_t  ngx_errlog_module_ctx = {
 //    ngx_string("errlog"),
 //    NULL,
 //    NULL
 //};
+
+function ngx_error_log(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//ngx_log_t  *dummy;
+
+    $dummy = $cf->cycle->new_log;
+
+    return ngx_log_set_log($cf, $dummy);
+}
+
+function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
+{
+    /**** $head is a array of ngx_log **/
+//ngx_log_t          *new_log;
+//    ngx_str_t          *value, name;
+//    ngx_syslog_peer_t  *peer;
+
+    $head = current($heads);
+    if ($head instanceof ngx_log && $head->log_level == 0) {
+           $new_log = $head;
+    } else {
+        $new_log = new ngx_log();
+        if (empty($heads)) {
+        $heads[] = $new_log;
+         }
+    }
+
+    $value = $cf->args;
+
+    if (ngx_strcmp($value[1], "stderr") == 0) {
+        $name = '';
+         $cf->cycle->log_use_stderr = 1;
+        $new_log->file = ngx_conf_open_file($cf->cycle, $name);
+        if ($new_log->file == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+     } else if (ngx_strncmp($value[1], "memory:", 7) == 0) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            "nginx was built without debug support");
+        return NGX_CONF_ERROR;
+
+     } else if (ngx_strncmp($value[1], "syslog:", 7) == 0) {
+//    peer = ngx_pcalloc(cf->pool, sizeof(ngx_syslog_peer_t));
+//        if (peer == NULL) {
+//            return NGX_CONF_ERROR;
+//        }
+        $peer = new ngx_syslog_peer_t();
+
+        if (ngx_syslog_process_conf($cf, $peer) != NGX_CONF_OK) {
+            return NGX_CONF_ERROR;
+        }
+
+        new_log->writer = ngx_syslog_writer;
+        new_log->wdata = peer;
+
+    } else {
+    new_log->file = ngx_conf_open_file(cf->cycle, &value[1]);
+        if (new_log->file == NULL) {
+        return NGX_CONF_ERROR;
+    }
+    }
+
+    if (ngx_log_set_levels(cf, new_log) != NGX_CONF_OK) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (*head != new_log) {
+    ngx_log_insert(*head, new_log);
+    }
+
+    return NGX_CONF_OK;
+}
 
 
