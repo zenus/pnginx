@@ -19,6 +19,34 @@ function ngx_strncasecmp($s1, $s2, $n)
     return strncasecmp($s1,$s2,$n);
 }
 
+function ngx_strlchr( $p, $last,$c)
+{
+    $pos = 0;
+    while ($pos < $last) {
+
+        if ($p[$pos] == $c) {
+            return $pos;
+        }
+
+        $pos++;
+    }
+    return NULL;
+}
+
+function ngx_snprintf($s, $fmt, $args = array())
+{
+    $p = ngx_vslprintf($s, $fmt, $args);
+    return $p;
+}
+
+function ngx_slprintf($s,  $fmt, array $args = array())
+{
+
+    $p = ngx_vslprintf($s, $fmt, $args);
+
+    return $p;
+}
+
 
 function ngx_strncmp($s1, $s2, $n)
 {
