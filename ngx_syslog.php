@@ -4,7 +4,27 @@
  * User: zenus
  * Date: 15-11-21
  * Time: 下午7:44
+ * @param $i
+ * @return
  */
+
+function facilities($i){
+
+    static $facilities = array(
+        "kern", "user", "mail", "daemon", "auth", "intern", "lpr", "news", "uucp",
+        "clock", "authpriv", "ftp", "ntp", "audit", "alert", "cron", "local0",
+        "local1", "local2", "local3", "local4", "local5", "local6", "local7",
+    );
+    return $facilities[$i];
+}
+
+/* note 'error/warn' like in nginx.conf, not 'err/warning' */
+function severities($i){
+    static $severities = array(
+        "emerg", "alert", "crit", "error", "warn", "notice", "info", "debug");
+    return $severities[$i];
+}
+
 class ngx_syslog_peer_t {
     /**ngx_uint_t  **/   private   $facility;
     /**ngx_uint_t  **/  private    $severity;
@@ -78,7 +98,7 @@ function ngx_syslog_parse_args(ngx_conf_t $cf, ngx_syslog_peer_t $peer)
         $comma = ngx_strchr($p, ',');
 
         if ($comma) {
-            $len = strlen($comma);
+            $len = strlen($p)-strlen($comma);
             $p[$len-1] = '';
         } else {
             $len = strlen($value[1])-($pp+1);
@@ -99,62 +119,63 @@ function ngx_syslog_parse_args(ngx_conf_t $cf, ngx_syslog_peer_t $peer)
             $u->url = substr($p, 7);
             $u->default_port = 514;
 
-            if (ngx_parse_url(cf->pool, &u) != NGX_OK) {
-                if (u.err) {
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            if (ngx_parse_url($u) != NGX_OK) {
+                if ($u->err) {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                         "%s in syslog server \"%V\"",
-                        u.err, &u.url);
+                        array($u->err, $u->url));
                 }
 
                 return NGX_CONF_ERROR;
             }
 
-            peer->server = u.addrs[0];
+            $peer->server = $u->addrs[0];
 
-        } else if (ngx_strncmp(p, "facility=", 9) == 0) {
+        } else if (ngx_strncmp($p, "facility=", 9) == 0) {
 
-            if (peer->facility != NGX_CONF_UNSET_UINT) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            if ($peer->facility != NGX_CONF_UNSET_UINT) {
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                     "duplicate syslog \"facility\"");
                 return NGX_CONF_ERROR;
             }
 
-            for (i = 0; facilities[i] != NULL; i++) {
-
-                if (ngx_strcmp(p + 9, facilities[i]) == 0) {
-                    peer->facility = i;
+            $m = substr($p,9);
+            for ($i = 0; facilities($i) != NULL; $i++) {
+                if (ngx_strcmp($m, facilities($i)) == 0) {
+                    $peer->facility = $i;
                     goto next;
                 }
             }
 
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                "unknown syslog facility \"%s\"", p + 9);
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                "unknown syslog facility \"%s\"", $m);
             return NGX_CONF_ERROR;
 
-        } else if (ngx_strncmp(p, "severity=", 9) == 0) {
+        } else if (ngx_strncmp($p, "severity=", 9) == 0) {
 
-            if (peer->severity != NGX_CONF_UNSET_UINT) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            if ($peer->severity != NGX_CONF_UNSET_UINT) {
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                     "duplicate syslog \"severity\"");
                 return NGX_CONF_ERROR;
             }
 
-            for (i = 0; severities[i] != NULL; i++) {
+            $m = substr($p,9);
+            for ($i = 0; severities($i) != NULL; $i++) {
 
-                if (ngx_strcmp(p + 9, severities[i]) == 0) {
-                    peer->severity = i;
+                if (ngx_strcmp($m, severities($i)) == 0) {
+                    $peer->severity = $i;
                     goto next;
                 }
             }
 
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                "unknown syslog severity \"%s\"", p + 9);
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                "unknown syslog severity \"%s\"", $m);
             return NGX_CONF_ERROR;
 
-        } else if (ngx_strncmp(p, "tag=", 4) == 0) {
+        } else if (ngx_strncmp($p, "tag=", 4) == 0) {
 
-            if (peer->tag.data != NULL) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            if ($peer->tag != NULL) {
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                     "duplicate syslog \"tag\"");
                 return NGX_CONF_ERROR;
             }
@@ -163,43 +184,43 @@ function ngx_syslog_parse_args(ngx_conf_t $cf, ngx_syslog_peer_t $peer)
              * RFC 3164: the TAG is a string of ABNF alphanumeric characters
              * that MUST NOT exceed 32 characters.
              */
-            if (len - 4 > 32) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            if ($len - 4 > 32) {
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
                     "syslog tag length exceeds 32");
                 return NGX_CONF_ERROR;
             }
 
-            for (i = 4; i < len; i++) {
-                c = ngx_tolower(p[i]);
+            for ($i = 4; $i < $len; $i++) {
+                $c = ngx_tolower($p[$i]);
 
-                if (c < '0' || (c > '9' && c < 'a' && c != '_') || c > 'z') {
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                        "syslog \"tag\" only allows "
-                                       "alphanumeric characters "
+                if ($c < '0' || ($c > '9' && $c < 'a' && $c != '_') || $c > 'z') {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                        "syslog \"tag\" only allows ".
+                                       "alphanumeric characters ".
                                        "and underscore");
                     return NGX_CONF_ERROR;
                 }
             }
 
-            peer->tag.data = p + 4;
-            peer->tag.len = len - 4;
+            $peer->tag = substr($p,4);
+            //peer->tag.len = len - 4;
 
-        } else if (len == 10 && ngx_strncmp(p, "nohostname", 10) == 0) {
-            peer->nohostname = 1;
+        } else if ($len == 10 && ngx_strncmp($p, "nohostname", 10) == 0) {
+            $peer->nohostname = 1;
 
         } else {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                "unknown syslog parameter \"%s\"", p);
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                "unknown syslog parameter \"%s\"", $p);
             return NGX_CONF_ERROR;
         }
 
     next:
 
-        if (comma == NULL) {
+        if ($comma == false) {
             break;
         }
 
-        p = comma + 1;
+        $p = substr($comma ,1);
     }
 
     return NGX_CONF_OK;

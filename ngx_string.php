@@ -33,6 +33,10 @@ function ngx_strlchr( $p, $last,$c)
     return NULL;
 }
 
+function  ngx_tolower($c){
+  return strtolower($c);
+}
+
 function ngx_snprintf($s, $fmt, $args = array())
 {
     $p = ngx_vslprintf($s, $fmt, $args);
@@ -74,16 +78,10 @@ function ngx_atoof($line)
 }
 
 
-function ngx_slprintf($s,  $fmt, array $args = array())
-{
 
-    $p = ngx_vslprintf($s, $fmt, $args);
-
-    return $p;
-}
 
 function ngx_strchr($s1, $c){
-   return  strchr($s1, $c, true);
+   return  strchr($s1, $c);
 }
 
 

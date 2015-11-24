@@ -49,9 +49,10 @@ function ngx_parse_url( ngx_url_t $u)
     return ngx_parse_unix_domain_url($u);
 }
 
-    if ($p[0] == '[') {
-    return ngx_parse_inet6_url($u);
-}
+    //todo we temporarily don't realize this
+//    if ($p[0] == '[') {
+//    return ngx_parse_inet6_url($u);
+//}
 
     return ngx_parse_inet_url($u);
 }
