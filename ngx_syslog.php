@@ -225,3 +225,78 @@ function ngx_syslog_parse_args(ngx_conf_t $cf, ngx_syslog_peer_t $peer)
 
     return NGX_CONF_OK;
 }
+
+
+function ngx_syslog_init_peer(ngx_syslog_peer_t $peer)
+{
+//ngx_socket_t         fd;
+//    ngx_pool_cleanup_t  *cln;
+    $ngx_syslog_dummy_event = ngx_syslog_dummy_event();
+
+    $peer->conn->read = $ngx_syslog_dummy_event;
+    $peer->conn->write = $ngx_syslog_dummy_event;
+
+    $ngx_syslog_dummy_event->log = ngx_syslog_dummy_log();
+
+    //ngx_syslog_dummy_event($ngx_syslog_dummy_event);
+
+    $fd = ngx_socket($peer->server->sockaddr->sa_family, SOCK_DGRAM, 0);
+    $ngx_cycle = ngx_cycle();
+    if (!$fd) {
+        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, socket_last_error(),
+                      ngx_socket_n ." failed");
+        return NGX_ERROR;
+    }
+
+    if (!ngx_nonblocking($fd)) {
+        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, socket_last_error(),
+                      ngx_nonblocking_n ." failed");
+        goto failed;
+    }
+
+    if (!ngx_connect($fd, $peer->server->sockaddr, $peer->server->port)) {
+        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, socket_last_error(),
+                      "connect() failed");
+        goto failed;
+    }
+
+//    cln = ngx_pool_cleanup_add(peer->pool, 0);
+//    if (cln == NULL) {
+//        goto failed;
+//    }
+
+    //todo how we clean ?
+//    cln->data = peer;
+//    cln->handler = ngx_syslog_cleanup;
+
+    $peer->conn->fd = $fd;
+
+    /* UDP sockets are always ready to write */
+    $peer->conn->write->ready = 1;
+
+    return NGX_OK;
+
+failed:
+
+    ngx_close_socket($fd);
+
+    return NGX_ERROR;
+}
+
+function ngx_syslog_dummy_event(ngx_event_t $event = null){
+   static $ngx_syslog_dummy_event;
+    if($event !== null){
+       $ngx_syslog_dummy_event = $event;
+    }else{
+       return $ngx_syslog_dummy_event;
+    }
+}
+
+function ngx_syslog_dummy_log(ngx_log $log = null){
+    static $ngx_syslog_dummy_log;
+    if($log !== null){
+       $ngx_syslog_dummy_log = $log;
+    }else{
+       return $ngx_syslog_dummy_log;
+    }
+}

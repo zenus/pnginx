@@ -892,3 +892,13 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //
 //    return NULL;
 }
+
+function ngx_cycle(ngx_cycle_t $ngx_cycle_t = null){
+   static $ngx_cycle = null;
+    if($ngx_cycle_t !== null){
+       $ngx_cycle = $ngx_cycle_t;
+    }else{
+       return $ngx_cycle;
+    }
+}
+

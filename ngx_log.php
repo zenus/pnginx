@@ -463,27 +463,24 @@ function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
         return NGX_CONF_ERROR;
 
      } else if (ngx_strncmp($value[1], "syslog:", 7) == 0) {
-//    peer = ngx_pcalloc(cf->pool, sizeof(ngx_syslog_peer_t));
-//        if (peer == NULL) {
-//            return NGX_CONF_ERROR;
-//        }
+
         $peer = new ngx_syslog_peer_t();
 
         if (ngx_syslog_process_conf($cf, $peer) != NGX_CONF_OK) {
             return NGX_CONF_ERROR;
         }
 
-        new_log->writer = ngx_syslog_writer;
-        new_log->wdata = peer;
+        $new_log->writer = ngx_syslog_writer_closure();
+        $new_log->wdata = $peer;
 
     } else {
-    new_log->file = ngx_conf_open_file(cf->cycle, &value[1]);
-        if (new_log->file == NULL) {
+    $new_log->file = ngx_conf_open_file($cf->cycle, $value[1]);
+        if ($new_log->file == NULL) {
         return NGX_CONF_ERROR;
     }
     }
 
-    if (ngx_log_set_levels(cf, new_log) != NGX_CONF_OK) {
+    if (ngx_log_set_levels($cf, $new_log) != NGX_CONF_OK) {
         return NGX_CONF_ERROR;
     }
 
@@ -492,6 +489,89 @@ function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
     }
 
     return NGX_CONF_OK;
+}
+
+function ngx_syslog_writer(ngx_log $log, $level, $buf)
+{
+//    u_char             *p, msg[NGX_SYSLOG_MAX_STR];
+//    ngx_uint_t          head_len;
+//    ngx_syslog_peer_t  *peer;
+
+    $peer = $log->wdata;
+
+    if ($peer->busy) {
+    return;
+    }
+
+    $peer->busy = 1;
+    $peer->severity = $level - 1;
+
+    $msg = '';
+    $p = ngx_syslog_add_header($peer, $msg);
+    //head_len = p - msg;
+
+//    len -= NGX_LINEFEED_SIZE;
+//
+//    if (len > NGX_SYSLOG_MAX_STR - head_len) {
+//        len = NGX_SYSLOG_MAX_STR - head_len;
+//    }
+
+    $p = ngx_snprintf($p,  "%s", $buf);
+
+     ngx_syslog_send($peer, $msg, p - msg);
+
+    $peer->busy = 0;
+}
+
+function ngx_syslog_add_header(ngx_syslog_peer_t $peer, $buf)
+{
+    //ngx_uint_t  pri;
+
+    $pri = $peer->facility * 8 + $peer->severity;
+
+    if ($peer->nohostname) {
+        return ngx_sprintf($buf, "<%ui>%V %V: ", array($pri, ngx_cached_syslog_time(),
+            $peer->tag));
+    }
+    $ngx_cycle = ngx_cycle();
+    return ngx_sprintf($buf, "<%ui>%V %V %V: ", array($pri, ngx_cached_syslog_time(),
+        $ngx_cycle->hostname, $peer->tag));
+}
+
+function ngx_syslog_send(ngx_syslog_peer_t $peer, $buf, $len)
+{
+//    ssize_t  n;
+
+    if (empty($peer->conn->fd)) {
+    if (ngx_syslog_init_peer($peer) != NGX_OK) {
+        return NGX_ERROR;
+    }
+}
+
+    /* log syslog socket events with valid log */
+    peer->conn.log = ngx_cycle->log;
+
+    if (ngx_send) {
+        n = ngx_send(&peer->conn, buf, len);
+
+    } else {
+        /* event module has not yet set ngx_io */
+        n = ngx_os_io.send(&peer->conn, buf, len);
+    }
+
+
+    if (n == NGX_ERROR && peer->server.sockaddr->sa_family == AF_UNIX) {
+
+    if (ngx_close_socket($peer->conn.fd) == -1) {
+        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, $ngx_socket_errno,
+                          ngx_close_socket_n ." failed");
+        }
+
+        $peer->conn.fd = (ngx_socket_t) -1;
+    }
+
+
+    return $n;
 }
 
 

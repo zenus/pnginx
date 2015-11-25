@@ -6,7 +6,7 @@
  * Time: 下午7:34
  */
 
-class ngx_event_s {
+class ngx_event_t {
 /**   void  **/    private  $data;
 
 /**   unsigned  **/    private  $write;
@@ -85,6 +85,12 @@ class ngx_event_s {
      */
 
 /**   void  **/    private  $thr_ctx;
+    public function __set($property,$value){
+       $this->$property = $value;
+    }
+    public function __get($property){
+       return $this->$property;
+    }
 
 #if (NGX_EVENT_T_PADDING)
 
@@ -93,4 +99,6 @@ class ngx_event_s {
 //   private  $padding[NGX_EVENT_T_PADDING];
 #endif
 #endif
+
+
 };

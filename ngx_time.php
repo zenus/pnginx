@@ -53,6 +53,15 @@ function ngx_gettimeofday(){
     return gettimeofday();
 }
 
+function ngx_cached_syslog_time($time=null){
+   static $ngx_cached_syslog_time = null;
+    if($time !== null){
+        $ngx_cached_syslog_time = $time;
+    }else{
+        return $ngx_cached_syslog_time;
+    }
+}
+
 
 
 function ngx_time_update()

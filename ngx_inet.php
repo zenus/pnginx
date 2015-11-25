@@ -295,8 +295,11 @@ class sockaddr_un
 
 class ngx_addr_t {
     /***struct sockaddr**/  private         $sockaddr;
-    /**socklen_t**/         private        $socklen;
+//    /**socklen_t**/         private        $socklen;
     /**ngx_str_t **/        private        $name;
+    /**todo self create**/
+    /**ngx_str_t **/        private        $family;
+    /**ngx_str_t **/        private        $port;
     public function __set($property, $value){
        $this->$property = $value;
     }
