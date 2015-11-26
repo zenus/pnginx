@@ -565,18 +565,20 @@ function ngx_syslog_send(ngx_syslog_peer_t $peer, $buf, $len)
 
     } else {
         /* event module has not yet set ngx_io */
-        $n = ngx_os_io.send(&peer->conn, buf, len);
+        $ngx_os_io = ngx_os_io();
+        $n = $ngx_os_io->send($peer->conn, $buf, $len);
     }
 
 
-    if (n == NGX_ERROR && peer->server.sockaddr->sa_family == AF_UNIX) {
-
-    if (ngx_close_socket($peer->conn.fd) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, $ngx_socket_errno,
+    //todo we change the ngx_addr_t
+    if ($n == NGX_ERROR && $peer->server->family == AF_UNIX) {
+    ngx_close_socket($peer->conn->fd);
+    if (socket_last_error()) {
+        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, socket_last_error(),
                           ngx_close_socket_n ." failed");
         }
 
-        $peer->conn.fd = (ngx_socket_t) -1;
+        $peer->conn->fd = null;
     }
 
 
