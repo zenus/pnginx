@@ -491,6 +491,12 @@ function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
     return NGX_CONF_OK;
 }
 
+function ngx_syslog_writer_closure(){
+    return function(ngx_log $log, $level, $buf){
+        ngx_syslog_writer($log,$level,$buf);
+    };
+}
+
 function ngx_syslog_writer(ngx_log $log, $level, $buf)
 {
 //    u_char             *p, msg[NGX_SYSLOG_MAX_STR];
@@ -549,14 +555,17 @@ function ngx_syslog_send(ngx_syslog_peer_t $peer, $buf, $len)
 }
 
     /* log syslog socket events with valid log */
-    peer->conn.log = ngx_cycle->log;
+    $ngx_cycle = ngx_cycle();
+    $peer->conn->log = $ngx_cycle->log;
 
-    if (ngx_send) {
-        n = ngx_send(&peer->conn, buf, len);
+    $ngx_io = ngx_io();
+    if ($ngx_io->send) {
+        //todo find where to create the function
+        $n = $ngx_io->send($peer->conn, $buf, $len);
 
     } else {
         /* event module has not yet set ngx_io */
-        n = ngx_os_io.send(&peer->conn, buf, len);
+        $n = ngx_os_io.send(&peer->conn, buf, len);
     }
 
 

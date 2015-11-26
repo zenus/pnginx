@@ -100,5 +100,15 @@ class ngx_event_t {
 #endif
 #endif
 
+}
 
-};
+function ngx_io(ngx_os_io_t $ngx_os_io_t = null)
+{
+    static $ngx_io = null;
+    if ($ngx_io !== null) {
+        $ngx_io = $ngx_os_io_t;
+    } else {
+        return $ngx_io;
+    }
+}
+

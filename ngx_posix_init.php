@@ -54,3 +54,17 @@ function ngx_os_init(ngx_log &$log)
 
     return NGX_OK;
 }
+
+function ngx_os_io()
+{
+    static $ngx_os_io = array(
+        'recv'=>ngx_unix_recv_closure(),
+        'recv_chain'=>ngx_readv_chain_closure(),
+        'udp_recv'=>ngx_udp_unix_recv_closure(),
+        'send'=>ngx_unix_send_closure(),
+        'send_chain'=>ngx_writev_chain_closure(),
+        'flags'=>0
+    );
+    return $ngx_os_io;
+}
+
