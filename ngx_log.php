@@ -43,6 +43,33 @@ define('NGX_LOG_DEBUG_ALL',        0x7ffffff0);
 //    "debug"
 //);
 
+function  err_levels($i){
+
+     static  $err_levels = array(
+            "",
+        "emerg",
+        "alert",
+        "crit",
+        "error",
+        "warn",
+        "notice",
+        "info",
+        "debug"
+         );
+    return $err_levels[$i];
+}
+
+function debug_levels($i)
+{
+    static $debug_levels = array(
+        "debug_core", "debug_alloc", "debug_mutex", "debug_event",
+        "debug_http", "debug_mail", "debug_mysql", "debug_stream"
+    );
+    return $debug_levels[$i];
+    }
+
+
+
 class ngx_log extends SplDoublyLinkedList{
 
     private $ngx_log_s;
@@ -524,7 +551,7 @@ function ngx_syslog_writer(ngx_log $log, $level, $buf)
 
     $p = ngx_snprintf($p,  "%s", $buf);
 
-     ngx_syslog_send($peer, $msg, p - msg);
+     ngx_syslog_send($peer, $msg);
 
     $peer->busy = 0;
 }
@@ -544,7 +571,7 @@ function ngx_syslog_add_header(ngx_syslog_peer_t $peer, $buf)
         $ngx_cycle->hostname, $peer->tag));
 }
 
-function ngx_syslog_send(ngx_syslog_peer_t $peer, $buf, $len)
+function ngx_syslog_send(ngx_syslog_peer_t $peer, $buf)
 {
 //    ssize_t  n;
 
@@ -572,17 +599,78 @@ function ngx_syslog_send(ngx_syslog_peer_t $peer, $buf, $len)
 
     //todo we change the ngx_addr_t
     if ($n == NGX_ERROR && $peer->server->family == AF_UNIX) {
-    ngx_close_socket($peer->conn->fd);
-    if (socket_last_error()) {
-        ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, socket_last_error(),
-                          ngx_close_socket_n ." failed");
-        }
+        ngx_close_socket($peer->conn->fd);
+        if (socket_last_error()) {
+            ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, socket_last_error(),
+                              ngx_close_socket_n ." failed");
+            }
 
         $peer->conn->fd = null;
     }
 
 
     return $n;
+}
+
+function ngx_log_set_levels(ngx_conf_t $cf, ngx_log $log)
+{
+//ngx_uint_t   i, n, d, found;
+//    ngx_str_t   *value;
+
+    if (count($cf->args) == 2) {
+        $log->log_level = NGX_LOG_ERR;
+        return NGX_CONF_OK;
+    }
+
+    $value = $cf->args;
+
+    for ($i = 2; $i < count($cf->args); $i++) {
+            $found = 0;
+
+        for ($n = 1; $n <= NGX_LOG_DEBUG; $n++) {
+            if (ngx_strcmp($value[$i], err_levels($n)) == 0) {
+
+                if ($log->log_level != 0) {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                        "duplicate log level \"%V\"",
+                        $value[$i]);
+                        return NGX_CONF_ERROR;
+                    }
+
+                    $log->log_level = $n;
+                    $found = 1;
+                    break;
+                }
+            }
+
+        for ($n = 0, $d = NGX_LOG_DEBUG_FIRST; $d <= NGX_LOG_DEBUG_LAST; $d <<= 1) {
+            if (ngx_strcmp($value[$i], debug_levels($n++)) == 0) {
+                if ($log->log_level & ~NGX_LOG_DEBUG_ALL) {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                        "invalid log level \"%V\"",
+                        $value[$i]);
+                        return NGX_CONF_ERROR;
+                    }
+
+                    $log->log_level |= $d;
+                    $found = 1;
+                    break;
+                }
+            }
+
+
+    if (!$found) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            "invalid log level \"%V\"", $value[$i]);
+            return NGX_CONF_ERROR;
+        }
+    }
+
+    if ($log->log_level == NGX_LOG_DEBUG) {
+        $log->log_level = NGX_LOG_DEBUG_ALL;
+      }
+
+    return NGX_CONF_OK;
 }
 
 

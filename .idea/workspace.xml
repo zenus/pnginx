@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="5de78659-5fa9-4842-a3d8-69b8ba554ca3" name="Default" comment="C">
+    <list default="true" id="5de78659-5fa9-4842-a3d8-69b8ba554ca3" name="Default" comment="add  syslog">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ngx_log.php" afterPath="$PROJECT_DIR$/ngx_log.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ngx_posix_init.php" afterPath="$PROJECT_DIR$/ngx_posix_init.php" />
     </list>
     <ignored path="pnginx.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,10 +28,10 @@
       <file leaf-file-name="ngx_log.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ngx_log.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.45394737">
-              <caret line="569" column="4" selection-start-line="569" selection-start-column="4" selection-end-line="569" selection-end-column="4" />
+            <state vertical-scroll-proportion="0.016447369">
+              <caret line="620" column="37" selection-start-line="620" selection-start-column="37" selection-end-line="620" selection-end-column="37" />
               <folding>
-                <marker date="1448551646902" expanded="true" signature="12444:12556" placeholder="..." />
+                <marker date="1448637694767" expanded="true" signature="12929:13041" placeholder="..." />
               </folding>
             </state>
           </provider>
@@ -428,7 +427,13 @@
       <option name="project" value="LOCAL" />
       <updated>1448550842724</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="add  syslog">
+      <created>1448551675227</created>
+      <option name="number" value="00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1448551675227</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -477,7 +482,8 @@
     <MESSAGE value="add  inherit_sock init" />
     <MESSAGE value="add  parse_conf_file" />
     <MESSAGE value="add  parse_modules" />
-    <option name="LAST_COMMIT_MESSAGE" value="add  parse_modules" />
+    <MESSAGE value="add  syslog" />
+    <option name="LAST_COMMIT_MESSAGE" value="add  syslog" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -515,7 +521,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="5" column="23" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
           <folding>
-            <marker date="1448551646902" expanded="true" signature="12444:12556" placeholder="..." />
+            <marker date="1448637694767" expanded="true" signature="12929:13041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -548,7 +554,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="4" column="30" selection-start-line="4" selection-start-column="30" selection-end-line="4" selection-end-column="30" />
           <folding>
-            <marker date="1448551646902" expanded="true" signature="12444:12556" placeholder="..." />
+            <marker date="1448637694767" expanded="true" signature="12929:13041" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -883,10 +889,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ngx_log.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.45394737">
-          <caret line="569" column="4" selection-start-line="569" selection-start-column="4" selection-end-line="569" selection-end-column="4" />
+        <state vertical-scroll-proportion="0.016447369">
+          <caret line="620" column="37" selection-start-line="620" selection-start-column="37" selection-end-line="620" selection-end-column="37" />
           <folding>
-            <marker date="1448551646902" expanded="true" signature="12444:12556" placeholder="..." />
+            <marker date="1448637694767" expanded="true" signature="12929:13041" placeholder="..." />
           </folding>
         </state>
       </provider>
