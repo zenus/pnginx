@@ -23,23 +23,33 @@ static $ngx_worker;
 static $ngx_pid;
 
 
-static $atomic_ngx_reap;
-static $atomic_ngx_sigio;
-static $atomic_ngx_sigalrm;
-static $atomic_ngx_terminate;
-static $atomic_ngx_quit;
-static $atomic_ngx_debug_quit;
-static $ngx_exiting;
-static $atomic_ngx_reconfigure;
-static $atomic_ngx_reopen;
+//static $atomic_ngx_reap;
+//static $atomic_ngx_sigio;
+//static $atomic_ngx_sigalrm;
+//static $atomic_ngx_terminate;
+//static $atomic_ngx_quit;
+//static $atomic_ngx_debug_quit;
+//static $ngx_exiting;
+//static $atomic_ngx_reconfigure;
+//static $atomic_ngx_reopen;
+//
+//static $atomic_ngx_change_binary;
+//static $ngx_new_binary;
+//static $ngx_inherited;
+//static $ngx_daemonized;
+//static $atomic_ngx_noaccept;
+//static $ngx_noaccepting;
+//static $ngx_restart;
+//
+//
+//static $master_process = "master process";
 
-static $atomic_ngx_change_binary;
-static $ngx_new_binary;
-static $ngx_inherited;
-static $ngx_daemonized;
-static $atomic_ngx_noaccept;
-static $ngx_noaccepting;
-static $ngx_restart;
+function ngx_process($i = null){
+    static $ngx_process = null;
+    if(!is_null($i)){
+       $ngx_process = $i;
+    }else{
+       return $ngx_process;
+    }
 
-
-static $master_process = "master process";
+}

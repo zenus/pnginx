@@ -16,6 +16,24 @@ define('NGX_DEBUG_POINTS_ABORT',  2);
 //define('NGX_MAIN_CONF',0x01000000);
 //define('NGX_ANY_CONF',0x0F000000);
 
+function ngx_cycle(ngx_cycle_t $obj = null){
+    static $ngx_cycle = null;
+    if(!is_null($obj)){
+       $ngx_cycle = $obj;
+    }else{
+       return $ngx_cycle;
+    }
+}
+
+function ngx_quiet_mode($i = null){
+    static $ngx_quiet_mode = null;
+    if(!is_null($i)){
+       $ngx_quiet_mode = $i;
+    }else{
+       return $ngx_quiet_mode;
+    }
+}
+
 class ngx_cycle_t {
     /**void **/        private         /**   ****conf_ctx  ****/ $conf_ctx;
     //ngx_pool_t               *pool;
@@ -244,20 +262,19 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //
     $cycle->hostname = $hostname;
 //    ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
-    $ngx_modules = ngx_cfg('ngx_modules');
-    for ($i = 0; $ngx_modules[$i]; $i++) {
-    if ($ngx_modules[$i]->type != NGX_CORE_MODULE) {
+    //$ngx_modules = ngx_cfg('ngx_modules');
+    for ($i = 0; ngx_modules($i); $i++) {
+    if (ngx_modules($i,'type') != NGX_CORE_MODULE) {
         continue;
     }
 
-        $module = $ngx_modules[$i]->ctx;
-
-        if ($module->create_conf) {
-            $rv = $module->create_conf($cycle);
+        $module = ngx_modules($i,'ctx');
+        if ($create_conf = $module->create_conf) {
+            $rv = $create_conf($cycle);
             if ($rv == NULL) {
                 return NULL;
             }
-            $cycle->conf_ctx[$ngx_modules[$i]->index] = $rv;
+            $cycle->conf_ctx[ngx_modules($i,'index')] = $rv;
         }
     }
 //
@@ -265,18 +282,6 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //    senv = environ;
 //
 //
-
-   $argument_number =array(
-        NGX_CONF_NOARGS,
-        NGX_CONF_TAKE1,
-        NGX_CONF_TAKE2,
-        NGX_CONF_TAKE3,
-        NGX_CONF_TAKE4,
-        NGX_CONF_TAKE5,
-        NGX_CONF_TAKE6,
-        NGX_CONF_TAKE7
-    );
-    ngx_cfg('argument_number',$argument_number);
     $conf = new ngx_conf_t();
     $conf->ctx = $cycle->conf_ctx;
     $conf->cycle = $cycle;
@@ -299,23 +304,23 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
         return NULL;
     }
 
-    $ngx_test_config = ngx_cfg('ngx_test_config');
-    $ngx_quiet_mode = ngx_cfg('ngx_quiet_mode');
+//    $ngx_test_config = ngx_cfg('ngx_test_config');
+//    $ngx_quiet_mode = ngx_cfg('ngx_quiet_mode');
 
-    if ($ngx_test_config && !$ngx_quiet_mode) {
+    if (ngx_test_config() && !ngx_quiet_mode()) {
         ngx_log_stderr(0, "the configuration file %s syntax is ok",
             $cycle->conf_file);
     }
 
-    for ($i = 0; $ngx_modules[$i]; $i++) {
-    if ($ngx_modules[$i]->type != NGX_CORE_MODULE) {
+    for ($i = 0; ngx_modules($i); $i++) {
+    if (ngx_modules($i,'type') != NGX_CORE_MODULE) {
         continue;
     }
 
-        $module = $ngx_modules[$i]->ctx;
+        $module = ngx_modules($i,'ctx');
 
         if ($module->init_conf) {
-        if ($module->init_conf($cycle, $cycle->conf_ctx[$ngx_modules[$i]->index])
+        if ($module->init_conf($cycle, $cycle->conf_ctx[ngx_modules($i,'index')])
                 == NGX_CONF_ERROR)
             {
                 //environ = senv;
@@ -326,13 +331,12 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
         }
     }
 
-    $ngx_process = ngx_cfg('ngx_process');
-    if ($ngx_process == NGX_PROCESS_SIGNALLER) {
+    if (ngx_process() == NGX_PROCESS_SIGNALLER) {
         return $cycle;
     }
 
     //ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-//    $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module);
+    $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module());
 //
 //    if (ngx_test_config) {
 //
@@ -899,6 +903,15 @@ function ngx_cycle(ngx_cycle_t $ngx_cycle_t = null){
        $ngx_cycle = $ngx_cycle_t;
     }else{
        return $ngx_cycle;
+    }
+}
+
+function ngx_test_config($i = null){
+    static $ngx_test_config = null;
+    if(!is_null($ngx_test_config)){
+       $ngx_test_config = $i;
+    }else{
+        return $ngx_test_config ;
     }
 }
 

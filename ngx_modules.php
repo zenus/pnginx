@@ -59,7 +59,7 @@ include_once "ngx_core.php";
 //extern ngx_module_t  ngx_http_range_body_filter_module;
 //extern ngx_module_t  ngx_http_not_modified_filter_module;
 
-function ngx_modules()
+function ngx_modules($i,$k = null,$v = null)
 {
 
       static $ngx_modules = array(
@@ -111,5 +111,11 @@ function ngx_modules()
           ngx_http_not_modified_filter_module(),
           NULL
       );
-      return $ngx_modules;
+      if(!is_null($i)){
+         return $ngx_modules[$i];
+      }elseif(!is_null($k)){
+          return $ngx_modules[$i]->$k;
+      }elseif(!is_null($k)&&!is_null($v)){
+          return $ngx_modules[$i]->$k = $v;
+      }
 }

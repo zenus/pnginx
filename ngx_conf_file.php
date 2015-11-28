@@ -151,6 +151,23 @@ class ngx_conf_t {
     }
 }
 
+class ngx_core_module_t {
+ /***   ngx_str_t **/   private         $name;
+ /**   void  **/        private     $create_conf; /****(*create_conf)(ngx_cycle_t *cycle); ***/
+  /***  char **/        private    $init_conf; /*** *(*init_conf)(ngx_cycle_t *cycle, void *conf); *
+ * @param $property
+ * @param $value
+ */
+    public function __set($property,$value){
+
+        $this->$property = $value;
+    }
+    public function __get($property){
+        return $this->$property;
+    }
+
+}
+
 class ngx_command_t {
 /** ngx_str_t **/ private $name; 
 /** ngx_uint_t **/ private $type; 
@@ -1250,3 +1267,34 @@ function ngx_conf_open_file(ngx_cycle_t $cycle, $name)
     $cycle->open_files->push(array($file));
     return $file;
 }
+
+function argument_number($i){
+
+    static  $argument_number = array(
+                NGX_CONF_NOARGS,
+                NGX_CONF_TAKE1,
+                NGX_CONF_TAKE2,
+                NGX_CONF_TAKE3,
+                NGX_CONF_TAKE4,
+                NGX_CONF_TAKE5,
+                NGX_CONF_TAKE6,
+                NGX_CONF_TAKE7
+                  );
+   return $argument_number[$i];
+
+}
+
+ngx_module_t  ngx_conf_module = {
+    NGX_MODULE_V1,
+    NULL,                                  /* module context */
+    ngx_conf_commands,                     /* module directives */
+    NGX_CONF_MODULE,                       /* module type */
+    NULL,                                  /* init master */
+    NULL,                                  /* init module */
+    NULL,                                  /* init process */
+    NULL,                                  /* init thread */
+    NULL,                                  /* exit thread */
+    ngx_conf_flush_files,                  /* exit process */
+    NULL,                                  /* exit master */
+    NGX_MODULE_V1_PADDING
+};

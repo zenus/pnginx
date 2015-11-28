@@ -77,6 +77,7 @@ class ngx_log extends SplDoublyLinkedList{
     public  function __construct()
     {
         $this->ngx_log_s = new ngx_log_s();
+        $this->push($this->ngx_log_s);
     }
 
     public function __set($property_name, $value){
@@ -112,51 +113,17 @@ class ngx_log extends SplDoublyLinkedList{
         return $this->ngx_log_s->$property_name;
     }
 
-//    public function set_file(ngx_open_file_s &$file){
-//
-//       $this->ngx_log_s->set_file($file);
-//
-//    }
-//    public function get_file(){
-//
-//        return $this->ngx_log_s->get_file();
-//    }
-//
-//    public function set_level($level){
-//        $this->ngx_log_s->set_level($level);
-//    }
-//
-//    public function set_log_handler(Closure $callback){
-//
-//        $this->ngx_log_s->set_log_handler($callback);
-//    }
-//
-//    public function set_log_writer(Closure $callback){
-//
-//        $this->ngx_log_s->set_log_writer($callback);
-//    }
-//
-//    public function get_log_writer(){
-//
-////        return $this->writer;
-//        return $this->ngx_log_s->get_log_writer();
-//    }
-//
-//    public function get_log_handler(){
-//
-//        return  $this->ngx_log_s->get_log_handler();
-//    }
-
     public function handle($log, $s){
 
         return $this->ngx_log_s->handle($log,$s);
     }
 
     public function write($log, $level, $s){
-
         return $this->ngx_log_s->write($log, $level, $s);
-
     }
+//    public function _current(){
+//        return $this->ngx_log_s;
+//    }
     public function _next(){
        $this->next();
         $this->ngx_log_s = $this->current();
@@ -395,51 +362,80 @@ function  ngx_log_debug4($level, $log, $err, $fmt, $arg1, $arg2, $arg3, $arg4){
 
 
 function ngx_errlog_module(){
+    static $ngx_errlog_module = new ngx_module_t();
+        $ngx_errlog_module->version = 1;
+        $ngx_errlog_module->ctx = ngx_errlog_module_ctx();
+        $ngx_errlog_module->commands = ngx_errlog_commands();
+        $ngx_errlog_module->type = NGX_CORE_MODULE;
+        return $ngx_errlog_module;
+//    static  $ngx_errlog_module = array(
+//        'ctx_index'=>0,
+//        'index'=>0,
+//        'spare0'=>0,
+//        'spare1'=>0,
+//        'spare2'=>0,
+//        'spare3'=>0,
+//        'version'=>1,
+//        'ctx'=>ngx_errlog_module_ctx(),                  /* module context */
+//        'commands'=>ngx_errlog_commands(),                     /* module directives */
+//        'type'=>NGX_CORE_MODULE,                       /* module type */
+//        'init_master'=>NULL,                                  /* init master */
+//        'init_module'=>NULL,                                  /* init module */
+//        'init_process'=>NULL,                                  /* init process */
+//        'init_thread'=>NULL,                                  /* init thread */
+//        'exit_thread'=>NULL,                                  /* exit thread */
+//        'exit_process'=>NULL,                                  /* exit process */
+//        'exit_master'=>NULL,                                  /* exit master */
+//        'spare_hook0'=>0,
+//        'spare_hook1'=>0,
+//        'spare_hook2'=>0,
+//        'spare_hook3'=>0,
+//        'spare_hook4'=>0,
+//        'spare_hook5'=>0,
+//        'spare_hook6'=>0,
+//        'spare_hook7'=>0
+//    );
+}
+function ngx_errlog_module_ctx(){
 
-    static $ngx_errlog_module = array(
-        0, 0, 0, 0, 0, 0, 1,
-    ngx_errlog_module_ctx(),                /* module context */
-    ngx_errlog_commands(),                   /* module directives */
-    NGX_CORE_MODULE,                       /* module type */
-    NULL,                                  /* init master */
-    NULL,                                  /* init module */
-    NULL,                                  /* init process */
-    NULL,                                  /* init thread */
-    NULL,                                  /* exit thread */
-    NULL,                                  /* exit process */
-    NULL,                                  /* exit master */
-    0, 0, 0, 0, 0, 0, 0, 0
-);
-    return $ngx_errlog_module;
+    static $ngx_errlog_module_ctx = new ngx_core_module_t();
+    $ngx_errlog_module_ctx->name = 'errlog';
+    $ngx_errlog_module_ctx->create_conf = null;
+    $ngx_errlog_module_ctx->init_conf = null;
+//    static $ngx_errlog_module_ctx = array(
+//           'name'=>"errlog",
+//           'create_conf'=>NULL,
+//           'init_conf'=>NULL
+//    );
+
+    return $ngx_errlog_module_ctx;
 }
 
-
 function ngx_errlog_commands(){
+
     static $ngx_errlog_commands = array(
         array(
-              "error_log",
-              NGX_MAIN_CONF|NGX_CONF_1MORE,
-              ngx_error_log,
-              0,
-              0,
-              NULL),
-         array( '', 0, NULL, 0, 0, NULL ),
+              'name'=>"error_log",
+              'type'=>NGX_MAIN_CONF|NGX_CONF_1MORE,
+              'set'=>ngx_error_log_closure(),
+              'conf'=>0,
+            //  0,
+              'post'=>NULL
+        ),
+         array(
+             'name'=>'',
+             'type'=>0,
+             'set'=>NULL,
+             'conf'=>0,
+             //0,
+             'post'=>NULL
+         ),
           );
+
     return $ngx_errlog_commands;
 
 }
 
-static ngx_command_t  ngx_errlog_commands[] = {
-
-    {ngx_string("error_log"),
-     NGX_MAIN_CONF|NGX_CONF_1MORE,
-     ngx_error_log,
-     0,
-     0,
-     NULL},
-
-    ngx_null_command
-};
 
 //
 //static ngx_core_module_t  ngx_errlog_module_ctx = {
@@ -447,6 +443,12 @@ static ngx_command_t  ngx_errlog_commands[] = {
 //    NULL,
 //    NULL
 //};
+
+function ngx_error_log_closure(){
+    return  function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+     ngx_error_log($cf,$cmd,$conf);
+    };
+}
 
 function ngx_error_log(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -457,20 +459,19 @@ function ngx_error_log(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return ngx_log_set_log($cf, $dummy);
 }
 
-function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
+function ngx_log_set_log(ngx_conf_t $cf, ngx_log $head)
 {
     /**** $head is a array of ngx_log **/
 //ngx_log_t          *new_log;
 //    ngx_str_t          *value, name;
 //    ngx_syslog_peer_t  *peer;
 
-    $head = current($heads);
     if ($head instanceof ngx_log && $head->log_level == 0) {
            $new_log = $head;
     } else {
         $new_log = new ngx_log();
-        if (empty($heads)) {
-        $heads[] = $new_log;
+        if (empty($head)) {
+            $head = $new_log;
          }
     }
 
@@ -478,7 +479,7 @@ function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
 
     if (ngx_strcmp($value[1], "stderr") == 0) {
         $name = '';
-         $cf->cycle->log_use_stderr = 1;
+        $cf->cycle->log_use_stderr = 1;
         $new_log->file = ngx_conf_open_file($cf->cycle, $name);
         if ($new_log->file == NULL) {
         return NGX_CONF_ERROR;
@@ -501,7 +502,7 @@ function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
         $new_log->wdata = $peer;
 
     } else {
-    $new_log->file = ngx_conf_open_file($cf->cycle, $value[1]);
+        $new_log->file = ngx_conf_open_file($cf->cycle, $value[1]);
         if ($new_log->file == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -511,11 +512,18 @@ function ngx_log_set_log(ngx_conf_t $cf, /**ngx_log array***/ $heads)
         return NGX_CONF_ERROR;
     }
 
-    if (*head != new_log) {
-    ngx_log_insert(*head, new_log);
-    }
+    if ($head != $new_log) {
 
+        ngx_log_insert($head, $new_log);
+    }
     return NGX_CONF_OK;
+}
+
+function  ngx_log_insert(ngx_log $log, ngx_log $new_log)
+{
+
+    //todo  insert into list by log_level
+    $log->push($new_log->current());
 }
 
 function ngx_syslog_writer_closure(){
