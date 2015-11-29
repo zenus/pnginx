@@ -51,5 +51,13 @@ function ngx_process($i = null){
     }else{
        return $ngx_process;
     }
+}
 
+function ngx_new_binary($i = null){
+    static $ngx_new_binary = null;
+    if(!is_null($i)){
+       $ngx_new_binary = $i;
+    }else{
+       return $ngx_new_binary;
+    }
 }

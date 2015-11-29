@@ -69,7 +69,7 @@ function ngx_show_configure($i = null){
     }
 }
 
-function ngx_pid($i){
+function ngx_pid($i = null){
     static $ngx_pid = null;
     if(!is_null($i)){
        $ngx_pid = $i;

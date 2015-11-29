@@ -22,6 +22,9 @@ define('ngx_open_file_n',"open()");
 define('ngx_fd_info_n',"fstat()");
 define('ngx_close_file_n',"close()");
 define('ngx_read_file_n',"read()");
+define('ngx_delete_file_n',"unlink()");
+define('ngx_create_dir_n',"mkdir()");
+define('ngx_file_info_n',"stat()");
 
 include_once 'ngx_core.php';
 /**
@@ -99,4 +102,58 @@ function ngx_read_file(ngx_file_t $file, &$buf, $size, $offset)
 
     return $n;
 }
+
+function ngx_write_file(ngx_file_t $file, $buf, $size, $offset)
+{
+//    ssize_t  n, written;
+
+    ngx_log_debug4(NGX_LOG_DEBUG_CORE, $file->log, 0,
+                   "write: %d, %p, %uz, %O", $file->fd, $buf, $size, $offset);
+
+    $written = 0;
+
+    if ($file->sys_offset != $offset) {
+        if (fseek($file->fd, $offset, SEEK_SET) == -1) {
+            ngx_log_error(NGX_LOG_CRIT, $file->log, NGX_FLERROR,
+                              "lseek() \"%s\" failed", $file->name);
+                return NGX_ERROR;
+            }
+
+        $file->sys_offset = $offset;
+    }
+
+    for ( ;; ) {
+        $buf = substr($buf,$written);
+        $n = fwrite($file->fd, $buf, $size);
+
+        if ($n == false) {
+            ngx_log_error(NGX_LOG_CRIT, $file->log, NGX_FERROR,
+                          "write() \"%s\" failed", $file->name);
+            return NGX_ERROR;
+        }
+
+        $file->offset += $n;
+        $written += $n;
+
+        if ( $n == $size) {
+            return $written;
+        }
+
+        $size -= $n;
+    }
+}
+
+function ngx_file_info($file){
+  return   stat($file);
+}
+
+function ngx_delete_file($name)
+{
+    unlink($name);
+}
+function ngx_create_dir($name, $access)
+{
+    mkdir($name, $access);
+}
+
 

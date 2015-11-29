@@ -151,6 +151,12 @@ define('ERFKILL',132); /* Operation not possible due to RF-kill */
 define('EHWPOISON',133); /* Memory page has hardware error */
 
 define('NGX_FERROR',180); /*file error */
+define('NGX_FLERROR',181); /*file error */
+define('NGX_FCERROR',182); /*file error */
+define('NGX_FDERROR',183); /*file error */
+define('NGX_DCERROR',184); /*file error */
+define('NGX_FIERROR',185); /*file error */
+define('NGX_FCNERROR',186); /*file error */
 
 define('NGX_EPERM',EPERM);
 define('NGX_ENOENT',ENOENT);

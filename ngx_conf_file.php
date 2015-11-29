@@ -1284,17 +1284,21 @@ function argument_number($i){
 
 }
 
-ngx_module_t  ngx_conf_module = {
-    NGX_MODULE_V1,
-    NULL,                                  /* module context */
-    ngx_conf_commands,                     /* module directives */
-    NGX_CONF_MODULE,                       /* module type */
-    NULL,                                  /* init master */
-    NULL,                                  /* init module */
-    NULL,                                  /* init process */
-    NULL,                                  /* init thread */
-    NULL,                                  /* exit thread */
-    ngx_conf_flush_files,                  /* exit process */
-    NULL,                                  /* exit master */
-    NGX_MODULE_V1_PADDING
-};
+function ngx_get_conf($conf_ctx,ngx_module_t $module){
+   return $conf_ctx[$module->index];
+}
+
+//ngx_module_t  ngx_conf_module = {
+//    NGX_MODULE_V1,
+//    NULL,                                  /* module context */
+//    ngx_conf_commands,                     /* module directives */
+//    NGX_CONF_MODULE,                       /* module type */
+//    NULL,                                  /* init master */
+//    NULL,                                  /* init module */
+//    NULL,                                  /* init process */
+//    NULL,                                  /* init thread */
+//    NULL,                                  /* exit thread */
+//    ngx_conf_flush_files,                  /* exit process */
+//    NULL,                                  /* exit master */
+//    NGX_MODULE_V1_PADDING
+//};

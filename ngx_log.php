@@ -245,6 +245,7 @@ function ngx_log_init(){
 
 function ngx_log_error($level, ngx_log $log, $err_no, $fmt, array $args = array())
 {
+    $args = is_array($args) ? $args : array($args);
     if ($log->log_level >= $level) {
 
        ngx_log_error_core($level, $log, $err_no, $fmt, $args);
@@ -679,6 +680,46 @@ function ngx_log_set_levels(ngx_conf_t $cf, ngx_log $log)
       }
 
     return NGX_CONF_OK;
+}
+
+function ngx_log_open_default(ngx_cycle_t $cycle)
+{
+//ngx_log_t         *log;
+    static   $error_log = NGX_ERROR_LOG_PATH;
+
+    $log = new ngx_log();
+    if (ngx_log_get_file_log($cycle->log) != NULL) {
+            return NGX_OK;
+        }
+
+    if ($cycle->new_log->log_level != 0) {
+    /* there are some error logs, but no files */
+        $log = $cycle->new_log;
+    }
+
+    $log->log_level = NGX_LOG_ERR;
+
+    $log->file = ngx_conf_open_file($cycle, $error_log);
+    if ($log->file == NULL) {
+        return NGX_ERROR;
+    }
+
+    if ($log != $cycle->new_log) {
+        ngx_log_insert($cycle->new_log, $log);
+    }
+
+    return NGX_OK;
+}
+
+function ngx_log_get_file_log(ngx_log $head)
+{
+    for ($head->rewind(); $head->valid(); $head->_next()) {
+        if($head->file != null){
+           return $head;
+        }
+    }
+
+    return null;
 }
 
 
