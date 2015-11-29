@@ -381,39 +381,38 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //
 //    /* open the new files */
 //
-//    part = &cycle->open_files.part;
-//    file = part->elts;
+    $open_files_list = $cycle->open_files;
+    $file = $open_files_list->current();
 //
-//    for (i = 0; /* void */ ; i++) {
-//
-//        if (i >= part->nelts) {
-//            if (part->next == NULL) {
-//                break;
-//            }
-//            part = part->next;
-//            file = part->elts;
-//            i = 0;
-//        }
-//
-//        if (file[i].name.len == 0) {
-//            continue;
-//        }
-//
-//        file[i].fd = ngx_open_file(file[i].name.data,
-//                                   NGX_FILE_APPEND,
-//                                   NGX_FILE_CREATE_OR_OPEN,
-//                                   NGX_FILE_DEFAULT_ACCESS);
-//
-//        ngx_log_debug3(NGX_LOG_DEBUG_CORE, log, 0,
-//            "log: %p %d \"%s\"",
-//            &file[i], file[i].fd, file[i].name.data);
-//
-//        if (file[i].fd == NGX_INVALID_FILE) {
-//            ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
-//                ngx_open_file_n " \"%s\" failed",
-//                          file[i].name.data);
-//            goto failed;
-//        }
+    for ($i = 0; /* void */ ; $i++) {
+
+        if ($i >= count($file)) {
+            $open_files_list->next();
+            $file = $open_files_list->current();
+            if (empty($file)) {
+                break;
+            }
+            $i = 0;
+        }
+
+        if (strlen($file[$i]->name)== 0) {
+            continue;
+        }
+
+        $file[$i]->fd = ngx_open_file($file[$i]->name,
+                                   NGX_FILE_APPEND,
+                                   NGX_FILE_DEFAULT_ACCESS);
+
+        ngx_log_debug3(NGX_LOG_DEBUG_CORE, $log, 0,
+            "log: %p %d \"%s\"",
+            $file[$i], $file[$i]->fd, $file[$i]->name);
+
+        if ($file[$i]->fd == NGX_INVALID_FILE) {
+            ngx_log_error(NGX_LOG_EMERG, $log, NGX_FERROR,
+                ngx_open_file_n ." \"%s\" failed",
+                          $file[$i]->name);
+            goto failed;
+        }
 //
 //#if !(NGX_WIN32)
 //        if (fcntl(file[i].fd, F_SETFD, FD_CLOEXEC) == -1) {
@@ -423,12 +422,11 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //            goto failed;
 //        }
 //#endif
-//    }
-//
-//    cycle->log = &cycle->new_log;
-//    pool->log = &cycle->new_log;
-//
-//
+    }
+
+    $cycle->log = $cycle->new_log;
+
+//todo find the usage of shared memory
 //    /* create shared memory */
 //
 //    part = &cycle->shared_memory.part;
@@ -523,35 +521,34 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //
 //    /* handle the listening sockets */
 //
-//    if (old_cycle->listening.nelts) {
-//    ls = old_cycle->listening.elts;
-//        for (i = 0; i < old_cycle->listening.nelts; i++) {
-//        ls[i].remain = 0;
-//        }
-//
-//        nls = cycle->listening.elts;
-//        for (n = 0; n < cycle->listening.nelts; n++) {
-//
-//        for (i = 0; i < old_cycle->listening.nelts; i++) {
-//            if (ls[i].ignore) {
-//                continue;
-//            }
-//
-//                if (ls[i].remain) {
-//                continue;
-//            }
-//
-//                if (ngx_cmp_sockaddr(nls[n].sockaddr, nls[n].socklen,
-//                                     ls[i].sockaddr, ls[i].socklen, 1)
-//                    == NGX_OK)
-//                {
-//                    nls[n].fd = ls[i].fd;
-//                    nls[n].previous = &ls[i];
-//                    ls[i].remain = 1;
-//
-//                    if (ls[i].backlog != nls[n].backlog) {
-//                    nls[n].listen = 1;
-//                    }
+    if (!empty($old_cycle->listening)) {
+        $ls = $old_cycle->listening;
+        for ($i = 0; $i < count($old_cycle->listening); $i++) {
+            $ls[$i]->remain = 0;
+        }
+
+        $nls = $cycle->listening;
+        for ($n = 0; $n < count($cycle->listening); $n++) {
+
+            for ($i = 0; $i < count($old_cycle->listening); $i++) {
+                if ($ls[$i]->ignore) {
+                    continue;
+                }
+
+                if ($ls[$i]->remain) {
+                    continue;
+                }
+
+                if (ngx_cmp_sockaddr($nls[$n]->sockaddr, $ls[$i]->sockaddr,  1)
+                    == NGX_OK)
+                {
+                    $nls[$n]->fd = $ls[$i]->fd;
+                    $nls[$n]->previous = $ls[$i];
+                    $ls[$i]->remain = 1;
+
+                    if ($ls[$i]->backlog != $nls[$n]->backlog) {
+                        $nls[$n]->listen = 1;
+                    }
 //
 //#if (NGX_HAVE_DEFERRED_ACCEPT && defined SO_ACCEPTFILTER)
 //

@@ -280,18 +280,18 @@ function ntohs($n){
     return unpack('v', $n);
 }
 
-class sockaddr_un
-  {
-    private $sun_family;
-    private $sun_path;
-
-    public function __set($property, $value){
-        $this->$property = $value;
-    }
-    public function __get($property){
-       return $this->$property;
-    }
-  }
+//class sockaddr_un
+//  {
+//    private $sun_family;
+//    private $sun_path;
+//
+//    public function __set($property, $value){
+//        $this->$property = $value;
+//    }
+//    public function __get($property){
+//       return $this->$property;
+//    }
+//  }
 
 class ngx_addr_t {
     /***struct sockaddr**/  private         $sockaddr;
@@ -313,26 +313,26 @@ function ngx_inet_addr($text)
    return inet_pton($text);
 }
 
-class sockaddr_in
-  {
-    //  __SOCKADDR_COMMON (sin_);
-    /**  in_port_t **/  private  $sin_port;			/* Port number.  */
-    /** struct in_addr **/ private $sin_addr;		/* Internet address.  */
-    /**  sin_family* */  private $sin_family;
-
-    /* Pad to size of `struct sockaddr'.  */
-//    unsigned char sin_zero[sizeof (struct sockaddr) -
-//  __SOCKADDR_COMMON_SIZE -
-//  sizeof (in_port_t) -
-//  sizeof (struct in_addr)];
-   public function __set($property,$value){
-       $this->$property = $value;
-   }
-
-    public function __get($property){
-       return $this->$property;
-    }
-  }
+//class sockaddr_in
+//  {
+//    //  __SOCKADDR_COMMON (sin_);
+//    /**  in_port_t **/  private  $sin_port;			/* Port number.  */
+//    /** struct in_addr **/ private $sin_addr;		/* Internet address.  */
+//    /**  sin_family* */  private $sin_family;
+//
+//    /* Pad to size of `struct sockaddr'.  */
+////    unsigned char sin_zero[sizeof (struct sockaddr) -
+////  __SOCKADDR_COMMON_SIZE -
+////  sizeof (in_port_t) -
+////  sizeof (struct in_addr)];
+//   public function __set($property,$value){
+//       $this->$property = $value;
+//   }
+//
+//    public function __get($property){
+//       return $this->$property;
+//    }
+//  }
 
 function ngx_inet_resolve_host( ngx_url_t $u)
 {
@@ -476,3 +476,140 @@ case AF_INET:
         return 0;
     }
 }
+
+function ngx_cmp_sockaddr( sockaddr $sa1, sockaddr $sa2, $cmp_port)
+{
+//    struct sockaddr_in   *sin1, *sin2;
+//#if (NGX_HAVE_INET6)
+//    struct sockaddr_in6  *sin61, *sin62;
+//#endif
+//#if (NGX_HAVE_UNIX_DOMAIN)
+//    struct sockaddr_un   *saun1, *saun2;
+//#endif
+
+    if ($sa1->sa_family != $sa2->sa_family) {
+          return NGX_DECLINED;
+     }
+
+    switch ($sa1->sa_family) {
+
+    case AF_INET6:
+
+            $sin61 = /**(struct sockaddr_in6 *)**/ $sa1;
+            $sin62 = /**(struct sockaddr_in6 *)**/ $sa2;
+
+            if ($cmp_port && $sin61->sin6_port != $sin62->sin6_port) {
+                return NGX_DECLINED;
+            }
+
+            if (ngx_strcmp($sin61->sin6_addr, $sin62->sin6_addr) != 0) {
+            return NGX_DECLINED;
+        }
+
+            break;
+
+        case AF_UNIX:
+
+           /* TODO length */
+
+           $saun1 = /*(struct sockaddr_un *)*/ $sa1;
+           $saun2 = /*(struct sockaddr_un *)*/ $sa2;
+
+           if (ngx_strcmp($saun1->sun_path, $saun2->sun_path) != 0)
+           {
+               return NGX_DECLINED;
+           }
+
+           break;
+
+        default: /* AF_INET */
+
+            $sin1 = /*(struct sockaddr_in *)*/ $sa1;
+            $sin2 = /*(struct sockaddr_in *)*/ $sa2;
+
+            if ($cmp_port && $sin1->sin_port != $sin2->sin_port) {
+                return NGX_DECLINED;
+            }
+
+            if ($sin1->sin_addr != $sin2->sin_addr) {
+                return NGX_DECLINED;
+            }
+
+            break;
+    }
+    return NGX_OK;
+}
+
+
+class sockaddr
+  {
+      //__SOCKADDR_COMMON (sa_);	/* Common data: address family and length.  */
+      //char sa_data[14];		/* Address data.  */
+      private $sa_family;
+      private $sa_data;
+
+    public function __set($name,$value){
+       $this->$name = $value;
+    }
+    public function __get($name){
+       return $this->$name;
+    }
+  };
+
+/* Ditto, for IPv6.  */
+class sockaddr_in6 extends sockaddr
+  {
+    private $sin6_family;
+    private $sin6_port;
+//      __SOCKADDR_COMMON (sin6_);
+//      in_port_t sin6_port;	/* Transport layer port # */
+//    uint32_t sin6_flowinfo;	/* IPv6 flow information */
+//    struct in6_addr sin6_addr;	/* IPv6 address */
+//    uint32_t sin6_scope_id;	/* IPv6 scope-id */
+    public function __set($name,$value){
+        $this->$name = $value;
+    }
+    public function __get($name){
+        return $this->$name;
+    }
+  };
+
+/* Structure describing the address of an AF_LOCAL (aka AF_UNIX) socket.  */
+class sockaddr_un extends sockaddr
+  {
+    private $sun_family;
+    private $sun_path;
+//      __SOCKADDR_COMMON (sun_);
+//      char sun_path[108];		/* Path name.  */
+    public function __set($name,$value){
+        $this->$name = $value;
+    }
+    public function __get($name){
+        return $this->$name;
+    }
+  };
+
+/* Structure describing an Internet socket address.  */
+class sockaddr_in extends sockaddr
+  {
+    private $sin_family;
+    private $sin_addr;
+    private $sin_port;
+    public function __set($name,$value){
+        $this->$name = $value;
+    }
+    public function __get($name){
+        return $this->$name;
+    }
+//      __SOCKADDR_COMMON (sin_);
+//      in_port_t sin_port;			/* Port number.  */
+//    struct in_addr sin_addr;		/* Internet address.  */
+
+    /* Pad to size of `struct sockaddr'.  */
+//    unsigned char sin_zero[sizeof (struct sockaddr) -
+//  __SOCKADDR_COMMON_SIZE -
+//  sizeof (in_port_t) -
+//  sizeof (struct in_addr)];
+  };
+
+

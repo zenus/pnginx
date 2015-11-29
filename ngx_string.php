@@ -51,6 +51,9 @@ function ngx_slprintf($s,  $fmt, array $args = array())
     return $p;
 }
 
+//function ngx_memcmp($s1, $s2, $n){
+//    memcmp($s1, $s2, $n);
+//}
 
 function ngx_strncmp($s1, $s2, $n)
 {
