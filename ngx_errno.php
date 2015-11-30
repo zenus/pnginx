@@ -153,10 +153,11 @@ define('EHWPOISON',133); /* Memory page has hardware error */
 define('NGX_FERROR',180); /*file error */
 define('NGX_FLERROR',181); /*file error */
 define('NGX_FCERROR',182); /*file error */
-define('NGX_FDERROR',183); /*file error */
-define('NGX_DCERROR',184); /*file error */
-define('NGX_FIERROR',185); /*file error */
-define('NGX_FCNERROR',186); /*file error */
+define('NGX_FDERROR',183); /*file delete error */
+define('NGX_DCERROR',184); /*dir create file error */
+define('NGX_FIERROR',185); /*stat file error */
+define('NGX_FCNERROR',186); /*chown file error */
+define('NGX_FCMERROR',187); /*chmod file error */
 
 define('NGX_EPERM',EPERM);
 define('NGX_ENOENT',ENOENT);

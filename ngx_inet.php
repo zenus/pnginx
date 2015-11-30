@@ -561,6 +561,7 @@ class sockaddr_in6 extends sockaddr
   {
     private $sin6_family;
     private $sin6_port;
+    private $sin6_addr;
 //      __SOCKADDR_COMMON (sin6_);
 //      in_port_t sin6_port;	/* Transport layer port # */
 //    uint32_t sin6_flowinfo;	/* IPv6 flow information */

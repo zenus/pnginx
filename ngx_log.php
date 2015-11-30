@@ -243,7 +243,7 @@ function ngx_log_init(){
 }
 
 
-function ngx_log_error($level, ngx_log $log, $err_no, $fmt, array $args = array())
+function ngx_log_error($level, ngx_log $log, $err_no, $fmt,  $args = array())
 {
     $args = is_array($args) ? $args : array($args);
     if ($log->log_level >= $level) {
@@ -365,6 +365,9 @@ function ngx_log_debug3($level, $log, $err, $fmt, $arg1, $arg2, $arg3){
 
 }
 
+function ngx_log_debug2($level, $log, $err, $fmt, $arg1, $arg2){
+
+}
 
 
 

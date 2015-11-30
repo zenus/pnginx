@@ -6,6 +6,94 @@
  * Time: 下午7:34
  */
 
+/*
+ * The event filter requires to read/write the whole data:
+ * select, poll, /dev/poll, kqueue, epoll.
+ */
+define('NGX_USE_LEVEL_EVENT',0x00000001);
+
+/*
+ * The event filter is deleted after a notification without an additional
+ * syscall: kqueue, epoll.
+ */
+define('NGX_USE_ONESHOT_EVENT',0x00000002);
+
+/*
+ * The event filter notifies only the changes and an initial level:
+ * kqueue, epoll.
+ */
+define('NGX_USE_CLEAR_EVENT',0x00000004);
+
+/*
+ * The event filter has kqueue features: the eof flag, errno,
+ * available data, etc.
+ */
+define('NGX_USE_KQUEUE_EVENT',0x00000008);
+
+/*
+ * The event filter supports low water mark: kqueue's NOTE_LOWAT.
+ * kqueue in FreeBSD 4.1-4.2 has no NOTE_LOWAT so we need a separate flag.
+ */
+define('NGX_USE_LOWAT_EVENT',0x00000010);
+
+/*
+ * The event filter requires to do i/o operation until EAGAIN: epoll.
+ */
+define('NGX_USE_GREEDY_EVENT',0x00000020);
+
+/*
+ * The event filter is epoll.
+ */
+define('NGX_USE_EPOLL_EVENT',0x00000040);
+
+/*
+ * Obsolete.
+ */
+define('NGX_USE_RTSIG_EVENT',0x00000080);
+
+/*
+ * Obsolete.
+ */
+define('NGX_USE_AIO_EVENT',0x00000100);
+
+/*
+ * Need to add socket or handle only once: i/o completion port.
+ */
+define('NGX_USE_IOCP_EVENT',0x00000200);
+
+/*
+ * The event filter has no opaque data and requires file descriptors table:
+ * poll, /dev/poll.
+ */
+define('NGX_USE_FD_EVENT',0x00000400);
+
+/*
+ * The event module handles periodic or absolute timer event by itself:
+ * kqueue in FreeBSD 4.4, NetBSD 2.0, and MacOSX 10.4, Solaris 10's event ports.
+ */
+define('NGX_USE_TIMER_EVENT',0x00000800);
+
+/*
+ * All event filters on file descriptor are deleted after a notification:
+ * Solaris 10's event ports.
+ */
+define('NGX_USE_EVENTPORT_EVENT',0x00001000);
+
+/*
+ * The event filter support vnode notifications: kqueue.
+ */
+define('NGX_USE_VNODE_EVENT',0x00002000);
+
+
+function ngx_event_flags($i = null){
+    static $ngx_event_flags = null;
+    if(!is_null($i)){
+       $ngx_event_flags  = $i;
+    }else{
+       return $ngx_event_flags;
+    }
+}
+
 class ngx_event_t {
 /**   void  **/    private  $data;
 

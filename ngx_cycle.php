@@ -549,92 +549,28 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
                     if ($ls[$i]->backlog != $nls[$n]->backlog) {
                         $nls[$n]->listen = 1;
                     }
-//
-//#if (NGX_HAVE_DEFERRED_ACCEPT && defined SO_ACCEPTFILTER)
-//
-//                    /*
-//                     * FreeBSD, except the most recent versions,
-//                     * could not remove accept filter
-//                     */
-//                    nls[n].deferred_accept = ls[i].deferred_accept;
-//
-//                    if (ls[i].accept_filter && nls[n].accept_filter) {
-//                if (ngx_strcmp(ls[i].accept_filter,
-//                                       nls[n].accept_filter)
-//                            != 0)
-//                        {
-//                            nls[n].delete_deferred = 1;
-//                            nls[n].add_deferred = 1;
-//                        }
-//
-//                    } else if (ls[i].accept_filter) {
-//                nls[n].delete_deferred = 1;
-//
-//                    } else if (nls[n].accept_filter) {
-//                nls[n].add_deferred = 1;
-//                    }
-//#endif
-//
-//#if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
-//
-//                    if (ls[i].deferred_accept && !nls[n].deferred_accept) {
-//                nls[n].delete_deferred = 1;
-//
-//                    } else if (ls[i].deferred_accept != nls[n].deferred_accept)
-//                    {
-//                        nls[n].add_deferred = 1;
-//                    }
-//#endif
-//
-//#if (NGX_HAVE_REUSEPORT)
-//                    if (nls[n].reuseport && !ls[i].reuseport) {
-//                nls[n].add_reuseport = 1;
-//                    }
-//#endif
-//
-//                    break;
-//                }
-//            }
-//
-//            if (nls[n].fd == (ngx_socket_t) -1) {
-//            nls[n].open = 1;
-//#if (NGX_HAVE_DEFERRED_ACCEPT && defined SO_ACCEPTFILTER)
-//                if (nls[n].accept_filter) {
-//                nls[n].add_deferred = 1;
-//                }
-//#endif
-//#if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
-//                if (nls[n].deferred_accept) {
-//                nls[n].add_deferred = 1;
-//                }
-//#endif
-//            }
-//        }
-//
-//    } else {
-//    ls = cycle->listening.elts;
-//        for (i = 0; i < cycle->listening.nelts; i++) {
-//        ls[i].open = 1;
-//#if (NGX_HAVE_DEFERRED_ACCEPT && defined SO_ACCEPTFILTER)
-//            if (ls[i].accept_filter) {
-//            ls[i].add_deferred = 1;
-//            }
-//#endif
-//#if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
-//            if (ls[i].deferred_accept) {
-//            ls[i].add_deferred = 1;
-//            }
-//#endif
-//        }
-//    }
-//
-//    if (ngx_open_listening_sockets(cycle) != NGX_OK) {
-//        goto failed;
-//    }
-//
-//    if (!ngx_test_config) {
-//        ngx_configure_listening_sockets(cycle);
-//    }
+                    break;
+                }
+            }
+            if ($nls[$n]->fd == false) {
+                $nls[$n]->open = 1;
+            }
+        }
+
+    } else {
+        $ls = $cycle->listening;
+        for ($i = 0; $i < count($cycle->listening); $i++) {
+                $ls[$i]->open = 1;
+        }
+    }
+
+    if (ngx_open_listening_sockets($cycle) != NGX_OK) {
+        goto failed;
+    }
+
+    if (!ngx_test_config()) {
+        ngx_configure_listening_sockets($cycle);
+    }
 //
 //
 //    /* commit the new cycle configuration */

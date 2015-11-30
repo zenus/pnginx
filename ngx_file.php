@@ -8,6 +8,12 @@
 define('S_IRUSR',0400);
 define('S_IWUSR',0200);
 define('S_IXUSR',0100);
+
+define('S_IRGRP',(S_IRUSR >> 3));  /* Read by group.  */
+define('S_IWGRP',(S_IWUSR >> 3));  /* Write by group.  */
+define('S_IROTH',(S_IRGRP >> 3));  /* Read by others.  */
+define('S_IWOTH',(S_IWGRP >> 3));  /* Write by others.  */
+//S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
 class ngx_file_t {
 /** ngx_fd_t **/ private $fd;
 /** ngx_str_t **/ private $name;

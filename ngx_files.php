@@ -149,11 +149,11 @@ function ngx_file_info($file){
 
 function ngx_delete_file($name)
 {
-    unlink($name);
+    return unlink($name);
 }
 function ngx_create_dir($name, $access)
 {
-    mkdir($name, $access);
+    return mkdir($name, $access);
 }
 
 

@@ -349,4 +349,11 @@ function ngx_time_init()
 //    ngx_time_update();
 }
 
+/**
+ * @param $ms
+ */
+function ngx_msleep($ms) {
+   usleep($ms * 1000);
+}
+
 
