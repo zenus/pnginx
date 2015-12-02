@@ -578,6 +578,7 @@ class sockaddr_in6 extends sockaddr
 /* Structure describing the address of an AF_LOCAL (aka AF_UNIX) socket.  */
 class sockaddr_un extends sockaddr
   {
+    private $sa_family = AF_UNIX;
     private $sun_family;
     private $sun_path;
 //      __SOCKADDR_COMMON (sun_);

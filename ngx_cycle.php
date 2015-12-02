@@ -34,6 +34,35 @@ function ngx_quiet_mode($i = null){
     }
 }
 
+function ngx_old_cycles(ngx_cycle_t $cycle = null){
+    static $ngx_old_cycles = null;
+    if(!is_null($ngx_old_cycles)){
+       $ngx_old_cycles = $cycle;
+    }else{
+       return $ngx_old_cycles;
+    }
+}
+
+function dumb(ngx_connection_t $con = null){
+    static $dumb = null;
+    if(!is_null($dumb)){
+       $dumb = $con;
+    }else{
+       return $dumb;
+    }
+}
+
+function ngx_cleaner_event(ngx_event_t $event){
+    static $ngx_cleaner_event = null;
+    if(!is_null($ngx_cleaner_event)){
+       $ngx_cleaner_event = $event;
+    }else{
+       return $event;
+    }
+
+}
+
+
 class ngx_cycle_t {
     /**void **/        private         /**   ****conf_ctx  ****/ $conf_ctx;
     //ngx_pool_t               *pool;
@@ -571,26 +600,26 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
     if (!ngx_test_config()) {
         ngx_configure_listening_sockets($cycle);
     }
-//
-//
-//    /* commit the new cycle configuration */
-//
-//    if (!ngx_use_stderr) {
-//        (void) ngx_log_redirect_stderr(cycle);
-//    }
+
+
+    /* commit the new cycle configuration */
+
+    if (ngx_use_stderr()) {
+         ngx_log_redirect_stderr($cycle);
+    }
 //
 //    pool->log = cycle->log;
 //
-//    for (i = 0; ngx_modules[i]; i++) {
-//    if (ngx_modules[i]->init_module) {
-//        if (ngx_modules[i]->init_module(cycle) != NGX_OK) {
-//            /* fatal */
-//            exit(1);
-//        }
-//        }
-//    }
-//
-//
+    for ($i = 0; ngx_modules($i); $i++) {
+    if ($init_module = ngx_modules($i)->init_module) {
+        if ($init_module($cycle) != NGX_OK) {
+            /* fatal */
+            exit(1);
+        }
+        }
+    }
+
+    //todo it really need share memory?
 //    /* close and delete stuff that lefts from an old cycle */
 //
 //    /* free the unnecessary shared memory */
@@ -643,88 +672,84 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //old_shm_zone_done:
 //
 //
-//    /* close the unnecessary listening sockets */
-//
-//    ls = old_cycle->listening.elts;
-//    for (i = 0; i < old_cycle->listening.nelts; i++) {
-//
-//    if (ls[i].remain || ls[i].fd == (ngx_socket_t) -1) {
-//        continue;
-//    }
-//
-//        if (ngx_close_socket(ls[i].fd) == -1) {
-//        ngx_log_error(NGX_LOG_EMERG, log, ngx_socket_errno,
-//            ngx_close_socket_n " listening socket on %V failed",
-//                          &ls[i].addr_text);
-//        }
-//
-//#if (NGX_HAVE_UNIX_DOMAIN)
-//
-//        if (ls[i].sockaddr->sa_family == AF_UNIX) {
-//        u_char  *name;
-//
-//        name = ls[i].addr_text.data + sizeof("unix:") - 1;
-//
-//            ngx_log_error(NGX_LOG_WARN, cycle->log, 0,
-//                          "deleting socket %s", name);
-//
-//            if (ngx_delete_file(name) == NGX_FILE_ERROR) {
-//                ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno,
-//                              ngx_delete_file_n " %s failed", name);
-//            }
-//        }
-//
-//#endif
-//    }
-//
-//
-//    /* close the unnecessary open files */
-//
-//    part = &old_cycle->open_files.part;
-//    file = part->elts;
-//
-//    for (i = 0; /* void */ ; i++) {
-//
-//        if (i >= part->nelts) {
-//            if (part->next == NULL) {
-//                break;
-//            }
-//            part = part->next;
-//            file = part->elts;
-//            i = 0;
-//        }
-//
-//        if (file[i].fd == NGX_INVALID_FILE || file[i].fd == ngx_stderr) {
-//            continue;
-//        }
-//
-//        if (ngx_close_file(file[i].fd) == NGX_FILE_ERROR) {
-//            ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
-//                ngx_close_file_n " \"%s\" failed",
-//                          file[i].name.data);
-//        }
-//    }
-//
-//    ngx_destroy_pool(conf.temp_pool);
-//
-//    if (ngx_process == NGX_PROCESS_MASTER || ngx_is_init_cycle(old_cycle)) {
-//
-//        /*
-//         * perl_destruct() frees environ, if it is not the same as it was at
-//         * perl_construct() time, therefore we save the previous cycle
-//         * environment before ngx_conf_parse() where it will be changed.
-//         */
-//
+    /* close the unnecessary listening sockets */
+
+    $ls = $old_cycle->listening;
+    for ($i = 0; $i < $old_cycle->listening; $i++) {
+
+        if ($ls[$i]->remain || empty($ls[$i]->fd) ) {
+            continue;
+        }
+
+        if (ngx_close_socket($ls[$i]->fd) == false) {
+            ngx_log_error(NGX_LOG_EMERG, $log, socket_last_error(),
+                ngx_close_socket_n. " listening socket on %V failed",
+                              $ls[$i]->addr_text);
+        }
+
+        if ($ls[$i]->sockaddr->sa_family == AF_UNIX) {
+
+            $name = substr($ls[$i]->addr_text,strlen('unix:')-1);
+
+            ngx_log_error(NGX_LOG_WARN, $cycle->log, 0,
+                          "deleting socket %s", $name);
+
+            if (ngx_delete_file($name) == false) {
+                ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FDERROR,
+                              ngx_delete_file_n ." %s failed", $name);
+            }
+        }
+    }
+
+
+    /* close the unnecessary open files */
+
+    $open_files_list = $old_cycle->open_files;
+    $file = $open_files_list->current();
+
+    for ($i = 0; /* void */ ; $i++) {
+
+        if ($i >= count($file)) {
+            $open_files_list->next();
+            $file = $open_files_list->current();
+            if (empty($file)) {
+                break;
+            }
+            $i = 0;
+        }
+
+        if ($file[$i]->fd == NGX_INVALID_FILE || $file[$i]->fd == ngx_stderr) {
+            continue;
+        }
+
+        if (ngx_close_file($file[$i]->fd) == false) {
+            ngx_log_error(NGX_LOG_EMERG, $log, NGX_FERROR,
+                ngx_close_file_n. " \"%s\" failed",
+                          $file[$i]->name);
+        }
+    }
+
+
+
+    if (ngx_process() == NGX_PROCESS_MASTER || ngx_is_init_cycle($old_cycle)) {
+
+        /*
+         * perl_destruct() frees environ, if it is not the same as it was at
+         * perl_construct() time, therefore we save the previous cycle
+         * environment before ngx_conf_parse() where it will be changed.
+         */
+
+        //todo really don't know why
 //        env = environ;
 //        environ = senv;
-//
-//        ngx_destroy_pool(old_cycle->pool);
-//        cycle->old_cycle = NULL;
-//
-//        environ = env;
-//
-//        return cycle;
-//    }
+
+        //ngx_destroy_pool(old_cycle->pool);
+        $cycle->old_cycle = NULL;
+
+        //environ = env;
+
+        return $cycle;
+    }
 //
 //
 //    if (ngx_temp_pool == NULL) {

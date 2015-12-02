@@ -25,6 +25,7 @@ define('ngx_read_file_n',"read()");
 define('ngx_delete_file_n',"unlink()");
 define('ngx_create_dir_n',"mkdir()");
 define('ngx_file_info_n',"stat()");
+define('ngx_set_stderr_n',"set_stderr(STDERR_FILENO)");
 
 include_once 'ngx_core.php';
 /**
@@ -35,7 +36,6 @@ include_once 'ngx_core.php';
  * @param $p
  * @return string
  */
-
 function ngx_linefeed(&$p)
 {
     return  $p.LF;
@@ -56,6 +56,10 @@ function ngx_path_separator($c){
 function ngx_write_fd($fd, $p)
 {
     return fwrite($fd, $p);
+}
+
+function ngx_set_stderr(ngx_log $log){
+    $log->file->fd = ngx_stderr;
 }
 
 function ngx_fd_info($fd){

@@ -81,15 +81,15 @@ class ngx_module_t {
 /** ngx_command_t **/ private $commands;
 /** ngx_uint_t **/ private $type;
 
-/**    ngx_int_t           (*init_master)(ngx_log_t *log); **/ private $init_master_handler;
+/**    ngx_int_t           (*init_master)(ngx_log_t *log); **/ private $init_master;
 /**
-/**    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);**/ private $init_module_handler;
+/**    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);**/ private $init_module;
 /**
-/**    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);**/ private $init_process_handler;
-/**    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);**/  private $init_thread_handler;
-/**    void                (*exit_thread)(ngx_cycle_t *cycle);**/  private $exit_thread_handler;
-/**    void                (*exit_process)(ngx_cycle_t *cycle);**/ private $exit_process_hander;
-/**    void                (*exit_master)(ngx_cycle_t *cycle);**/  private $exit_master_handler;
+/**    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);**/ private $init_process;
+/**    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);**/  private $init_thread;
+/**    void                (*exit_thread)(ngx_cycle_t *cycle);**/  private $exit_thread;
+/**    void                (*exit_process)(ngx_cycle_t *cycle);**/ private $exit_process;
+/**    void                (*exit_master)(ngx_cycle_t *cycle);**/  private $exit_master;
 
 /** uintptr_t **/ private $spare_hook0;
 /** uintptr_t **/ private $spare_hook1;
@@ -104,8 +104,8 @@ class ngx_module_t {
         $this->$property = $value;
     }
 
-    public function __get($property,$value){
-       return $this->$value;
+    public function __get($property){
+       return $this->$property;
     }
 }
 

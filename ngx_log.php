@@ -731,4 +731,51 @@ function ngx_log_get_file_log(ngx_log $head)
     return null;
 }
 
+function ngx_log(ngx_log $log = null){
+    static $ngx_log = null;
+    if(!is_null($log)){
+       $ngx_log = $log;
+    }else{
+        return $ngx_log;
+    }
+
+}
+
+function ngx_log_file(ngx_open_file_s $file = null){
+   static $ngx_log_file = null;
+    if(!is_null($file)){
+       $ngx_log_file = $file;
+    }else{
+        return $ngx_log_file;
+    }
+}
+
+function ngx_use_stderr(){
+
+    static $ngx_use_stderr = 1;
+    return $ngx_use_stderr;
+}
+
+function ngx_log_redirect_stderr(ngx_cycle_t $cycle)
+{
+//ngx_fd_t  fd;
+
+    if ($cycle->log_use_stderr) {
+         return NGX_OK;
+     }
+
+    /* file log always exists when we are called */
+    $log = ngx_log_get_file_log($cycle->log)->file->fd;
+
+    if ($log->file->fd != ngx_stderr) {
+        if (ngx_set_stderr($log) == NGX_FILE_ERROR) {
+            ngx_log_error(NGX_LOG_ALERT, $cycle->log, NGX_FILE_ERROR,
+                          ngx_set_stderr_n ." failed");
+
+            return NGX_ERROR;
+        }
+    }
+
+    return NGX_OK;
+}
 
