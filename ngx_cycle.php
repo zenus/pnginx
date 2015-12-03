@@ -37,7 +37,7 @@ function ngx_quiet_mode($i = null){
 function ngx_old_cycles(ngx_cycle_t $cycle = null){
     static $ngx_old_cycles = null;
     if(!is_null($ngx_old_cycles)){
-       $ngx_old_cycles = $cycle;
+       $ngx_old_cycles[] = $cycle;
     }else{
        return $ngx_old_cycles;
     }
@@ -52,7 +52,7 @@ function dumb(ngx_connection_t $con = null){
     }
 }
 
-function ngx_cleaner_event(ngx_event_t $event){
+function ngx_cleaner_event(ngx_event_t $event = null){
     static $ngx_cleaner_event = null;
     if(!is_null($ngx_cleaner_event)){
        $ngx_cleaner_event = $event;
@@ -771,6 +771,16 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //        ngx_old_cycles.nalloc = n;
 //        ngx_old_cycles.pool = ngx_temp_pool;
 //
+      if(!ngx_cleaner_event()){
+          $event = new ngx_event_t();
+          $event->handler = 'ngx_clean_old_cycles';
+          $event->log = $cycle->log;
+          $con = dumb();
+          $con->fd = null;
+          $event->data = $con;
+          ngx_cleaner_event($event);
+      }
+
 //        ngx_cleaner_event.handler = ngx_clean_old_cycles;
 //        ngx_cleaner_event.log = cycle->log;
 //        ngx_cleaner_event.data = &dumb;
@@ -783,14 +793,15 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //    if (old == NULL) {
 //        exit(1);
 //    }
-//    *old = old_cycle;
+       ngx_old_cycles($old_cycle);
 //
-//    if (!ngx_cleaner_event.timer_set) {
-//        ngx_add_timer(&ngx_cleaner_event, 30000);
-//        ngx_cleaner_event.timer_set = 1;
-//    }
-//
-//    return cycle;
+    $ngx_cleaner_event = ngx_cleaner_event();
+    if (!$ngx_cleaner_event->timer_set) {
+        ngx_add_timer($ngx_cleaner_event, 30000);
+        $ngx_cleaner_event->timer_set = 1;
+    }
+
+    return $cycle;
 //
 //
 //failed:

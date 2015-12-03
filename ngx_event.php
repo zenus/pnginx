@@ -200,3 +200,7 @@ function ngx_io(ngx_os_io_t $ngx_os_io_t = null)
     }
 }
 
+function ngx_add_timer(ngx_event_t $e, $time){
+   return ngx_event_add_timer($e, $time);
+}
+

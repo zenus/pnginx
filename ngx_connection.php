@@ -63,6 +63,14 @@ class ngx_connection_t {
 
    /** unsigned  **/       private   $need_last_buf;
 
+    public function __set($property,$value){
+       $this->$property = $value;
+    }
+
+    public function __get($property){
+       return $this->$property;
+    }
+
 //#if (NGX_HAVE_IOCP)
 //    unsigned            accept_context_updated:1;
 //#endif
