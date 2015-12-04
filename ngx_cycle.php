@@ -750,27 +750,7 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 
         return $cycle;
     }
-//
-//
-//    if (ngx_temp_pool == NULL) {
-//        ngx_temp_pool = ngx_create_pool(128, cycle->log);
-//        if (ngx_temp_pool == NULL) {
-//            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-//                          "could not create ngx_temp_pool");
-//            exit(1);
-//        }
-//
-//        n = 10;
-//        ngx_old_cycles.elts = ngx_pcalloc(ngx_temp_pool,
-//            n * sizeof(ngx_cycle_t *));
-//        if (ngx_old_cycles.elts == NULL) {
-//            exit(1);
-//        }
-//        ngx_old_cycles.nelts = 0;
-//        ngx_old_cycles.size = sizeof(ngx_cycle_t *);
-//        ngx_old_cycles.nalloc = n;
-//        ngx_old_cycles.pool = ngx_temp_pool;
-//
+
       if(!ngx_cleaner_event()){
           $event = new ngx_event_t();
           $event->handler = 'ngx_clean_old_cycles';
@@ -802,66 +782,62 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
     }
 
     return $cycle;
-//
-//
-//failed:
-//
-//    if (!ngx_is_init_cycle(old_cycle)) {
-//        old_ccf = (ngx_core_conf_t *) ngx_get_conf(old_cycle->conf_ctx,
-//                                                   ngx_core_module);
-//        if (old_ccf->environment) {
-//            environ = old_ccf->environment;
-//        }
-//    }
-//
-//    /* rollback the new cycle configuration */
-//
-//    part = &cycle->open_files.part;
-//    file = part->elts;
-//
-//    for (i = 0; /* void */ ; i++) {
-//
-//        if (i >= part->nelts) {
-//            if (part->next == NULL) {
-//                break;
-//            }
-//            part = part->next;
-//            file = part->elts;
-//            i = 0;
-//        }
-//
-//        if (file[i].fd == NGX_INVALID_FILE || file[i].fd == ngx_stderr) {
-//            continue;
-//        }
-//
-//        if (ngx_close_file(file[i].fd) == NGX_FILE_ERROR) {
-//            ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
-//                ngx_close_file_n " \"%s\" failed",
-//                          file[i].name.data);
-//        }
-//    }
-//
-//    if (ngx_test_config) {
-//        ngx_destroy_cycle_pools(&conf);
-//        return NULL;
-//    }
-//
-//    ls = cycle->listening.elts;
-//    for (i = 0; i < cycle->listening.nelts; i++) {
-//    if (ls[i].fd == (ngx_socket_t) -1 || !ls[i].open) {
-//        continue;
-//    }
-//
-//        if (ngx_close_socket(ls[i].fd) == -1) {
-//        ngx_log_error(NGX_LOG_EMERG, log, ngx_socket_errno,
-//            ngx_close_socket_n " %V failed",
-//                          &ls[i].addr_text);
-//        }
-//    }
-//
-//    ngx_destroy_cycle_pools(&conf);
-//
-//    return NULL;
+
+
+failed:
+
+    if (!ngx_is_init_cycle($old_cycle)) {
+        $old_ccf =  ngx_get_conf($old_cycle->conf_ctx, ngx_core_module());
+        if ($old_ccf->environment) {
+            environ($old_ccf->environment);
+        }
+    }
+
+    /* rollback the new cycle configuration */
+
+    $open_files_list = $cycle->open_files;
+    $file = $open_files_list->current();
+
+    for ($i = 0; /* void */ ; $i++) {
+
+        if ($i >= count($file)) {
+            $open_files_list->next();
+            $file = $open_files_list->current();
+            if (empty($file)) {
+                break;
+            }
+            $i = 0;
+        }
+
+        if ($file[$i]->fd == NGX_INVALID_FILE || $file[$i]->fd == ngx_stderr) {
+            continue;
+        }
+
+        if (ngx_close_file($file[$i]->fd) == false) {
+            ngx_log_error(NGX_LOG_EMERG, $log, NGX_FCERROR,
+                ngx_close_file_n ." \"%s\" failed",
+                          $file[$i]->name);
+        }
+    }
+
+    if (ngx_test_config()) {
+        return NULL;
+    }
+
+    $ls = $cycle->listening;
+    for ($i = 0; $i < count($cycle->listening); $i++) {
+    if (empty($ls[$i]->fd) || !$ls[$i]->open) {
+        continue;
+    }
+
+        if (ngx_close_socket($ls[$i]->fd) == false) {
+            ngx_log_error(NGX_LOG_EMERG, $log, socket_last_error(),
+            ngx_close_socket_n ." %V failed",
+                          $ls[$i]->addr_text);
+        }
+    }
+
+    return NULL;
 }
 
 function ngx_create_pidfile($name, ngx_log $log)
@@ -963,5 +939,62 @@ function ngx_test_lockfile($file, ngx_log $log)
     }
 
     return NGX_OK;
+}
+
+function ngx_clean_old_cycles(ngx_event_t $ev)
+{
+//ngx_uint_t     i, n, found, live;
+//    ngx_log_t     *log;
+//    ngx_cycle_t  **cycle;
+
+    $ngx_cycle = ngx_cycle();
+    $log = $ngx_cycle->log;
+//    ngx_temp_pool->log = log;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_CORE, $log, 0, "clean old cycles");
+
+    $live = 0;
+
+    $cycle = ngx_old_cycles();
+    for ($i = 0; $i < count($cycle); $i++) {
+
+        if ($cycle[$i] == NULL) {
+            continue;
+        }
+
+        $found = 0;
+
+        for ($n = 0; $n < $cycle[$i]->connection_n; $n++) {
+            if ($cycle[$i]->connections[$n]->fd != false) {
+                $found = 1;
+
+                ngx_log_debug1(NGX_LOG_DEBUG_CORE, $log, 0, "live fd:%d", $n);
+
+                break;
+            }
+        }
+
+        if ($found) {
+            $live = 1;
+            continue;
+        }
+
+        ngx_log_debug1(NGX_LOG_DEBUG_CORE, $log, 0, "clean old cycle: %d", $i);
+
+        //ngx_destroy_pool(cycle[i]->pool);
+        $cycle[$i] = NULL;
+    }
+
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, $log, 0, "old cycles status: %d", $live);
+
+    if ($live) {
+        ngx_add_timer($ev, 30000);
+    }
+
+//    } else {
+//        ngx_destroy_pool(ngx_temp_pool);
+//        ngx_temp_pool = NULL;
+//        ngx_old_cycles.nelts = 0;
+//    }
 }
 

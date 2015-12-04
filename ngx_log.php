@@ -369,6 +369,14 @@ function ngx_log_debug2($level, $log, $err, $fmt, $arg1, $arg2){
 
 }
 
+function ngx_log_debug1($level, $log, $err, $fmt, $arg1){
+
+}
+
+function ngx_log_debug0($level, $log, $err, $fmt){
+
+}
+
 
 
 function ngx_errlog_module(){

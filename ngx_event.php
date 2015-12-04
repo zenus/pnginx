@@ -94,6 +94,10 @@ function ngx_event_flags($i = null){
     }
 }
 
+function ngx_event_ident(ngx_connection_t $p) {
+ return $p->fd;
+}
+
 class ngx_event_t {
 /**   void  **/    private  $data;
 
@@ -157,6 +161,8 @@ class ngx_event_t {
 
 /**   ngx_log_t  **/    private  $log;
 
+    //todo php special use it as libevent  event element
+    private $event;
 /**   ngx_rbtree_node_t  **/    private  $timer;
 
     /* the posted queue */
@@ -202,5 +208,22 @@ function ngx_io(ngx_os_io_t $ngx_os_io_t = null)
 
 function ngx_add_timer(ngx_event_t $e, $time){
    return ngx_event_add_timer($e, $time);
+}
+
+function ngx_del_timer(ngx_event_t $ev){
+    return ngx_event_del_timer($ev);
+
+}
+function ngx_event_del_timer(ngx_event_t $ev){
+
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, $ev->log, 0,
+                   "event timer del: %d: %M",
+    ngx_event_ident($ev->data), $ev->timer);
+
+    event_del($ev->event);
+    event_free($ev->event);
+
+
+    $ev->timer_set = 0;
 }
 

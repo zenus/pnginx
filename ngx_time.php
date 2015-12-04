@@ -62,6 +62,15 @@ function ngx_cached_syslog_time($time=null){
     }
 }
 
+function ngx_current_msec($time = null){
+    static $ngx_current_msec = null;
+    if(!is_null($time)){
+        $ngx_current_msec = $time;
+    }else{
+       return $ngx_current_msec;
+    }
+}
+
 
 
 function ngx_time_update()
