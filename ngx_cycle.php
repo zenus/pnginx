@@ -385,7 +385,6 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
         if (ngx_strcmp($ccf->pid, $old_ccf->pid) != 0)
         {
             /* new pid file name */
-
             if (ngx_create_pidfile($ccf->pid, $log) != NGX_OK) {
             goto failed;
         }
