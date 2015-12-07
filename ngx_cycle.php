@@ -34,6 +34,15 @@ function ngx_quiet_mode($i = null){
     }
 }
 
+function  ngx_dump_config($i = null){
+    static $ngx_dump_config = null;
+    if(!is_null($i)){
+        $ngx_dump_config = $i;
+    }else{
+        return $ngx_dump_config;
+    }
+}
+
 function ngx_old_cycles(ngx_cycle_t $cycle = null){
     static $ngx_old_cycles = null;
     if(!is_null($ngx_old_cycles)){
@@ -764,7 +773,6 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //        ngx_cleaner_event.log = cycle->log;
 //        ngx_cleaner_event.data = &dumb;
 //        dumb.fd = (ngx_socket_t) -1;
-//    }
 //
 //    ngx_temp_pool->log = cycle->log;
 //

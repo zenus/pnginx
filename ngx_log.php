@@ -213,6 +213,21 @@ function ngx_write_stderr($s)
   ngx_write_fd(ngx_stderr, $s);
 }
 
+function ngx_write_stdout($text)
+{
+    ngx_write_fd(ngx_stdout, $text);
+}
+
+function  ngx_use_stderr($i = null){
+   static $ngx_use_stderr = 1;
+    if(!is_null($ngx_use_stderr)){
+       $ngx_use_stderr = $i;
+    }else{
+       return $ngx_use_stderr;
+    }
+}
+
+
 function ngx_log_init(){
      $err_levels = array(
         '',

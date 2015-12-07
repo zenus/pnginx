@@ -53,10 +53,10 @@ function ngx_path_separator($c){
     return (($c) == '/');
 }
 
-function ngx_write_fd($fd, $p)
-{
-    return fwrite($fd, $p);
-}
+//function ngx_write_fd($fd, $p)
+//{
+//    return fwrite($fd, $p);
+//}
 
 function ngx_set_stderr(ngx_log $log){
     $log->file->fd = ngx_stderr;

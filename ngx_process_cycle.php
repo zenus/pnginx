@@ -61,3 +61,21 @@ function ngx_new_binary($i = null){
        return $ngx_new_binary;
     }
 }
+
+function ngx_inherited($i = null){
+    static $ngx_inherited = null;
+    if(!is_null($ngx_inherited)){
+       $ngx_inherited = $i;
+    }else{
+       return $ngx_inherited;
+    }
+}
+
+function ngx_daemonized($i = null){
+    static $ngx_daemonized = null;
+    if(!is_null($ngx_daemonized)){
+       $ngx_daemonized = $i;
+    }else{
+       return $ngx_daemonized;
+    }
+}

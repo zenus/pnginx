@@ -69,6 +69,15 @@ function ngx_show_configure($i = null){
     }
 }
 
+function ngx_signal($char = null){
+    static $ngx_signal = null;
+    if(!is_null($char)){
+       $ngx_signal = $char;
+    }else{
+       return $ngx_signal;
+    }
+}
+
 function ngx_pid($i = null){
     static $ngx_pid = null;
     if(!is_null($i)){
@@ -168,14 +177,99 @@ function main($argc, array $argv){
         ngx_modules($i,'index',$ngx_max_module++);
     }
     $cycle = ngx_init_cycle($init_cycle);
-//    if (cycle == NULL) {
-//        if (ngx_test_config) {
-//            ngx_log_stderr(0, "configuration file %s test failed",
-//                init_cycle.conf_file.data);
-//        }
-//
-//        return 1;
-//    }
+    if ($cycle == NULL) {
+        if (ngx_test_config()) {
+            ngx_log_stderr(0, "configuration file %s test failed",
+                $init_cycle->conf_file);
+        }
+
+        return 1;
+    }
+
+    if (ngx_test_config()) {
+        if (!ngx_quiet_mode()) {
+            ngx_log_stderr(0, "configuration file %s test is successful",
+                $cycle->conf_file);
+        }
+
+        if (ngx_dump_config()) {
+            $cd = $cycle->config_dump;
+
+            for ($i = 0; $i < count($cycle->config_dump); $i++) {
+
+                ngx_write_stdout("# configuration file ");
+                ngx_write_fd(ngx_stdout, $cd[$i]->name);
+                ngx_write_stdout(":". NGX_LINEFEED);
+
+                $b = $cd[$i]->buffer;
+
+                //todo should hava a good method to deal with ngx_buf_t struct
+                 ngx_write_fd(ngx_stdout, $b->pos);
+                ngx_write_stdout(NGX_LINEFEED);
+            }
+        }
+
+        return 0;
+    }
+
+
+    if ($ngx_signal = ngx_signal()) {
+        return ngx_signal_process($cycle, $ngx_signal);
+    }
+
+    ngx_os_status($cycle->log);
+
+    ngx_cycle($cycle);
+
+    $ccf =  ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
+    if ($ccf->master && ngx_process() == NGX_PROCESS_SINGLE) {
+        ngx_process(NGX_PROCESS_MASTER);
+    }
+
+
+    if (ngx_init_signals($cycle->log) != NGX_OK) {
+        return 1;
+    }
+
+    if (!ngx_inherited() && $ccf->daemon) {
+        if (ngx_daemon($cycle->log) != NGX_OK) {
+            return 1;
+        }
+
+        ngx_daemonized(1);
+    }
+
+    if (ngx_inherited()) {
+        ngx_daemonized(1);
+    }
+
+
+    if (ngx_create_pidfile($ccf->pid, $cycle->log) != NGX_OK) {
+        return 1;
+    }
+
+    if (ngx_log_redirect_stderr($cycle) != NGX_OK) {
+        return 1;
+    }
+
+    if ($log->file->fd != ngx_stderr) {
+        if (ngx_close_file($log->file->fd) == NGX_FILE_ERROR) {
+            ngx_log_error(NGX_LOG_ALERT, $cycle->log, NGX_FCERROR,
+                          ngx_close_file_n ." built-in log failed");
+        }
+    }
+
+    ngx_use_stderr(0);
+
+    if (ngx_process() == NGX_PROCESS_SINGLE) {
+        ngx_single_process_cycle($cycle);
+
+    } else {
+        ngx_master_process_cycle($cycle);
+    }
+
+    return 0;
 
 
 
