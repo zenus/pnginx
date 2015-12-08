@@ -64,7 +64,7 @@ function ngx_new_binary($i = null){
 
 function ngx_inherited($i = null){
     static $ngx_inherited = null;
-    if(!is_null($ngx_inherited)){
+    if(!is_null($i)){
        $ngx_inherited = $i;
     }else{
        return $ngx_inherited;
@@ -73,9 +73,121 @@ function ngx_inherited($i = null){
 
 function ngx_daemonized($i = null){
     static $ngx_daemonized = null;
-    if(!is_null($ngx_daemonized)){
+    if(!is_null($i)){
        $ngx_daemonized = $i;
     }else{
        return $ngx_daemonized;
     }
 }
+
+//ngx_uint_t    ngx_process;
+//ngx_uint_t    ngx_worker;
+//ngx_pid_t     ngx_pid;
+//
+//sig_atomic_t  ngx_reap;
+function ngx_reap($i = null){
+   static $ngx_reap = null;
+    if(!is_null($i)){
+        $ngx_reap = $i;
+    }else{
+       return $ngx_reap;
+    }
+}
+//sig_atomic_t  ngx_sigio;
+function ngx_sigio($i = null){
+   static $ngx_sigio = null;
+    if(!is_null($i)){
+       $ngx_sigio = $i;
+    }else{
+       return $ngx_sigio;
+    }
+}
+//sig_atomic_t  ngx_sigalrm;
+function ngx_sigalrm($i = null){
+   static $ngx_sigalrm = null;
+    if(!is_null($i)){
+        $ngx_sigalrm = $i;
+    }else{
+       return $ngx_sigalrm;
+    }
+}
+//sig_atomic_t  ngx_terminate;
+function ngx_terminate($i = null){
+   static $ngx_terminate = null;
+    if(!is_null($i)){
+       $ngx_terminate  = $i;
+    }else{
+       return $ngx_terminate;
+    }
+}
+//sig_atomic_t  ngx_quit;
+function ngx_quit($i = null){
+    static $ngx_quit = null;
+   if(!is_null($i)){
+      $ngx_quit = $i;
+   }else{
+       return $ngx_quit;
+   }
+}
+//sig_atomic_t  ngx_debug_quit;
+function ngx_debug_quit($i = null){
+   static $ngx_debug_quit = null;
+    if(!is_null($ngx_debug_quit)){
+       $ngx_debug_quit = $i;
+    }else{
+       return $ngx_debug_quit;
+    }
+}
+//ngx_uint_t    ngx_exiting;
+//sig_atomic_t  ngx_reconfigure;
+function ngx_reconfigure($i = null){
+   static $ngx_reconfigure = null;
+    if(!is_null($i)){
+        $ngx_reconfigure = $i;
+    }else{
+       return $ngx_reconfigure;
+    }
+}
+//sig_atomic_t  ngx_reopen;
+function ngx_reopen($i = null){
+   static $ngx_reopen = null;
+    if(!is_null($i)){
+       $ngx_reopen = $i;
+    }else{
+       return $ngx_reopen;
+    }
+}
+//
+//sig_atomic_t  ngx_change_binary;
+function ngx_change_binary($i = null){
+    static $ngx_change_binary = null;
+   if(!is_null($i)){
+      $ngx_change_binary = $i;
+   } else{
+      return $ngx_change_binary;
+   }
+}
+//ngx_pid_t     ngx_new_binary;
+function ngx_new_binary($i = null){
+   static $ngx_new_binary = null;
+    if(!is_null($i)){
+       $ngx_new_binary = $i;
+    }else{
+       return $ngx_new_binary;
+    }
+}
+//ngx_uint_t    ngx_inherited;
+//ngx_uint_t    ngx_daemonized;
+//
+//sig_atomic_t  ngx_noaccept;
+function ngx_noaccept($i = null){
+   static $ngx_noaccept = null;
+    if(!is_null($i)){
+       $ngx_noaccept = $i;
+    }else{
+       return $ngx_noaccept;
+    }
+}
+//ngx_uint_t    ngx_noaccepting;
+//ngx_uint_t    ngx_restart;
+

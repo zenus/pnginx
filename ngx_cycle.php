@@ -1005,3 +1005,56 @@ function ngx_clean_old_cycles(ngx_event_t $ev)
 //    }
 }
 
+
+function ngx_signal_process(ngx_cycle_t $cycle,  $sig)
+{
+//ssize_t           n;
+//    ngx_int_t         pid;
+//    ngx_file_t        file;
+//    ngx_core_conf_t  *ccf;
+//    u_char            buf[NGX_INT64_LEN + 2];
+
+    ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "signal process started");
+
+    $ccf =  ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
+    $file = new ngx_file_t();
+    //ngx_memzero(&file, sizeof(ngx_file_t));
+
+    $file->name = $ccf->pid;
+    $file->log = $cycle->log;
+
+    $file->fd = ngx_open_file($file->name, NGX_FILE_RDONLY, NGX_FILE_DEFAULT_ACCESS);
+
+    if ($file->fd == false) {
+        ngx_log_error(NGX_LOG_ERR, $cycle->log, NGX_FERROR,
+                      ngx_open_file_n ." \"%s\" failed", $file->name);
+        return 1;
+    }
+
+    $n = ngx_read_file($file, $buf,  PHP_INT_MAX, 0);
+
+    if (ngx_close_file($file->fd) == false) {
+        ngx_log_error(NGX_LOG_ALERT, $cycle->log, NGX_FCERROR,
+                      ngx_close_file_n ." \"%s\" failed", $file->name);
+    }
+
+    if ($n == NGX_ERROR) {
+        return 1;
+    }
+
+    while ($n-- && ($buf[$n] == CR || $buf[$n] == LF)) { /* void */ }
+
+    $pid = ngx_atoi(substr($buf,0,++$n));
+
+    if ($pid == NGX_ERROR) {
+        ngx_log_error(NGX_LOG_ERR, $cycle->log, 0,
+                      "invalid PID number \"%*s\" in \"%s\"",
+                      array($n, $buf, $file->name));
+        return 1;
+    }
+
+    return ngx_os_signal_process($cycle, $sig, $pid);
+
+}
+

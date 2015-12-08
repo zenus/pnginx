@@ -358,11 +358,97 @@ function ngx_time_init()
 //    ngx_time_update();
 }
 
+function ngx_time_lock($time_lock = null){
+   static $ngx_time_lock = null;
+    if(!is_null($time_lock)){
+        $ngx_time_lock = $time_lock;
+    }else{
+        return $ngx_time_lock;
+    }
+}
+
+function cached_time($t = null){
+    static $cached_time = null;
+   if(!is_null($cached_time)){
+       if(is_array($t)){
+           $cached_time[] = $t;
+       }else{
+           return $cached_time[$t];
+       }
+   }else{
+      return $cached_time;
+   }
+}
+
+function slot($i = null){
+    static $slot = null;
+    if(!is_null($i)){
+       $slot = $i;
+    }else{
+       return $slot;
+    }
+}
+
 /**
  * @param $ms
  */
 function ngx_msleep($ms) {
    usleep($ms * 1000);
+}
+
+function ngx_time_sigsafe_update()
+{
+//u_char          *p, *p2;
+//    ngx_tm_t         tm;
+//    time_t           sec;
+//    ngx_time_t      *tp;
+//    struct timeval   tv;
+
+    if (!ngx_trylock(ngx_time_lock())) {
+        return;
+    }
+
+    $tv = ngx_gettimeofday();
+
+    $sec = $tv['tv_sec'];
+    $slot= slot();
+    $tp = cached_time($slot);
+
+    if ($tp['sec'] == $sec) {
+        ngx_unlock(ngx_time_lock());
+        return;
+    }
+
+    if ($slot == NGX_TIME_SLOTS - 1) {
+        $slot = 0;
+    } else {
+        $slot++;
+    }
+
+//    $tp = cached_time($slot);
+//    $tp['sec'] = 0;
+
+//    ngx_gmtime($sec + cached_gmtoff * 60, &tm);
+//
+//    p = &cached_err_log_time[slot][0];
+//
+//    (void) ngx_sprintf(p, "%4d/%02d/%02d %02d:%02d:%02d",
+//    tm.ngx_tm_year, tm.ngx_tm_mon,
+//    tm.ngx_tm_mday, tm.ngx_tm_hour,
+//    tm.ngx_tm_min, tm.ngx_tm_sec);
+//
+//    p2 = cached_syslog_time[slot][0];
+//
+//    (void) ngx_sprintf(p2, "%s %2d %02d:%02d:%02d",
+//    months[tm.ngx_tm_mon - 1], tm.ngx_tm_mday,
+//                       tm.ngx_tm_hour, tm.ngx_tm_min, tm.ngx_tm_sec);
+//
+//    ngx_memory_barrier();
+//
+//    ngx_cached_err_log_time.data = p;
+//    ngx_cached_syslog_time.data = p2;
+//
+//    ngx_unlock(ngx_time_lock());
 }
 
 
