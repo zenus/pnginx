@@ -11,6 +11,27 @@
 //char           **ngx_os_argv;
 //define('ngx_log_pid',ngx_cfg('ngx_pid'));
 
+
+class ngx_process_t {
+/** ngx_pid_t **/ private $pid;
+/** int **/ private $status;
+/**    ngx_socket_t **/  private      $channel[2];
+/** ngx_spawn_proc_pt **/ private $proc;
+/** void **/ private $data;
+/** char **/ private $name;
+/** unsigned **/ private $respawn;
+/** unsigned **/ private $just_spawn;
+/** unsigned **/ private $detached;
+/** unsigned **/ private $exiting;
+/** unsigned **/ private $exited;
+    public function __set($property, $value){
+       $this->$property = $value;
+    }
+    public function __get($property){
+        return $this->$property;
+    }
+}
+
 function ngx_signal_value($n){
    return ngx_signal_helper($n);
 }
@@ -250,6 +271,7 @@ function ngx_signal_handler( $signo)
             break;
     }
 
+    $ngx_cycle = ngx_cycle();
     ngx_log_error(NGX_LOG_NOTICE, $ngx_cycle->log, 0,
                   "signal %d (%s) received%s", array($signo, $sig->signame, $action));
 
@@ -271,20 +293,181 @@ function ngx_getpid(){
    return posix_getpid();
 }
 
+function ngx_processes($mix){
+    static $ngx_processes = null;
+    if($mix instanceof ngx_process_t){
+        $ngx_processes[] = $mix;
+    }else{
+        return $ngx_processes[$mix];
+    }
+
+}
+
+function ngx_process_get_status()
+{
+//int              status;
+//    char            *process;
+//    ngx_pid_t        pid;
+//    ngx_err_t        err;
+//    ngx_int_t        i;
+//    ngx_uint_t       one;
+
+    $one = 0;
+
+    for ( ;; ) {
+        $pid = pcntl_waitpid(-1, $status, WNOHANG);
+
+        if ($pid == 0) {
+            return;
+        }
+
+        if ($pid == -1) {
+            $err = pcntl_get_last_error();
+
+            if ($err == NGX_EINTR) {
+                continue;
+            }
+
+            if ($err == NGX_ECHILD && $one) {
+                return;
+            }
+
+            /*
+             * Solaris always calls the signal handler for each exited process
+             * despite waitpid() may be already called for this process.
+             *
+             * When several processes exit at the same time FreeBSD may
+             * erroneously call the signal handler for exited process
+             * despite waitpid() may be already called for this process.
+             */
+
+            $ngx_cycle = ngx_cycle();
+            if ($err == NGX_ECHILD) {
+                ngx_log_error(NGX_LOG_INFO, $ngx_cycle->log, $err,
+                              "waitpid() failed");
+                return;
+            }
+
+            ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, $err,
+                          "waitpid() failed");
+            return;
+        }
+
+
+        $one = 1;
+        $process = "unknown process";
+
+        for ($i = 0; $i < ngx_last_process(); $i++) {
+            $ngx_process = ngx_processes($i);
+            if ($ngx_process->pid == $pid) {
+                $ngx_process->status = $status;
+                $ngx_process->exited = 1;
+                $process = $ngx_process->name;
+                break;
+            }
+        }
+
+        //pcntl_wtermsig
+        if (pcntl_wtermsig($status)) {
+
+            $ngx_cycle = ngx_cycle();
+            ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, 0,
+                          "%s %P exited on signal %d",
+                          array($process, $pid, pcntl_wtermsig($status)));
+        } else {
+            ngx_log_error(NGX_LOG_NOTICE, $ngx_cycle->log, 0,
+                          "%s %P exited with code %d",
+                          array($process, $pid, pcntl_wexitstatus($status)));
+        }
+
+
+          $ngx_process = ngx_processes($i);
+        if (pcntl_wexitstatus($status) == 2 && $ngx_process->respawn) {
+            ngx_log_error(NGX_LOG_ALERT, $ngx_cycle->log, 0,
+                          "%s %P exited with fatal code %d ".
+                          "and cannot be respawned",
+                          array($process, $pid,pcntl_wexitstatus($status)));
+            $ngx_process->respawn = 0;
+        }
+
+        //todo why should unlock
+        ngx_unlock_mutexes($pid);
+    }
+}
+
+function ngx_unlock_mutexes($pid)
+{
+//    ngx_uint_t        i;
+//    ngx_shm_zone_t   *shm_zone;
+//    ngx_list_part_t  *part;
+//    ngx_slab_pool_t  *sp;
+
+    /*
+     * unlock the accept mutex if the abnormally exited process
+     * held it
+     */
+//
+//    if (ngx_accept_mutex_ptr()) {
+//         ngx_shmtx_force_unlock(&ngx_accept_mutex, $pid);
+//    }
+//
+//    /*
+//     * unlock shared memory mutexes if held by the abnormally exited
+//     * process
+//     */
+//
+//    part = (ngx_list_part_t *) &ngx_cycle->shared_memory.part;
+//    shm_zone = part->elts;
+//
+//    for (i = 0; /* void */ ; i++) {
+//
+//        if (i >= part->nelts) {
+//            if (part->next == NULL) {
+//                break;
+//            }
+//            part = part->next;
+//            shm_zone = part->elts;
+//            i = 0;
+//        }
+//
+//        sp = (ngx_slab_pool_t *) shm_zone[i].shm.addr;
+//
+//        if (ngx_shmtx_force_unlock(&sp->mutex, pid)) {
+//            ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
+//                          "shared memory zone \"%V\" was locked by %P",
+//                          &shm_zone[i].shm.name, pid);
+//        }
+//    }
+}
+
+
+function  ngx_last_process($i = null){
+    static $ngx_last_process = null;
+    if(!is_null($i)){
+       $ngx_last_process = $i;
+    }else{
+       return $ngx_last_process;
+    }
+}
+
+//function  ngx_processes(){
+//   // [NGX_MAX_PROCESSES];
+//}
+
 function ngx_os_signal_process(ngx_cycle_t $cycle,  $name,  $pid)
 {
 //   ngx_signal_t  *sig;
-
-   for (sig = signals; sig->signo != 0; sig++) {
-   if (ngx_strcmp(name, sig->name) == 0) {
-      if (kill(pid, sig->signo) != -1) {
-         return 0;
-      }
-
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "kill(%P, %d) failed", pid, sig->signo);
-        }
-    }
-
-    return 1;
+//
+//   for (sig = signals; sig->signo != 0; sig++) {
+//   if (ngx_strcmp(name, sig->name) == 0) {
+//      if (kill(pid, sig->signo) != -1) {
+//         return 0;
+//      }
+//
+//            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
+//                          "kill(%P, %d) failed", pid, sig->signo);
+//        }
+//    }
+//
+//    return 1;
 }

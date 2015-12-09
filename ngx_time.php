@@ -8,9 +8,11 @@
 
 define('NGX_HAVE_GETTIMEZONE', 1);
 
- $week  = array( "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" );
- $months = array( "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" );
+function week($i){
+
+    static $week  = array( "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" );
+    return $week[$i];
+}
 class ngx_tm_t
 {
       private $tm_sec;			/* Seconds.	[0-60] (1 leap second) */
@@ -33,6 +35,24 @@ class ngx_tm_t
        return $this->$property;
     }
 };
+function months($i){
+    static $months = array( "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" );
+    return $months[$i];
+}
+
+class ngx_time_t {
+ private /*  time_t    */  $sec;
+ private /*  ngx_uint_t*/  $msec;
+ private /*  ngx_int_t */  $gmtoff;
+
+    public function __set($property,$value){
+       $this->$property = $value;
+    }
+    public function  __get($property){
+       return $this->$property;
+    }
+
+}
 
 define('NGX_TIME_SLOTS',64);
 
@@ -248,7 +268,7 @@ function ngx_gettimezone()
     return 0;
 }
 
-function ngx_gmtime($t, ngx_tm_t &$tp)
+function ngx_gmtime($t, ngx_tm_t $tp)
 {
 //    ngx_int_t   yday;
 //    ngx_uint_t  n, sec, min, hour, mday, mon, year, wday, days, leap;
@@ -367,10 +387,20 @@ function ngx_time_lock($time_lock = null){
     }
 }
 
+
+function cached_gmtoff($i = null){
+    static $cached_gmtoff = null;
+    if(!is_null($i)){
+        $cached_gmtoff = $i;
+    }else{
+        return $cached_gmtoff;
+    }
+}
+
 function cached_time($t = null){
     static $cached_time = null;
-   if(!is_null($cached_time)){
-       if(is_array($t)){
+   if(!is_null($t)){
+       if($t instanceof ngx_time_t){
            $cached_time[] = $t;
        }else{
            return $cached_time[$t];
@@ -388,6 +418,87 @@ function slot($i = null){
        return $slot;
     }
 }
+
+function  cached_err_log_time($char ){
+   // [NGX_TIME_SLOTS]
+    static $cached_err_log_time = null;
+    if(!is_string($char)){
+       $cached_err_log_time[] = $char;
+    }else{
+       return $cached_err_log_time[$char];
+    }
+}
+
+function cached_syslog_time($char){
+    static $cached_syslog_time = null;
+    if(!is_string($char)){
+       $cached_syslog_time[] = $char;
+    }else{
+       return $cached_syslog_time[$char];
+    }
+}
+
+function ngx_current_msec($i = null){
+    static $ngx_current_msec = null;
+    if(!is_null($i)){
+        $ngx_current_msec = $i;
+    }else{
+       return $ngx_current_msec;
+    }
+}
+function ngx_cached_time(ngx_time_t $t = null){
+    static $ngx_cached_time = null;
+    if(!is_null($t)){
+        $ngx_cached_time = $t ;
+    }else{
+       return $ngx_cached_time;
+    }
+}
+
+function ngx_cached_err_log_time($s = null){
+    static $ngx_cached_err_log_time = null;
+    if(!is_null($s)){
+         $ngx_cached_err_log_time = $s;
+    }else{
+        return $ngx_cached_err_log_time;
+    }
+}
+
+function ngx_cached_http_time($s = null){
+   static $ngx_cached_http_time = null;
+    if(!is_null($)){
+       $ngx_cached_http_time = $s;
+    }else{
+        return $ngx_cached_http_time;
+    }
+}
+
+function ngx_cached_http_log_time($s = null){
+   static $ngx_cached_http_log_time = null;
+    if(!is_null($ngx_cached_http_log_time)){
+       $ngx_cached_http_log_time = $s;
+    }else{
+       return $ngx_cached_http_log_time;
+    }
+}
+
+function ngx_cached_http_log_iso8601($s = null){
+    static $ngx_cached_http_log_iso8601 = null;
+    if(!is_null($s)){
+       $ngx_cached_http_log_iso8601 = $s;
+    }else{
+       return $ngx_cached_http_log_iso8601;
+    }
+}
+
+//function ngx_cached_syslog_time($s = null){
+//   static $ngx_cached_syslog_time = null;
+//    if(!is_null($s)){
+//       $ngx_cached_syslog_time = $s;
+//    }else{
+//       return $ngx_cached_syslog_time;
+//    }
+//}
 
 /**
  * @param $ms
@@ -414,7 +525,7 @@ function ngx_time_sigsafe_update()
     $slot= slot();
     $tp = cached_time($slot);
 
-    if ($tp['sec'] == $sec) {
+    if ($tp->sec == $sec) {
         ngx_unlock(ngx_time_lock());
         return;
     }
@@ -425,30 +536,35 @@ function ngx_time_sigsafe_update()
         $slot++;
     }
 
-//    $tp = cached_time($slot);
-//    $tp['sec'] = 0;
+    $tp = cached_time($slot);
+    $tp->sec = 0;
+    slot($slot);
 
-//    ngx_gmtime($sec + cached_gmtoff * 60, &tm);
-//
-//    p = &cached_err_log_time[slot][0];
-//
-//    (void) ngx_sprintf(p, "%4d/%02d/%02d %02d:%02d:%02d",
-//    tm.ngx_tm_year, tm.ngx_tm_mon,
-//    tm.ngx_tm_mday, tm.ngx_tm_hour,
-//    tm.ngx_tm_min, tm.ngx_tm_sec);
-//
-//    p2 = cached_syslog_time[slot][0];
-//
-//    (void) ngx_sprintf(p2, "%s %2d %02d:%02d:%02d",
-//    months[tm.ngx_tm_mon - 1], tm.ngx_tm_mday,
-//                       tm.ngx_tm_hour, tm.ngx_tm_min, tm.ngx_tm_sec);
-//
-//    ngx_memory_barrier();
-//
-//    ngx_cached_err_log_time.data = p;
-//    ngx_cached_syslog_time.data = p2;
-//
-//    ngx_unlock(ngx_time_lock());
+    $tm = new ngx_tm_t();
+    ngx_gmtime($sec + cached_gmtoff() * 60, $tm);
+
+    //p = &cached_err_log_time[slot][0];
+    $p = cached_err_log_time($slot);
+
+    ngx_sprintf($p, "%4d/%02d/%02d %02d:%02d:%02d",
+    array($tm->tm_year, $tm->tm_mon,
+    $tm->tm_mday, $tm->tm_hour,
+    $tm->tm_min, $tm->tm_sec));
+
+  //  p2 = cached_syslog_time[slot][0];
+     $p2 = cached_syslog_time($slot);
+      //slot($slot);
+
+     ngx_sprintf($p2, "%s %2d %02d:%02d:%02d",
+                      array(months($tm->tm_mon - 1), $tm->tm_mday,
+                       $tm->tm_hour, $tm->tm_min, $tm->tm_sec));
+
+    //ngx_memory_barrier();
+
+    ngx_cached_err_log_time($p);
+    ngx_cached_syslog_time($p2);
+
+    ngx_unlock(ngx_time_lock());
 }
 
 

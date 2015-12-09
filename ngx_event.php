@@ -227,3 +227,12 @@ function ngx_event_del_timer(ngx_event_t $ev){
     $ev->timer_set = 0;
 }
 
+function ngx_accept_mutex_ptr($ptr = null){
+    static $ngx_accept_mutex_ptr = null;
+    if(!is_null($ptr)){
+       $ngx_accept_mutex_ptr = $ptr;
+    }else{
+        return $ngx_accept_mutex_ptr;
+    }
+}
+
