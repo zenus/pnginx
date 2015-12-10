@@ -391,7 +391,7 @@ function ngx_process_get_status()
         }
 
         //todo why should unlock
-        ngx_unlock_mutexes($pid);
+     //   ngx_unlock_mutexes($pid);
     }
 }
 
@@ -457,17 +457,17 @@ function  ngx_last_process($i = null){
 function ngx_os_signal_process(ngx_cycle_t $cycle,  $name,  $pid)
 {
 //   ngx_signal_t  *sig;
-//
-//   for (sig = signals; sig->signo != 0; sig++) {
-//   if (ngx_strcmp(name, sig->name) == 0) {
-//      if (kill(pid, sig->signo) != -1) {
-//         return 0;
-//      }
-//
-//            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-//                          "kill(%P, %d) failed", pid, sig->signo);
-//        }
-//    }
-//
-//    return 1;
+
+   for ($i=0; $sig = signals($i),$sig->signo != 0; $i++) {
+       if (ngx_strcmp($name, $sig->name) == 0) {
+          if (posix_kill($pid, $sig->signo) != false) {
+             return 0;
+          }
+
+                ngx_log_error(NGX_LOG_ALERT, $cycle->log, posix_get_last_error(),
+                              "kill(%P, %d) failed", array($pid, $sig->signo));
+            }
+        }
+
+        return 1;
 }

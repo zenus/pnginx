@@ -68,3 +68,13 @@ function ngx_os_io()
     return $ngx_os_io;
 }
 
+function ngx_os_status(ngx_log $log)
+{
+    ngx_log_error(NGX_LOG_NOTICE, $log, 0, NGINX_VER_BUILD);
+    ngx_os_specific_status($log);
+    $limit  = posix_getrlimit();
+    ngx_log_error(NGX_LOG_NOTICE, $log, 0,
+        "getrlimit(RLIMIT_NOFILE): %r:%r",
+        array($limit['soft openfiles'], $limit['hard openfiles']));
+}
+
