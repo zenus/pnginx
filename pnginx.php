@@ -203,7 +203,7 @@ function main($argc, array $argv){
 
                 $b = $cd[$i]->buffer;
 
-                //todo should hava a good method to deal with ngx_buf_t struct
+                //todo should hava a good method to deal  with ngx_buf_t struct
                  ngx_write_fd(ngx_stdout, $b->pos);
                 ngx_write_stdout(NGX_LINEFEED);
             }
