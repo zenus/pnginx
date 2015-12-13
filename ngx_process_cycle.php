@@ -18,9 +18,9 @@ define('NGX_PROCESS_SIGNALLER' , 2);
 define('NGX_PROCESS_WORKER'    , 3);
 define('NGX_PROCESS_HELPER'    , 4);
 
-static $ngx_process;
-static $ngx_worker;
-static $ngx_pid;
+//static $ngx_process;
+//static $ngx_worker;
+//static $ngx_pid;
 
 
 //static $atomic_ngx_reap;
@@ -132,7 +132,7 @@ function ngx_quit($i = null){
 //sig_atomic_t  ngx_debug_quit;
 function ngx_debug_quit($i = null){
    static $ngx_debug_quit = null;
-    if(!is_null($ngx_debug_quit)){
+    if(!is_null($i)){
        $ngx_debug_quit = $i;
     }else{
        return $ngx_debug_quit;
@@ -167,15 +167,7 @@ function ngx_change_binary($i = null){
       return $ngx_change_binary;
    }
 }
-//ngx_pid_t     ngx_new_binary;
-function ngx_new_binary($i = null){
-   static $ngx_new_binary = null;
-    if(!is_null($i)){
-       $ngx_new_binary = $i;
-    }else{
-       return $ngx_new_binary;
-    }
-}
+
 //ngx_uint_t    ngx_inherited;
 //ngx_uint_t    ngx_daemonized;
 //

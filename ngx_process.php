@@ -471,3 +471,19 @@ function ngx_os_signal_process(ngx_cycle_t $cycle,  $name,  $pid)
 
         return 1;
 }
+
+function ngx_init_signals(ngx_log $log)
+{
+//ngx_signal_t      *sig;
+//    struct sigaction   sa;
+
+    for ($i=0,$sig = signals($i); $sig->signo != 0; $i++) {
+        if (pcntl_signal($sig['signo'], $sig['handler'], NULL) == false) {
+            ngx_log_error(NGX_LOG_EMERG, $log, pcntl_get_last_error(),
+                "sigaction(%s) failed", $sig['signame']);
+            return NGX_ERROR;
+        }
+    }
+
+    return NGX_OK;
+}

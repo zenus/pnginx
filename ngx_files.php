@@ -1,6 +1,10 @@
 <?php
 define('ngx_stdout',STDOUT);
 define('ngx_stderr',STDERR);
+/* Standard file descriptors.  */
+define('STDIN_FILENO', STDIN);/* Standard input.  */
+define('STDOUT_FILENO',	STDOUT);	/* Standard output.  */
+define('STDERR_FILENO',	STDERR);	/* Standard error output.  */
 define('NGX_LINEFEED',"\x0a");
 define('NGX_FILE_RDONLY',         'r');
 define('NGX_FILE_WRONLY',          'w');
@@ -71,7 +75,7 @@ function ngx_file_size($sb){
 }
 
 function  ngx_close_file($fd){
-   fclose($fd);
+   return fclose($fd);
 }
 
 function ngx_read_file(ngx_file_t $file, &$buf, $size, $offset)
