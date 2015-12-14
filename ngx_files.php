@@ -19,8 +19,8 @@ define('NGX_FILE_OWNER_ACCESS',   0600);
 
 //define('NGX_FILE_NONBLOCK',        O_NONBLOCK);
 
-define('NGX_INVALID_FILE',FALSE);
-define('NGX_FILE_ERROR',-1);
+define('NGX_INVALID_FILE',false);
+define('NGX_FILE_ERROR',false);
 
 define('ngx_open_file_n',"open()");
 define('ngx_fd_info_n',"fstat()");

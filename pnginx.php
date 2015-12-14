@@ -848,6 +848,20 @@ function ngx_set_worker_processes_closure(){
     };
 }
 
+
+function ngx_os_environ($var = null){
+    static $ngx_os_environ = null;
+    if(!is_null($var)){
+        if(is_array($var)){
+            $ngx_os_environ = $var;
+        }elseif(is_string($var)){
+           $ngx_os_environ[] = $var;
+        }
+    }else{
+       return $ngx_os_environ;
+    }
+}
+
 function ngx_set_worker_processes(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
 //ngx_str_t        *value;
@@ -1028,6 +1042,7 @@ function ngx_set_env(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     }
     return NGX_CONF_OK;
 }
+
 main($argc,$argv);
 
 function ngx_conf_params($s = null){
@@ -1037,6 +1052,105 @@ function ngx_conf_params($s = null){
     }else{
        return $ngx_conf_params;
     }
+}
+
+function ngx_set_environment(ngx_cycle_t $cycle, $last)
+{
+//char             **p, **env;
+    $env = null;
+//    ngx_str_t         *var;
+//    ngx_uint_t         i, n;
+//    ngx_core_conf_t   *ccf;
+
+    $ccf =  ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
+    if ($last == NULL && !empty($ccf->environment)) {
+        return $ccf->environment;
+    }
+
+    $var = $ccf->env;
+
+    for ($i = 0; $i < count($ccf->env); $i++) {
+    if (ngx_strcmp($var[$i], "TZ") == 0
+    || ngx_strncmp($var[$i], "TZ=", 3) == 0)
+        {
+            goto tz_found;
+        }
+    }
+
+//    var = ngx_array_push(&ccf->env);
+//    if (var == NULL) {
+//    return NULL;
+//}
+
+//    var->len = 2;
+//    var->data = (u_char *) "TZ";
+    $ccf->env[] = 'TZ';
+    $var = $ccf->env;
+
+
+tz_found:
+
+    $n = 0;
+
+    for ($i = 0; $i < count($ccf->env); $i++) {
+
+        if ($var[$i][strlen($var[$i])] == '=') {
+            $n++;
+            continue;
+        }
+
+        for ($j=0,$p = ngx_os_environ(); $p[$j]; $j++) {
+
+            if (ngx_strncmp($p[$j], $var[$i], strlen($var[$i])) == 0
+            && $p[strlen($var[$i])] == '=')
+                {
+                    $n++;
+                    break;
+                }
+        }
+    }
+
+    if ($last) {
+        //env = ngx_alloc((*last + n + 1) * sizeof(char *), cycle->log);
+        $last = $n;
+
+    } else {
+        //env = ngx_palloc(cycle->pool, (n + 1) * sizeof(char *));
+    }
+
+//    if ($env == NULL) {
+//        return NULL;
+//    }
+
+    $n = 0;
+
+    for ($i = 0; $i < count($ccf->env); $i++) {
+
+    if ($var[$i][strlen($var[$i])] == '=') {
+            $env[$n++] = $var[$i];
+            continue;
+        }
+
+        for ($j=0,$p = ngx_os_environ(); $p[$j]; $j++) {
+
+            if (ngx_strncmp($p[$j], $var[$i], strlen($var[$i])) == 0
+            && $p[strlen($var[$i])] == '=')
+                {
+                    $env[$n++] = $p[$j];
+                    break;
+                }
+        }
+    }
+
+    $env[$n] = NULL;
+
+    if ($last == NULL) {
+        $ccf->environment = $env;
+        environ($env);
+    }
+
+    return $env;
 }
 
 

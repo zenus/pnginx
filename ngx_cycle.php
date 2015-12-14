@@ -1058,3 +1058,123 @@ function ngx_signal_process(ngx_cycle_t $cycle,  $sig)
 
 }
 
+function ngx_reopen_files(ngx_cycle_t $cycle,  $user)
+{
+//    ngx_fd_t          fd;
+//    ngx_uint_t        i;
+//    ngx_list_part_t  *part;
+//    ngx_open_file_t  *file;
+
+//    $part = $cycle->open_files;
+//    file = part->elts;
+    $open_files_list = $cycle->open_files;
+    $file = $open_files_list->current();
+   for ($i = 0; /* void */ ; $i++) {
+
+       if ($i >= count($file)) {
+           $open_files_list->next();
+           $file = $open_files_list->current();
+           if (empty($file)) {
+               break;
+           }
+           $i = 0;
+       }
+
+       if (strlen($file[$i]->name)== 0) {
+           continue;
+       }
+
+        if ($file[$i]->flush) {
+            $file[$i]->flush($file[$i], $cycle->log);
+        }
+
+        $fd = ngx_open_file($file[$i]->name, NGX_FILE_APPEND, NGX_FILE_DEFAULT_ACCESS);
+
+        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
+                       "reopen file \"%s\", old:%d new:%d",
+                       $file[$i]->name, $file[$i]->fd, $fd);
+
+        if ($fd == NGX_INVALID_FILE) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FERROR,
+                          ngx_open_file_n ." \"%s\" failed", $file[$$i]->name);
+            continue;
+        }
+
+        if ($user !=  NGX_CONF_UNSET_UINT) {
+            //ngx_file_info_t  fi;
+
+            if ($fi = ngx_file_info($file[$i]->name) == NGX_FILE_ERROR)
+            {
+                ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FIERROR,
+                              ngx_file_info_n ." \"%s\" failed",
+                              $file[$i]->name);
+
+                if (ngx_close_file($fd) == NGX_FILE_ERROR) {
+                    ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCERROR,
+                                  ngx_close_file_n ." \"%s\" failed",
+                                  $file[$i]->name);
+                }
+                continue;
+            }
+
+            if ($fi['uid'] != $user) {
+                if (chown( $file[$i]->name, $user) == false) {
+                    ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCNERROR,
+                                  "chown(\"%s\", %d) failed",
+                                  array($file[$i]->name, $user));
+
+                    if (ngx_close_file($fd) == NGX_FILE_ERROR) {
+                        ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCERROR,
+                                      ngx_close_file_n ." \"%s\" failed",
+                                      $file[$i]->name);
+                    }
+
+                    continue;
+                }
+            }
+
+            if (($fi['mode'] & (S_IRUSR|S_IWUSR)) != (S_IRUSR|S_IWUSR)) {
+
+                $fi['mode'] |= (S_IRUSR|S_IWUSR);
+
+                if (chmod($file[$i]->name, $fi['mode']) == false) {
+                    ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCMERROR,
+                                  "chmod() \"%s\" failed", $file[$i]->name);
+
+                    if (ngx_close_file($fd) == NGX_FILE_ERROR) {
+                        ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCERROR,
+                                      ngx_close_file_n ." \"%s\" failed",
+                                      $file[$i]->name);
+                    }
+
+                    continue;
+                }
+            }
+        }
+
+       //todo we should find a way to replace it
+//        if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1) {
+//            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
+//                          "fcntl(FD_CLOEXEC) \"%s\" failed",
+//                          file[i].name.data);
+//
+//            if (ngx_close_file($fd) == NGX_FILE_ERROR) {
+//                ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCERROR,
+//                              ngx_close_file_n ." \"%s\" failed",
+//                              $file[$i]->name);
+//            }
+//
+//            continue;
+//        }
+        if (ngx_close_file($file[$i]->fd) == NGX_FILE_ERROR) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, NGX_FCERROR,
+                          ngx_close_file_n ." \"%s\" failed",
+                          $file[$i]->name);
+        }
+
+        $file[$i]->fd = $fd;
+    }
+
+    ngx_log_redirect_stderr($cycle);
+}
+

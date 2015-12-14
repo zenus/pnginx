@@ -147,7 +147,7 @@ function signals($i = 0){
     return  $signals[$i];
 }
 
-function ngx_signal_handler( $signo)
+function ngx_signal_handler($signo)
 {
 //    char            *action;
 //    ngx_int_t        ignore;

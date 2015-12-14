@@ -183,3 +183,123 @@ function ngx_noaccept($i = null){
 //ngx_uint_t    ngx_noaccepting;
 //ngx_uint_t    ngx_restart;
 
+function ngx_single_process_cycle(ngx_cycle_t $cycle)
+{
+//ngx_uint_t  i;
+
+    if (ngx_set_environment($cycle, NULL) == NULL) {
+        /* fatal */
+        exit(2);
+    }
+
+    for ($i = 0; ngx_modules($i); $i++) {
+    if (ngx_modules($i)->init_process) {
+        if (ngx_modules($i)->init_process($cycle) == NGX_ERROR) {
+            /* fatal */
+            exit(2);
+        }
+        }
+    }
+
+    for ( ;; ) {
+        ngx_log_debug0(NGX_LOG_DEBUG_EVENT, $cycle->log, 0, "worker cycle");
+
+        ngx_process_events_and_timers($cycle);
+
+        if (ngx_terminate() || ngx_quit()) {
+
+            for ($i = 0; ngx_modules($i); $i++) {
+                if (ngx_modules($i)->exit_process) {
+                    ngx_modules($i)->exit_process($cycle);
+                }
+            }
+
+            ngx_master_process_exit($cycle);
+        }
+
+        if (ngx_reconfigure()) {
+            ngx_reconfigure(0);
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "reconfiguring");
+
+            $cycle = ngx_init_cycle($cycle);
+            if ($cycle == NULL) {
+                $cycle = ngx_cycle();
+                continue;
+            }
+
+            ngx_cycle($cycle);
+        }
+
+        if (ngx_reopen()) {
+            ngx_reopen(0);
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "reopening logs");
+            ngx_reopen_files($cycle,  -1);
+        }
+    }
+}
+
+function ngx_exit_log_file(ngx_open_file_s $file = null){
+    static $ngx_exit_log_file = null;
+    if(!is_null($file)){
+       $ngx_exit_log_file = $file;
+    }else{
+       return  $ngx_exit_log_file;
+    }
+
+}
+
+function ngx_exit_cycle(ngx_cycle_t $cycle = null){
+
+    static  $ngx_exit_cycle = null;
+    if(!is_null($ngx_exit_cycle)){
+       $ngx_exit_cycle = $cycle;
+    }else{
+       return $ngx_exit_cycle;
+    }
+
+}
+
+function ngx_master_process_exit(ngx_cycle_t $cycle)
+{
+//ngx_uint_t  i;
+
+    ngx_delete_pidfile($cycle);
+
+    ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "exit");
+
+    for ($i = 0; ngx_modules($i); $i++) {
+        if (ngx_modules($i)->exit_master) {
+            ngx_modules($i)->exit_master($cycle);
+            }
+    }
+
+    ngx_close_listening_sockets($cycle);
+
+    /*
+     * Copy ngx_cycle->log related data to the special static exit cycle,
+     * log, and log file structures enough to allow a signal handler to log.
+     * The handler may be called when standard ngx_cycle->log allocated from
+     * ngx_cycle->pool is already destroyed.
+     */
+
+
+    $ngx_cycle = ngx_cycle();
+    $ngx_exit_log = ngx_log_get_file_log($ngx_cycle->log);
+
+    $ngx_exit_log_file = new ngx_open_file_s();
+    $ngx_exit_log_file->fd = $ngx_exit_log->file->fd;
+    $ngx_exit_log->file = $ngx_exit_log_file;
+    //$ngx_exit_log.next = NULL;
+    $ngx_exit_log->writer = NULL;
+
+    $ngx_exit_cycle = new ngx_cycle_t();
+    $ngx_exit_cycle->log = $ngx_exit_log;
+    $ngx_exit_cycle->files = $ngx_cycle->files;
+    $ngx_exit_cycle->files_n =$ngx_cycle->files_n;
+    ngx_cycle($ngx_exit_cycle);
+
+    //ngx_destroy_pool($cycle->pool);
+
+    exit(0);
+}
+
