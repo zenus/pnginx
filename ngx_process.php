@@ -300,7 +300,6 @@ function ngx_processes($mix){
     }else{
         return $ngx_processes[$mix];
     }
-
 }
 
 function ngx_process_get_status()
@@ -313,7 +312,7 @@ function ngx_process_get_status()
 //    ngx_uint_t       one;
 
     $one = 0;
-
+    $ngx_cycle = ngx_cycle();
     for ( ;; ) {
         $pid = pcntl_waitpid(-1, $status, WNOHANG);
 
@@ -341,10 +340,8 @@ function ngx_process_get_status()
              * despite waitpid() may be already called for this process.
              */
 
-            $ngx_cycle = ngx_cycle();
             if ($err == NGX_ECHILD) {
-                ngx_log_error(NGX_LOG_INFO, $ngx_cycle->log, $err,
-                              "waitpid() failed");
+                ngx_log_error(NGX_LOG_INFO, $ngx_cycle->log, $err, "waitpid() failed");
                 return;
             }
 

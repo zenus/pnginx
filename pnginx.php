@@ -417,7 +417,7 @@ function ngx_save_argv( $argc, $argv)
     }
 
     //todo
-    //ngx_os_environ = environ;
+    ngx_os_environ(environ());
 
     return NGX_OK;
 }

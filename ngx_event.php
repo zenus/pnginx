@@ -84,6 +84,10 @@ define('NGX_USE_EVENTPORT_EVENT',0x00001000);
  */
 define('NGX_USE_VNODE_EVENT',0x00002000);
 
+define('NGX_READ_EVENT', EV_READ);
+define('NGX_WRITE_EVENT',EV_WRITE);
+define('NGX_CLOSE_EVENT',1);
+
 
 function ngx_event_flags($i = null){
     static $ngx_event_flags = null;
@@ -235,4 +239,102 @@ function ngx_accept_mutex_ptr($ptr = null){
         return $ngx_accept_mutex_ptr;
     }
 }
+
+//ngx_atomic_t         *ngx_accept_mutex_ptr;
+//ngx_shmtx_t           ngx_accept_mutex;
+//ngx_uint_t            ngx_use_accept_mutex;
+function ngx_use_accept_mutex($i = null){
+    static $ngx_use_accept_mutex = null;
+    if(!is_null($i)){
+       $ngx_use_accept_mutex = $i;
+    }else{
+        return $ngx_use_accept_mutex;
+    }
+
+}
+//ngx_uint_t            ngx_accept_events;
+function ngx_accept_events($i = null){
+   static $ngx_accept_events = null;
+    if(!is_null($i)){
+       $ngx_accept_events = $i;
+    }else{
+       return $ngx_accept_events;
+    }
+}
+//ngx_uint_t            ngx_accept_mutex_held;
+function ngx_accept_mutex_held($i = null){
+    static $ngx_accept_mutex_held = null;
+    if(!is_null($i)){
+       $ngx_accept_mutex_held = $i;
+    }else{
+       return $ngx_accept_mutex_held;
+    }
+}
+//ngx_msec_t            ngx_accept_mutex_delay;
+function ngx_accept_mutex_delay($i = null){
+    static $ngx_accept_mutex_delay = null;
+    if(!is_null($i)){
+        $ngx_accept_mutex_delay = $i;
+    }else{
+       return $ngx_accept_mutex_delay;
+    }
+
+}
+
+function ngx_del_event(ngx_event_t $ev,  $event,  $flags)
+{
+//    int                  op;
+//    uint32_t             prev;
+//    ngx_event_t         *e;
+//    ngx_connection_t    *c;
+//    struct epoll_event   ee;
+
+    /*
+     * when the file descriptor is closed, the epoll automatically deletes
+     * it from its queue, so we do not need to delete explicitly the event
+     * before the closing the file descriptor
+     */
+
+    if ($flags & NGX_CLOSE_EVENT) {
+        $ev->active = 0;
+        return NGX_OK;
+    }
+
+    $c = $ev->data;
+
+    if ($event == NGX_READ_EVENT) {
+        $e = $c->write;
+        $prev = NGX_WRITE_EVENT;
+
+    } else {
+        $e = $c->read;
+        $prev = NGX_READ_EVENT;
+    }
+
+//    if ($e->active) {
+//    op = EPOLL_CTL_MOD;
+//    ee.events = prev | (uint32_t) flags;
+//        ee.data.ptr = (void *) ((uintptr_t) c | ev->instance);
+//
+//    } else {
+//    op = EPOLL_CTL_DEL;
+//    ee.events = 0;
+//    ee.data.ptr = NULL;
+//}
+//
+//    ngx_log_debug3(NGX_LOG_DEBUG_EVENT, ev->log, 0,
+//                   "epoll del event: fd:%d op:%d ev:%08XD",
+//                   c->fd, op, ee.events);
+//
+//    if (epoll_ctl(ep, op, c->fd, &ee) == -1) {
+//    ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_errno,
+//                      "epoll_ctl(%d, %d) failed", op, c->fd);
+//        return NGX_ERROR;
+//    }
+//
+//    ev->active = 0;
+
+    return NGX_OK;
+}
+//ngx_int_t             ngx_accept_disabled;
 
