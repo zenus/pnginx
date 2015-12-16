@@ -88,6 +88,9 @@ define('NGX_READ_EVENT', EV_READ);
 define('NGX_WRITE_EVENT',EV_WRITE);
 define('NGX_CLOSE_EVENT',1);
 
+define('NGX_UPDATE_TIME',1);
+define('NGX_POST_EVENTS',2);
+define('NGX_DISABLE_EVENT',2);
 
 function ngx_event_flags($i = null){
     static $ngx_event_flags = null;
@@ -211,11 +214,11 @@ function ngx_io(ngx_os_io_t $ngx_os_io_t = null)
 }
 
 function ngx_add_timer(ngx_event_t $e, $time){
-   return ngx_event_add_timer($e, $time);
+    ngx_event_add_timer($e, $time);
 }
 
 function ngx_del_timer(ngx_event_t $ev){
-    return ngx_event_del_timer($ev);
+    ngx_event_del_timer($ev);
 
 }
 function ngx_event_del_timer(ngx_event_t $ev){
@@ -281,6 +284,106 @@ function ngx_accept_mutex_delay($i = null){
 
 }
 
+function ngx_timer_resolution($i = null){
+    static $ngx_timer_resolution = null;
+    if(!is_null($i)){
+        $ngx_timer_resolution = $i;
+    }else{
+       return $ngx_timer_resolution;
+    }
+}
+
+function ngx_accept_disabled($i = null){
+    static $ngx_accept_disabled = null;
+    if(!is_null($i)){
+       $ngx_accept_disabled =  $i;
+    }else{
+       return $ngx_accept_disabled;
+    }
+}
+
+function  ngx_accept_mutex($shmtx = null){
+    static $ngx_accept_mutex = null;
+    if(!is_null($shmtx)){
+        $ngx_accept_mutex = $shmtx;
+    }else{
+       return $ngx_accept_mutex;
+    }
+}
+
+
+function ngx_process_events_and_timers(ngx_cycle_t $cycle)
+{
+//ngx_uint_t  flags;
+//    ngx_msec_t  timer, delta;
+
+    if (ngx_timer_resolution()) {
+        $timer = NGX_TIMER_INFINITE;
+        $flags = 0;
+
+    } else {
+    //todo should complete event method
+        $timer = ngx_event_find_timer();
+        $flags = NGX_UPDATE_TIME;
+    }
+
+    if (ngx_use_accept_mutex()) {
+        if ($ngx_accept_disabled = ngx_accept_disabled() > 0) {
+            $ngx_accept_disabled--;
+            ngx_accept_disabled($ngx_accept_disabled);
+
+        } else {
+            //todo should complete lock method
+            if (ngx_trylock_accept_mutex($cycle) == NGX_ERROR) {
+                return;
+            }
+
+            if (ngx_accept_mutex_held()) {
+                $flags |= NGX_POST_EVENTS;
+
+            } else {
+                if ($timer == NGX_TIMER_INFINITE
+                    || ($timer > ($ngx_accept_mutex_delay = ngx_accept_mutex_delay())))
+                {
+                    $timer = ngx_accept_mutex_delay();
+                }
+            }
+        }
+    }
+
+    $delta = ngx_current_msec();
+
+    //todo should complete event method
+    ngx_process_events($cycle, $timer, $flags);
+
+    $delta = ngx_current_msec() - $delta;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
+                   "timer delta: %M", $delta);
+
+    ngx_event_process_posted($cycle, ngx_posted_accept_events());
+
+    if (ngx_accept_mutex_held()) {
+        ngx_shmtx_unlock(ngx_accept_mutex());
+    }
+
+    if ($delta) {
+        ngx_event_expire_timers();
+    }
+
+    ngx_event_process_posted($cycle, ngx_posted_events());
+}
+
+//todo need to complete event method
+function ngx_add_event(ngx_event_t $ev,  $event,  $flags){
+  return NGX_OK;
+}
+
+//todo need to complete event method
+function ngx_process_events(ngx_cycle_t $cycle,  $timer,  $flags){
+
+}
+//todo need to complete event method
 function ngx_del_event(ngx_event_t $ev,  $event,  $flags)
 {
 //    int                  op;
@@ -337,4 +440,6 @@ function ngx_del_event(ngx_event_t $ev,  $event,  $flags)
     return NGX_OK;
 }
 //ngx_int_t             ngx_accept_disabled;
+
+
 

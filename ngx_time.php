@@ -82,15 +82,6 @@ function ngx_cached_syslog_time($time=null){
     }
 }
 
-function ngx_current_msec($time = null){
-    static $ngx_current_msec = null;
-    if(!is_null($time)){
-        $ngx_current_msec = $time;
-    }else{
-       return $ngx_current_msec;
-    }
-}
-
 
 
 function ngx_time_update()
@@ -466,7 +457,7 @@ function ngx_cached_err_log_time($s = null){
 
 function ngx_cached_http_time($s = null){
    static $ngx_cached_http_time = null;
-    if(!is_null($)){
+    if(!is_null($s)){
        $ngx_cached_http_time = $s;
     }else{
         return $ngx_cached_http_time;
@@ -482,6 +473,9 @@ function ngx_cached_http_log_time($s = null){
     }
 }
 
+/**
+ * @param null $s
+ */
 function ngx_cached_http_log_iso8601($s = null){
     static $ngx_cached_http_log_iso8601 = null;
     if(!is_null($s)){

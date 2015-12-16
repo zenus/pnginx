@@ -6,6 +6,7 @@
  * Time: 下午11:06
  */
 define('NGX_TIMER_LAZY_DELAY',300);
+define('NGX_TIMER_INFINITE',-1);
 
 function ngx_event_add_timer(ngx_event_t $ev, $timer){
 
@@ -48,6 +49,28 @@ function ngx_event_add_timer(ngx_event_t $ev, $timer){
     event_base_loop($base);
 
     $ev->timer_set = 1;
+}
+
+
+//todo should complete event method
+function ngx_event_find_timer()
+{
+////ngx_msec_int_t      timer;
+////    ngx_rbtree_node_t  *node, *root, *sentinel;
+//
+//    if (ngx_event_timer_rbtree.root == &ngx_event_timer_sentinel) {
+//        return NGX_TIMER_INFINITE;
+//    }
+//
+//    root = ngx_event_timer_rbtree.root;
+//    sentinel = ngx_event_timer_rbtree.sentinel;
+//
+//    node = ngx_rbtree_min(root, sentinel);
+//
+//    timer = (ngx_msec_int_t) (node->key - ngx_current_msec);
+//
+//    return (ngx_msec_t) (timer > 0 ? timer : 0);
+    return 1;
 }
 
 function event_base(){

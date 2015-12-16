@@ -635,39 +635,49 @@ function ngx_close_listening_sockets(ngx_cycle_t $cycle)
         $c = $ls[$i]->connection;
         if ($c) {
             if ($c->read->active) {
-                    ngx_del_event($c->read, NGX_READ_EVENT, NGX_CLOSE_EVENT);
-                }
+                //todo should finish event deal method
+                ngx_del_event($c->read, NGX_READ_EVENT, NGX_CLOSE_EVENT);
             }
 
             ngx_free_connection($c);
 
-            c->fd = (ngx_socket_t) -1;
+            $c->fd = null;
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0,
-                       "close listening %V #%d ", &ls[i].addr_text, ls[i].fd);
+        ngx_log_debug2(NGX_LOG_DEBUG_CORE, $cycle->log, 0,
+            "close listening %V #%d ", $ls[$i]->addr_text, $ls[$i]->fd);
 
-        if (ngx_close_socket(ls[i].fd) == -1) {
-        ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno,
-                          ngx_close_socket_n " %V failed", &ls[i].addr_text);
+        if (ngx_close_socket($ls[$i]->fd) == false) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, socket_last_error(),
+                ngx_close_socket_n . " %V failed", $ls[$i]->addr_text);
         }
 
 
-        if (ls[i].sockaddr->sa_family == AF_UNIX
-    && ngx_process <= NGX_PROCESS_MASTER
-    && ngx_new_binary == 0)
-        {
-            u_char *name = ls[i].addr_text.data + sizeof("unix:") - 1;
+        if ($ls[$i]->sockaddr->sa_family == AF_UNIX &&
+            ngx_process() <= NGX_PROCESS_MASTER && ngx_new_binary() == 0
+        ) {
+            $name = substr($ls[$i]->addr_text, strlen("unix:") - 1);
 
-            if (ngx_delete_file(name) == NGX_FILE_ERROR) {
-                ngx_log_error(NGX_LOG_EMERG, $cycle->log, ngx_socket_errno,
-                              ngx_delete_file_n ." %s failed", name);
+            if (ngx_delete_file($name) == NGX_FILE_ERROR) {
+                ngx_log_error(NGX_LOG_EMERG, $cycle->log, socket_last_error(),
+                    ngx_delete_file_n . " %s failed", $name);
             }
         }
 
-
         $ls[$i]->fd = null;
     }
-
     //cycle->listening.nelts = 0;
 }
+
+function ngx_free_connection(ngx_connection_t $c)
+{
+    $ngx_cycle = ngx_cycle();
+    $c->data = $ngx_cycle->free_connections;
+    $ngx_cycle->free_connections = $c;
+    $ngx_cycle->free_connection_n++;
+
+    if ($ngx_cycle->files) {
+        $ngx_cycle->files[$c->fd] = NULL;
+    }
+}
+
