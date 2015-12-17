@@ -11,6 +11,12 @@
 //char           **ngx_os_argv;
 //define('ngx_log_pid',ngx_cfg('ngx_pid'));
 
+define('NGX_PROCESS_NORESPAWN' ,    -1);
+define('NGX_PROCESS_JUST_SPAWN',    -2);
+define('NGX_PROCESS_RESPAWN',       -3);
+define('NGX_PROCESS_JUST_RESPAWN',  -4);
+define('NGX_PROCESS_DETACHED',      -5);
+
 
 class ngx_process_t {
 /** ngx_pid_t **/ private $pid;
@@ -37,6 +43,33 @@ function ngx_signal_value($n){
 }
 function ngx_signal_helper($n){
    return 'SIG##'.$n;
+}
+
+function ngx_argc($i = null){
+    static $ngx_argc = null;
+    if(!is_null($ngx_argc)){
+       $ngx_argc = $i;
+    }else{
+       return $ngx_argc;
+    }
+}
+
+function ngx_os_argv($i,$v=null){
+    static $ngx_os_argv = null;
+    if(is_null($v)){
+       return $ngx_os_argv[$i];
+    }else{
+       $ngx_os_argv[$i] = $v;
+    }
+}
+
+function ngx_argv($mixed) {
+    static $ngx_argv = null;
+    if(is_array($mixed)){
+        $ngx_argv = $mixed;
+    }else{
+        return $ngx_argv[$mixed];
+    }
 }
 
 function ngx_value($n){

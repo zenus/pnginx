@@ -364,6 +364,7 @@ function ngx_process_events_and_timers(ngx_cycle_t $cycle)
     ngx_event_process_posted($cycle, ngx_posted_accept_events());
 
     if (ngx_accept_mutex_held()) {
+        //todo should complete lock method
         ngx_shmtx_unlock(ngx_accept_mutex());
     }
 

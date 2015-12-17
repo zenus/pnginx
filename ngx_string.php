@@ -14,6 +14,11 @@ function ngx_strcasecmp($s1, $s2)
     return strcasecmp($s1,$s2);
 }
 
+function ngx_strlen($s){
+
+    return  strlen($s);
+}
+
 function ngx_strncasecmp($s1, $s2, $n)
 {
     return strncasecmp($s1,$s2,$n);

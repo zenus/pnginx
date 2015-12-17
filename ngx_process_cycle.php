@@ -53,6 +53,93 @@ function ngx_process($i = null){
     }
 }
 
+function master_process(){
+   static $master_process = 'master process' ;
+    return $master_process;
+}
+
+function ngx_cache_manager_process_handler(ngx_event_t $ev)
+{
+//time_t        next, n;
+//    ngx_uint_t    i;
+//    ngx_path_t  **path;
+
+    $next = 60 * 60;
+
+    $ngx_cycle = ngx_cycle();
+    $path = $ngx_cycle->paths;
+    for ($i = 0; $i < count($ngx_cycle->paths); $i++) {
+
+        if ($path[$i]->manager) {
+            $n = $path[$i]->manager($path[$i]->data);
+
+                $next = ($n <= $next) ? $n : $next;
+
+                ngx_time_update();
+            }
+    }
+
+    if ($next == 0) {
+        $next = 1;
+    }
+
+    ngx_add_timer($ev, $next * 1000);
+}
+
+function ngx_cache_manager_process_handler_closure(){
+
+    return function(ngx_event_t $ev){
+        ngx_cache_manager_process_handler($ev);
+    };
+}
+
+function ngx_cache_manager_ctx(){
+    static $ngx_cache_manager_ctx = array(
+        ngx_cache_manager_process_handler_closure(),
+        "cache manager process",
+        0);
+    return $ngx_cache_manager_ctx;
+}
+
+
+function ngx_cache_loader_process_handler(ngx_event_t $ev)
+{
+//ngx_uint_t     i;
+//    ngx_path_t   **path;
+//    ngx_cycle_t   *cycle;
+
+    $cycle = ngx_cycle();
+
+    $path = $cycle->paths;
+    for ($i = 0; $i < count($cycle->paths); $i++) {
+        if (ngx_terminate() || ngx_quit()) {
+            break;
+        }
+
+    if ($path[$i]->loader) {
+        $path[$i]->loader($path[$i]->data);
+            ngx_time_update();
+        }
+    }
+    exit(0);
+}
+
+function ngx_cache_loader_process_handler_closure(){
+
+    return function(ngx_event_t $ev){
+        ngx_cache_loader_process_handler($ev);
+    };
+}
+
+
+function ngx_cache_loader_ctx(){
+    static $ngx_cache_loader_ctx = array(
+        ngx_cache_loader_process_handler_closure(),
+        "cache loader process",
+        60000);
+    return $ngx_cache_loader_ctx;
+}
+
 function ngx_new_binary($i = null){
     static $ngx_new_binary = null;
     if(!is_null($i)){
@@ -237,6 +324,226 @@ function ngx_single_process_cycle(ngx_cycle_t $cycle)
         }
     }
 }
+
+function ngx_master_process_cycle(ngx_cycle_t $cycle)
+{
+//char              *title;
+//    u_char            *p;
+//    size_t             size;
+//    ngx_int_t          i;
+//    ngx_uint_t         n, sigio;
+//    sigset_t           set;
+//    struct itimerval   itv;
+//    ngx_uint_t         live;
+//    ngx_msec_t         delay;
+//    ngx_listening_t   *ls;
+//    ngx_core_conf_t   *ccf;
+//
+    $set = array(
+        SIGCHLD,
+        SIGALRM,
+        SIGIO,
+        SIGINT,
+        ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
+        ngx_signal_value(NGX_REOPEN_SIGNAL),
+        ngx_signal_value(NGX_NOACCEPT_SIGNAL),
+        ngx_signal_value(NGX_TERMINATE_SIGNAL),
+        ngx_signal_value(NGX_SHUTDOWN_SIGNAL),
+        ngx_signal_value(NGX_CHANGEBIN_SIGNAL)
+    );
+
+    if (pcntl_sigprocmask(SIG_BLOCK, $set) == false) {
+        ngx_log_error(NGX_LOG_ALERT, $cycle->log, pcntl_get_last_error(),
+                      "sigprocmask() failed");
+    }
+
+    //sigemptyset(&set);
+
+
+    $master_process = master_process();
+    $size = strlen($master_process);
+
+    for ($i = 0; $i < ngx_argc(); $i++) {
+        $size += ngx_strlen(ngx_argv($i)) + 1;
+    }
+
+//    title = ngx_pnalloc(cycle->pool, size);
+//    if (title == NULL) {
+//        /* fatal */
+//        exit(2);
+//    }
+
+    //p = ngx_cpymem(title, master_process, sizeof(master_process) - 1);
+    $title = $master_process;
+    for ($i = 0; $i < ngx_argc(); $i++) {
+        $title .= ' ';
+        $title .= ngx_argv($i);
+    }
+
+    //todo may have problem
+    ngx_setproctitle($title);
+
+
+    $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
+    ngx_start_worker_processes($cycle, $ccf->worker_processes,
+                               NGX_PROCESS_RESPAWN);
+    ngx_start_cache_manager_processes($cycle, 0);
+
+    ngx_new_binary(0);
+    $delay = 0;
+    $sigio = 0;
+    $live = 1;
+
+    for ( ;; ) {
+        if ($delay) {
+            if (ngx_sigalrm()) {
+                $sigio = 0;
+                $delay *= 2;
+                ngx_sigalrm(0);
+            }
+
+            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
+                           "termination cycle: %d", $delay);
+
+            //todo delay  do timer
+//            itv.it_interval.tv_sec = 0;
+//            itv.it_interval.tv_usec = 0;
+//            itv.it_value.tv_sec = delay / 1000;
+//            itv.it_value.tv_usec = (delay % 1000 ) * 1000;
+//
+//            if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
+//                ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
+//                              "setitimer() failed");
+//            }
+        }
+
+        ngx_log_debug0(NGX_LOG_DEBUG_EVENT, $cycle->log, 0, "sigsuspend");
+
+        //todo ________________________________________________________________________________________________________
+//        sigsuspend(&set);
+//
+//        ngx_time_update();
+//
+//        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+//                       "wake up, sigio %i", sigio);
+//
+//        if (ngx_reap) {
+//            ngx_reap = 0;
+//            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "reap children");
+//
+//            live = ngx_reap_children(cycle);
+//        }
+//
+//        if (!live && (ngx_terminate || ngx_quit)) {
+//            ngx_master_process_exit(cycle);
+//        }
+//
+//        if (ngx_terminate) {
+//            if (delay == 0) {
+//                delay = 50;
+//            }
+//
+//            if (sigio) {
+//                sigio--;
+//                continue;
+//            }
+//
+//            sigio = ccf->worker_processes + 2 /* cache processes */;
+//
+//            if (delay > 1000) {
+//                ngx_signal_worker_processes(cycle, SIGKILL);
+//            } else {
+//                ngx_signal_worker_processes(cycle,
+//                    ngx_signal_value(NGX_TERMINATE_SIGNAL));
+//            }
+//
+//            continue;
+//        }
+//
+//        if (ngx_quit) {
+//            ngx_signal_worker_processes(cycle,
+//                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
+//
+//            ls = cycle->listening.elts;
+//            for (n = 0; n < cycle->listening.nelts; n++) {
+//                if (ngx_close_socket(ls[n].fd) == -1) {
+//                    ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno,
+//                                  ngx_close_socket_n " %V failed",
+//                                  &ls[n].addr_text);
+//                }
+//            }
+//            cycle->listening.nelts = 0;
+//
+//            continue;
+//        }
+//
+//        if (ngx_reconfigure) {
+//            ngx_reconfigure = 0;
+//
+//            if (ngx_new_binary) {
+//                ngx_start_worker_processes(cycle, ccf->worker_processes,
+//                                           NGX_PROCESS_RESPAWN);
+//                ngx_start_cache_manager_processes(cycle, 0);
+//                ngx_noaccepting = 0;
+//
+//                continue;
+//            }
+//
+//            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
+//
+//            cycle = ngx_init_cycle(cycle);
+//            if (cycle == NULL) {
+//                cycle = (ngx_cycle_t *) ngx_cycle;
+//                continue;
+//            }
+//
+//            ngx_cycle = cycle;
+//            ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx,
+//                                                   ngx_core_module);
+//            ngx_start_worker_processes(cycle, ccf->worker_processes,
+//                                       NGX_PROCESS_JUST_RESPAWN);
+//            ngx_start_cache_manager_processes(cycle, 1);
+//
+//            /* allow new processes to start */
+//            ngx_msleep(100);
+//
+//            live = 1;
+//            ngx_signal_worker_processes(cycle,
+//                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
+//        }
+//
+//        if (ngx_restart) {
+//            ngx_restart = 0;
+//            ngx_start_worker_processes(cycle, ccf->worker_processes,
+//                                       NGX_PROCESS_RESPAWN);
+//            ngx_start_cache_manager_processes(cycle, 0);
+//            live = 1;
+//        }
+//
+//        if (ngx_reopen) {
+//            ngx_reopen = 0;
+//            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");
+//            ngx_reopen_files(cycle, ccf->user);
+//            ngx_signal_worker_processes(cycle,
+//                ngx_signal_value(NGX_REOPEN_SIGNAL));
+//        }
+//
+//        if (ngx_change_binary) {
+//            ngx_change_binary = 0;
+//            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "changing binary");
+//            ngx_new_binary = ngx_exec_new_binary(cycle, ngx_argv);
+//        }
+//
+//        if (ngx_noaccept) {
+//            ngx_noaccept = 0;
+//            ngx_noaccepting = 1;
+//            ngx_signal_worker_processes(cycle,
+//                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
+//        }
+//    }
+}
+
 
 function ngx_exit_log_file(ngx_open_file_s $file = null){
     static $ngx_exit_log_file = null;
