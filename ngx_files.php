@@ -30,6 +30,7 @@ define('ngx_delete_file_n',"unlink()");
 define('ngx_create_dir_n',"mkdir()");
 define('ngx_file_info_n',"stat()");
 define('ngx_set_stderr_n',"set_stderr(STDERR_FILENO)");
+define('ngx_rename_file_n', "rename()");
 
 include_once 'ngx_core.php';
 /**

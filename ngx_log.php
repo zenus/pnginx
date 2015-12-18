@@ -376,6 +376,9 @@ function  ngx_log_debug4($level, $log, $err, $fmt, $arg1, $arg2, $arg3, $arg4){
 
 }
 
+function  ngx_log_debug7($level, $log, $err, $fmt, $arg1, $arg2, $arg3, $arg4, $arg5, $arg6, $arg7){
+
+}
 function ngx_log_debug3($level, $log, $err, $fmt, $arg1, $arg2, $arg3){
 
 }

@@ -58,6 +58,15 @@ function master_process(){
     return $master_process;
 }
 
+function ngx_noaccepting($i = null){
+    static $ngx_noaccepting = null;
+    if(!is_null($i)){
+        $ngx_noaccepting = $i;
+    }else{
+        return $ngx_noaccepting;
+    }
+}
+
 function ngx_cache_manager_process_handler(ngx_event_t $ev)
 {
 //time_t        next, n;
@@ -354,7 +363,7 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
 
     if (pcntl_sigprocmask(SIG_BLOCK, $set) == false) {
         ngx_log_error(NGX_LOG_ALERT, $cycle->log, pcntl_get_last_error(),
-                      "sigprocmask() failed");
+            "sigprocmask() failed");
     }
 
     //sigemptyset(&set);
@@ -387,7 +396,7 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
     $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module());
 
     ngx_start_worker_processes($cycle, $ccf->worker_processes,
-                               NGX_PROCESS_RESPAWN);
+        NGX_PROCESS_RESPAWN);
     ngx_start_cache_manager_processes($cycle, 0);
 
     ngx_new_binary(0);
@@ -395,7 +404,7 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
     $sigio = 0;
     $live = 1;
 
-    for ( ;; ) {
+    for (; ;) {
         if ($delay) {
             if (ngx_sigalrm()) {
                 $sigio = 0;
@@ -404,9 +413,9 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
             }
 
             ngx_log_debug1(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
-                           "termination cycle: %d", $delay);
+                "termination cycle: %d", $delay);
 
-            //todo delay  do timer
+            //todo delay do timer
 //            itv.it_interval.tv_sec = 0;
 //            itv.it_interval.tv_usec = 0;
 //            itv.it_value.tv_sec = delay / 1000;
@@ -420,46 +429,45 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, $cycle->log, 0, "sigsuspend");
 
-        //todo ________________________________________________________________________________________________________
+        //todo php have a function pcntl_sigwaitinfo() but i have no ideas of their difference
 //        sigsuspend(&set);
-//
-//        ngx_time_update();
-//
-//        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-//                       "wake up, sigio %i", sigio);
-//
-//        if (ngx_reap) {
-//            ngx_reap = 0;
-//            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "reap children");
-//
-//            live = ngx_reap_children(cycle);
-//        }
-//
-//        if (!live && (ngx_terminate || ngx_quit)) {
-//            ngx_master_process_exit(cycle);
-//        }
-//
-//        if (ngx_terminate) {
-//            if (delay == 0) {
-//                delay = 50;
-//            }
-//
-//            if (sigio) {
-//                sigio--;
-//                continue;
-//            }
-//
-//            sigio = ccf->worker_processes + 2 /* cache processes */;
-//
-//            if (delay > 1000) {
-//                ngx_signal_worker_processes(cycle, SIGKILL);
-//            } else {
-//                ngx_signal_worker_processes(cycle,
-//                    ngx_signal_value(NGX_TERMINATE_SIGNAL));
-//            }
-//
-//            continue;
-//        }
+        ngx_time_update();
+
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
+            "wake up, sigio %i", $sigio);
+
+        if (ngx_reap()) {
+            ngx_reap(0);
+            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, $cycle->log, 0, "reap children");
+
+            $live = ngx_reap_children($cycle);
+        }
+
+        if (!$live && (ngx_terminate() || ngx_quit())) {
+            ngx_master_process_exit($cycle);
+        }
+
+        if (ngx_terminate()) {
+            if ($delay == 0) {
+                $delay = 50;
+            }
+
+            if ($sigio) {
+                $sigio--;
+                continue;
+            }
+
+            $sigio = $ccf->worker_processes + 2 /* cache processes */
+            ;
+
+            if ($delay > 1000) {
+                ngx_signal_worker_processes($cycle, SIGKILL);
+            } else {
+                ngx_signal_worker_processes($cycle,
+                    ngx_signal_value(NGX_TERMINATE_SIGNAL));
+            }
+            continue;
+        }
 //
 //        if (ngx_quit) {
 //            ngx_signal_worker_processes(cycle,
@@ -542,71 +550,204 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
 //                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
 //        }
 //    }
-}
-
-
-function ngx_exit_log_file(ngx_open_file_s $file = null){
-    static $ngx_exit_log_file = null;
-    if(!is_null($file)){
-       $ngx_exit_log_file = $file;
-    }else{
-       return  $ngx_exit_log_file;
     }
 
-}
 
-function ngx_exit_cycle(ngx_cycle_t $cycle = null){
+    function ngx_exit_log_file(ngx_open_file_s $file = null)
+    {
+        static $ngx_exit_log_file = null;
+        if (!is_null($file)) {
+            $ngx_exit_log_file = $file;
+        } else {
+            return $ngx_exit_log_file;
+        }
 
-    static  $ngx_exit_cycle = null;
-    if(!is_null($ngx_exit_cycle)){
-       $ngx_exit_cycle = $cycle;
-    }else{
-       return $ngx_exit_cycle;
     }
 
-}
+    function ngx_exit_cycle(ngx_cycle_t $cycle = null)
+    {
 
-function ngx_master_process_exit(ngx_cycle_t $cycle)
-{
+        static $ngx_exit_cycle = null;
+        if (!is_null($ngx_exit_cycle)) {
+            $ngx_exit_cycle = $cycle;
+        } else {
+            return $ngx_exit_cycle;
+        }
+
+    }
+
+    /**
+     * @param ngx_cycle_t $cycle
+     */
+    function ngx_master_process_exit(ngx_cycle_t $cycle)
+    {
 //ngx_uint_t  i;
 
-    ngx_delete_pidfile($cycle);
+        ngx_delete_pidfile($cycle);
 
-    ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "exit");
+        ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "exit");
 
-    for ($i = 0; ngx_modules($i); $i++) {
-        if (ngx_modules($i)->exit_master) {
-            ngx_modules($i)->exit_master($cycle);
+        for ($i = 0; ngx_modules($i); $i++) {
+            if (ngx_modules($i)->exit_master) {
+                ngx_modules($i)->exit_master($cycle);
             }
+        }
+
+        ngx_close_listening_sockets($cycle);
+
+        /*
+         * Copy ngx_cycle->log related data to the special static exit cycle,
+         * log, and log file structures enough to allow a signal handler to log.
+         * The handler may be called when standard ngx_cycle->log allocated from
+         * ngx_cycle->pool is already destroyed.
+         */
+
+
+        $ngx_cycle = ngx_cycle();
+        $ngx_exit_log = ngx_log_get_file_log($ngx_cycle->log);
+
+        $ngx_exit_log_file = new ngx_open_file_s();
+        $ngx_exit_log_file->fd = $ngx_exit_log->file->fd;
+        $ngx_exit_log->file = $ngx_exit_log_file;
+        //$ngx_exit_log.next = NULL;
+        $ngx_exit_log->writer = NULL;
+
+        $ngx_exit_cycle = new ngx_cycle_t();
+        $ngx_exit_cycle->log = $ngx_exit_log;
+        $ngx_exit_cycle->files = $ngx_cycle->files;
+        $ngx_exit_cycle->files_n = $ngx_cycle->files_n;
+        ngx_cycle($ngx_exit_cycle);
+
+        //ngx_destroy_pool($cycle->pool);
+
+        exit(0);
     }
 
-    ngx_close_listening_sockets($cycle);
+function ngx_reap_children(ngx_cycle_t $cycle)
+{
+//ngx_int_t         i, n;
+//    ngx_uint_t        live;
+//    ngx_channel_t     ch;
+//    ngx_core_conf_t  *ccf;
 
-    /*
-     * Copy ngx_cycle->log related data to the special static exit cycle,
-     * log, and log file structures enough to allow a signal handler to log.
-     * The handler may be called when standard ngx_cycle->log allocated from
-     * ngx_cycle->pool is already destroyed.
-     */
+    $ch = new ngx_channel_t();
+    //ngx_memzero(&ch, sizeof(ngx_channel_t));
+
+    $ch->command = NGX_CMD_CLOSE_CHANNEL;
+    //$ch->fd = null;
+
+    $live = 0;
+    for ($i = 0; $i < ngx_last_process(); $i++) {
+
+        $ngx_processes_i = ngx_processes($i);
+        ngx_log_debug7(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
+                       "child: %d %P e:%d t:%d d:%d r:%d j:%d",
+                       $i,
+                       $ngx_processes_i->pid,
+                       $ngx_processes_i->exiting,
+                       $ngx_processes_i->exited,
+                       $ngx_processes_i->detached,
+                       $ngx_processes_i->respawn,
+                       $ngx_processes_i->just_spawn);
+
+        if ($ngx_processes_i->pid == -1) {
+            continue;
+        }
+
+        if ($ngx_processes_i->exited) {
+
+            if (!$ngx_processes_i->detached) {
+                ngx_close_channel($ngx_processes_i->channel, $cycle->log);
+
+                $ngx_processes_i->channel[0] = null;
+                $ngx_processes_i->channel[1] = null;
+
+                $ch->pid = $ngx_processes_i->pid;
+                $ch->slot = $i;
+
+                for ($n = 0; $n < ngx_last_process(); $n++) {
+                    $ngx_processes_n = ngx_processes($n);
+                    if ($ngx_processes_n->exited
+                    || $ngx_processes_n->pid == -1
+                    || $ngx_processes_n->channel[0] == -1)
+                    {
+                        continue;
+                    }
+
+                    ngx_log_debug3(NGX_LOG_DEBUG_CORE, $cycle->log, 0,
+                                   "pass close channel s:%i pid:%P to:%P",
+                                   $ch->slot, $ch->pid, $ngx_processes_n->pid);
+
+                    /* TODO: NGX_AGAIN */
+
+                    ngx_write_channel($ngx_processes_n->channel[0],
+                                      $ch, sizeof(ngx_channel_t), $cycle->log);
+                }
+            }
+
+            if ($ngx_processes_i->respawn
+            && !$ngx_processes_i->exiting
+            && !ngx_terminate()
+            && !ngx_quit())
+            {
+                if (ngx_spawn_process($cycle, $ngx_processes_i->proc,
+                                      $ngx_processes_i->data,
+                                      $ngx_processes_i->name, $i)
+                    == NGX_INVALID_PID)
+                {
+                    ngx_log_error(NGX_LOG_ALERT, $cycle->log, 0,
+                                  "could not respawn %s",
+                                  $ngx_processes_i->name);
+                    continue;
+                }
 
 
-    $ngx_cycle = ngx_cycle();
-    $ngx_exit_log = ngx_log_get_file_log($ngx_cycle->log);
+                $ngx_processes_s =  ngx_processes(ngx_process_slot());
+                $ch->command = NGX_CMD_OPEN_CHANNEL;
+                $ch->pid = $ngx_processes_s->pid;
+                $ch->slot = ngx_process_slot();
+                $ch->fd = $ngx_processes_s->channel[0];
 
-    $ngx_exit_log_file = new ngx_open_file_s();
-    $ngx_exit_log_file->fd = $ngx_exit_log->file->fd;
-    $ngx_exit_log->file = $ngx_exit_log_file;
-    //$ngx_exit_log.next = NULL;
-    $ngx_exit_log->writer = NULL;
+                ngx_pass_open_channel($cycle, $ch);
 
-    $ngx_exit_cycle = new ngx_cycle_t();
-    $ngx_exit_cycle->log = $ngx_exit_log;
-    $ngx_exit_cycle->files = $ngx_cycle->files;
-    $ngx_exit_cycle->files_n =$ngx_cycle->files_n;
-    ngx_cycle($ngx_exit_cycle);
+                $live = 1;
 
-    //ngx_destroy_pool($cycle->pool);
+                continue;
+            }
 
-    exit(0);
+            if ($ngx_processes_i->pid == ngx_new_binary()) {
+
+                $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
+                if (ngx_rename_file($ccf->oldpid,
+                                    $ccf->pid)
+                    == NGX_FILE_ERROR)
+                {
+                    ngx_log_error(NGX_LOG_ALERT, $cycle->log, NGX_FRNERROR,
+                                  ngx_rename_file_n ." %s back to %s failed "
+                                  "after the new binary process \"%s\" exited",
+                                  $ccf->oldpid, $ccf->pid, ngx_argv(0));
+                }
+
+                ngx_new_binary(0);
+                if (ngx_noaccepting()) {
+                    ngx_restart(1);
+                    ngx_noaccepting(0);
+                }
+            }
+
+            if ($i == ngx_last_process() - 1) {
+                ngx_last_process($i);
+
+            } else {
+                $ngx_processes_i->pid = null;
+            }
+
+        } else if ($ngx_processes_i->exiting || !$ngx_processes_i->detached) {
+            $live = 1;
+        }
+    }
+
+    return $live;
 }
 

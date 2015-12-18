@@ -16,6 +16,7 @@ define('NGX_PROCESS_JUST_SPAWN',    -2);
 define('NGX_PROCESS_RESPAWN',       -3);
 define('NGX_PROCESS_JUST_RESPAWN',  -4);
 define('NGX_PROCESS_DETACHED',      -5);
+define('NGX_INVALID_PID',  -1);
 
 
 class ngx_process_t {
@@ -78,6 +79,16 @@ function ngx_value($n){
 
 function ngx_value_helper($n){
    return '#'.$n;
+}
+
+function ngx_process_slot($i = null){
+    static $ngx_process_slot = null;
+    if(!is_null($i)){
+       $ngx_process_slot = $i;
+    }else{
+       return $ngx_process_slot;
+    }
+
 }
 
 //typedef struct {
@@ -517,3 +528,4 @@ function ngx_init_signals(ngx_log $log)
 
     return NGX_OK;
 }
+

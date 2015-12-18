@@ -158,6 +158,7 @@ define('NGX_DCERROR',184); /*dir create file error */
 define('NGX_FIERROR',185); /*stat file error */
 define('NGX_FCNERROR',186); /*chown file error */
 define('NGX_FCMERROR',187); /*chmod file error */
+define('NGX_FRNERROR',188); /*rename file error */
 
 define('NGX_EPERM',EPERM);
 define('NGX_ENOENT',ENOENT);
