@@ -630,6 +630,7 @@ function ngx_reap_children(ngx_cycle_t $cycle)
 //    ngx_channel_t     ch;
 //    ngx_core_conf_t  *ccf;
 
+
     $ch = new ngx_channel_t();
     //ngx_memzero(&ch, sizeof(ngx_channel_t));
 
