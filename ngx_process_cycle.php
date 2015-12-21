@@ -651,7 +651,7 @@ function ngx_reap_children(ngx_cycle_t $cycle)
                        $ngx_processes_i->respawn,
                        $ngx_processes_i->just_spawn);
 
-        if ($ngx_processes_i->pid == -1) {
+        if ($ngx_processes_i->pid == null) {
             continue;
         }
 
@@ -669,8 +669,8 @@ function ngx_reap_children(ngx_cycle_t $cycle)
                 for ($n = 0; $n < ngx_last_process(); $n++) {
                     $ngx_processes_n = ngx_processes($n);
                     if ($ngx_processes_n->exited
-                    || $ngx_processes_n->pid == -1
-                    || $ngx_processes_n->channel[0] == -1)
+                    || $ngx_processes_n->pid == null
+                    || $ngx_processes_n->channel[0] == null)
                     {
                         continue;
                     }
@@ -679,10 +679,8 @@ function ngx_reap_children(ngx_cycle_t $cycle)
                                    "pass close channel s:%i pid:%P to:%P",
                                    $ch->slot, $ch->pid, $ngx_processes_n->pid);
 
-                    /* TODO: NGX_AGAIN */
 
-                    ngx_write_channel($ngx_processes_n->channel[0],
-                                      $ch, sizeof(ngx_channel_t), $cycle->log);
+                    ngx_write_channel($ngx_processes_n->channel[0],  $ch,  $cycle->log);
                 }
             }
 

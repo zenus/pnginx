@@ -31,5 +31,26 @@ function ngx_close_channel( $fd, ngx_log $log)
       }
 }
 
+function ngx_write_channel( $s, ngx_channel_t $ch,  ngx_log $log)
+{
+//    ssize_t             n;
+//    ngx_err_t           err;
+//    struct iovec        iov[1];
+//    struct msghdr       msg;
+
+    $n = socket_sendmsg($s, get_object_vars($ch), 0);
+
+    if ($n == -1) {
+        $err = socket_last_error();
+        if ($err == NGX_EAGAIN) {
+            return NGX_AGAIN;
+        }
+        ngx_log_error(NGX_LOG_ALERT, $log, $err, "sendmsg() failed");
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
+}
+
 
 

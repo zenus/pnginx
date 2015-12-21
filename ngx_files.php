@@ -127,7 +127,6 @@ function ngx_write_file(ngx_file_t $file, $buf, $size, $offset)
                               "lseek() \"%s\" failed", $file->name);
                 return NGX_ERROR;
             }
-
         $file->sys_offset = $offset;
     }
 

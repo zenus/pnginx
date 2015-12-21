@@ -198,7 +198,7 @@ define('NGX_EILSEQ',EILSEQ);
 define('NGX_ENOMOREFILES',0);
 define('NGX_ELOOP',ELOOP);
 define('NGX_EBADF',EBADF);
-
+define('NGX_EAGAIN',EAGAIN);
 define('NGX_SYS_NERR',133);
 
 
