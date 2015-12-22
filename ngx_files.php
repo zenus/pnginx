@@ -164,4 +164,8 @@ function ngx_create_dir($name, $access)
     return mkdir($name, $access);
 }
 
+function ngx_rename_file($o, $n){
+    return rename($o, $n);
+}
+
 
