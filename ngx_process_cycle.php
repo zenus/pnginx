@@ -1046,13 +1046,14 @@ function ngx_worker_process_init(ngx_cycle_t $cycle,  $worker)
         }
     }
 
-    if (worker >= 0) {
-        cpu_affinity = ngx_get_cpu_affinity(worker);
-
-        if (cpu_affinity) {
-            ngx_setaffinity(cpu_affinity, cycle->log);
-        }
-    }
+    //todo php don't have a cpu function
+//    if ($worker >= 0) {
+//        $cpu_affinity = ngx_get_cpu_affinity($worker);
+//
+//        if ($cpu_affinity) {
+//            ngx_setaffinity($cpu_affinity, $cycle->log);
+//        }
+//    }
 
     //todo php don't have a function to work
 //#if (NGX_HAVE_PR_SET_DUMPABLE)
@@ -1130,13 +1131,100 @@ function ngx_worker_process_init(ngx_cycle_t $cycle,  $worker)
     }
 
 
-    //todo ---------------------------------------------
     if (ngx_add_channel_event($cycle, ngx_channel(), NGX_READ_EVENT,
-            ngx_channel_handler)
+            'ngx_channel_handler')
         == NGX_ERROR)
     {
         /* fatal */
         exit(2);
+    }
+}
+
+function ngx_channel_handler(ngx_event_t $ev)
+{
+//ngx_int_t          n;
+//    ngx_channel_t      ch;
+//    ngx_connection_t  *c;
+    $ch = new ngx_channel_t();
+
+    if ($ev->timedout) {
+        $ev->timedout = 0;
+        return;
+        }
+
+    $c = $ev->data;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_CORE, $ev->log, 0, "channel handler");
+
+    for ( ;; ) {
+
+        $n = ngx_read_channel($c->fd, $ch,  $ev->log);
+
+        ngx_log_debug1(NGX_LOG_DEBUG_CORE, $ev->log, 0, "channel: %i", $n);
+
+        if ($n == NGX_ERROR) {
+
+            if (ngx_event_flags() & NGX_USE_EPOLL_EVENT) {
+                ngx_del_conn($c, 0);
+            }
+
+            ngx_close_connection($c);
+            return;
+        }
+
+        if (ngx_event_flags() & NGX_USE_EVENTPORT_EVENT) {
+            if (ngx_add_event($ev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+                return;
+            }
+        }
+
+        if ($n == NGX_AGAIN) {
+            return;
+        }
+
+        ngx_log_debug1(NGX_LOG_DEBUG_CORE, $ev->log, 0,
+                       "channel command: %d", $ch->command);
+
+        switch ($ch->command) {
+
+            case NGX_CMD_QUIT:
+                ngx_quit(1);
+                break;
+
+            case NGX_CMD_TERMINATE:
+                ngx_terminate(1);
+                break;
+
+            case NGX_CMD_REOPEN:
+                ngx_reopen(1);
+                break;
+
+            case NGX_CMD_OPEN_CHANNEL:
+
+                ngx_log_debug3(NGX_LOG_DEBUG_CORE, $ev->log, 0,
+                           "get channel s:%i pid:%P fd:%d",
+                           $ch->slot, $ch->pid, $ch->fd);
+
+            $ngx_processes_slot = ngx_processes($ch->slot);
+            $ngx_processes_slot->pid = $ch->pid;
+            $ngx_processes_slot->channel[0] = $ch->fd;
+            break;
+
+            case NGX_CMD_CLOSE_CHANNEL:
+
+                ngx_log_debug4(NGX_LOG_DEBUG_CORE, $ev->log, 0,
+                           "close channel s:%i pid:%P our:%P fd:%d",
+                           $ch->slot, $ch->pid, $ngx_processes_slot->pid,
+                           $ngx_processes_slot->channel[0]);
+
+            if (fclose($ngx_processes_slot->channel[0]) == false) {
+                ngx_log_error(NGX_LOG_ALERT, $ev->log, NGX_FCERROR,
+                              "close() channel failed");
+            }
+
+            $ngx_processes_slot->channel[0] = null;
+            break;
+        }
     }
 }
 

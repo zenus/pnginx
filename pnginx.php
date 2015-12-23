@@ -1153,5 +1153,23 @@ tz_found:
     return $env;
 }
 
+function ngx_get_cpu_affinity( $n)
+{
+//    ngx_core_conf_t  *ccf;
+
+    $ngx_cycle = ngx_cycle();
+    $ccf = ngx_get_conf($ngx_cycle->conf_ctx, ngx_core_module());
+
+    if($ccf->cpu_affinity == NULL) {
+        return 0;
+      }
+
+    if ($ccf->cpu_affinity_n > $n) {
+        return $ccf->cpu_affinity[$n];
+    }
+
+    return $ccf->cpu_affinity[$ccf->cpu_affinity_n - 1];
+}
+
 
 

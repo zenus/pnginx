@@ -5,6 +5,11 @@
  * Date: 15-11-7
  * Time: 下午7:16
  */
+ define('NGX_ERROR_ALERT', 0);
+ define('NGX_ERROR_ERR',1);
+ define('NGX_ERROR_INFO',2);
+ define('NGX_ERROR_IGNORE_ECONNRESET',3);
+ define('NGX_ERROR_IGNORE_EINVAL',4);
 class ngx_connection_t {
     /**  void   **/      private       $data;
     /**  ngx_event_t **/ private      $read;
@@ -678,6 +683,184 @@ function ngx_free_connection(ngx_connection_t $c)
 
     if ($ngx_cycle->files) {
         $ngx_cycle->files[$c->fd] = NULL;
+    }
+}
+
+function ngx_get_connection( $s, ngx_log $log)
+{
+//    ngx_uint_t         instance;
+//    ngx_event_t       *rev, *wev;
+//    ngx_connection_t  *c;
+    $ngx_cycle = ngx_cycle();
+
+    /* disable warning: Win32 SOCKET is u_int while UNIX socket is int */
+
+    if ($ngx_cycle->files && $s >= $ngx_cycle->files_n) {
+        ngx_log_error(NGX_LOG_ALERT, $log, 0,
+        "the new socket has number %d, ".
+                      "but only %ui files are available",
+                      array($s, $ngx_cycle->files_n));
+        return NULL;
+    }
+
+    $c = $ngx_cycle->free_connections;
+
+    if ($c == NULL) {
+         ngx_drain_connections();
+        $c = $ngx_cycle->free_connections;
+    }
+
+    if ($c == NULL) {
+        ngx_log_error(NGX_LOG_ALERT, $log, 0,
+            "%ui worker_connections are not enough",
+            $ngx_cycle->connection_n);
+
+        return NULL;
+    }
+
+    $ngx_cycle->free_connections = $c->data;
+    $ngx_cycle->free_connection_n--;
+
+    if ($ngx_cycle->files) {
+        $ngx_cycle->files[$s] = $c;
+    }
+
+    $rev = $c->read;
+    $wev = $c->write;
+
+    //ngx_memzero(c, sizeof(ngx_connection_t));
+    $c = new ngx_connection_t();
+
+    $c->read = $rev;
+    $c->write = $wev;
+    $c->fd = $s;
+    $c->log = $log;
+
+    $instance = $rev->instance;
+
+//    ngx_memzero(rev, sizeof(ngx_event_t));
+//    ngx_memzero(wev, sizeof(ngx_event_t));
+
+    $rev->instance = !$instance;
+    $wev->instance = !$instance;
+
+    $rev->index = NGX_INVALID_INDEX;
+    $wev->index = NGX_INVALID_INDEX;
+
+    $rev->data = $c;
+    $wev->data = $c;
+
+    $wev->write = 1;
+
+    return $c;
+}
+
+
+function ngx_drain_connections()
+{
+//ngx_int_t          i;
+//    ngx_queue_t       *q;
+//    ngx_connection_t  *c;
+    $ngx_cycle = ngx_cycle();
+
+    for ($i = 0; $i < 32; $i++) {
+        if ($ngx_cycle->reusable_connections_queue->isEmpty()) {
+            break;
+        }
+
+//        $q = ngx_queue_last($ngx_cycle->reusable_connections_queue);
+//        $c = ngx_queue_data($q, ngx_connection_t, queue);
+        $c = $ngx_cycle->reusable_connections_queue->pop();
+
+        ngx_log_debug0(NGX_LOG_DEBUG_CORE, $c->log, 0,
+                       "reusing connection");
+
+        $c->close = 1;
+        call_user_func($c->read->handler,$c->read);
+    }
+}
+
+function ngx_close_connection(ngx_connection_t $c)
+{
+//ngx_err_t     err;
+//    ngx_uint_t    log_error, level;
+//    ngx_socket_t  fd;
+
+    if ($c->fd == false) {
+        ngx_log_error(NGX_LOG_ALERT, $c->log, 0, "connection already closed");
+        return;
+    }
+
+    if ($c->read->timer_set) {
+        ngx_del_timer($c->read);
+    }
+
+    if ($c->write->timer_set) {
+        ngx_del_timer($c->write);
+    }
+
+    if (is_callable('ngx_del_conn')) {
+        ngx_del_conn($c, NGX_CLOSE_EVENT);
+
+    } else {
+        if ($c->read->active || $c->read->disabled) {
+            ngx_del_event($c->read, NGX_READ_EVENT, NGX_CLOSE_EVENT);
+        }
+
+        if ($c->write->active || $c->write->disabled) {
+            ngx_del_event($c->write, NGX_WRITE_EVENT, NGX_CLOSE_EVENT);
+        }
+    }
+
+    if ($c->read->posted) {
+        ngx_delete_posted_event($c->read);
+    }
+
+    if ($c->write->posted) {
+        ngx_delete_posted_event($c->write);
+    }
+
+    $c->read->closed = 1;
+    $c->write->closed = 1;
+
+    ngx_reusable_connection($c, 0);
+
+    $log_error = $c->log_error;
+
+    ngx_free_connection($c);
+
+    $fd = $c->fd;
+    $c->fd = false;
+
+    if (ngx_close_socket($fd) == false) {
+
+        $err = socket_last_error();
+
+        if ($err == NGX_ECONNRESET || $err == NGX_ENOTCONN) {
+
+            switch ($log_error) {
+
+                case NGX_ERROR_INFO:
+                    $level = NGX_LOG_INFO;
+                    break;
+
+                case NGX_ERROR_ERR:
+                    $level = NGX_LOG_ERR;
+                    break;
+
+                default:
+                    $level = NGX_LOG_CRIT;
+            }
+
+        } else {
+            $level = NGX_LOG_CRIT;
+        }
+
+        /* we use ngx_cycle->log because c->log was in c->pool */
+
+        $ngx_cycle = ngx_cycle();
+        ngx_log_error($level, $ngx_cycle->log, $err,
+                      ngx_close_socket_n ." %d failed", $fd);
     }
 }
 

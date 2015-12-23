@@ -91,6 +91,7 @@ define('NGX_CLOSE_EVENT',1);
 define('NGX_UPDATE_TIME',1);
 define('NGX_POST_EVENTS',2);
 define('NGX_DISABLE_EVENT',2);
+define('NGX_INVALID_INDEX',0xd0d0d0d0);
 
 function ngx_event_flags($i = null){
     static $ngx_event_flags = null;
@@ -379,7 +380,15 @@ function ngx_process_events_and_timers(ngx_cycle_t $cycle)
 function ngx_add_event(ngx_event_t $ev,  $event,  $flags){
   return NGX_OK;
 }
+//todo need to complete event method
+function ngx_add_conn(ngx_connection_t $con){
+    return NGX_OK;
+}
 
+//todo need to complete event method
+function ngx_del_conn(ngx_connection_t $con, $flags){
+    return NGX_OK;
+}
 //todo need to complete event method
 function ngx_process_events(ngx_cycle_t $cycle,  $timer,  $flags){
 
