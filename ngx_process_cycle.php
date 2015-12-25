@@ -130,6 +130,24 @@ function ngx_exit_cycle(ngx_cycle_t $cycle = null){
     }
 }
 
+function  ngx_cache_manager_ctx(){
+   static $ngx_cache_manager_ctx = array(
+       'ngx_cache_manager_process_handler',
+        'cache manager process',
+        0
+    );
+    return $ngx_cache_manager_ctx;
+}
+
+function  ngx_cache_loader_ctx(){
+    static $ngx_cache_loader_ctx = array(
+        'ngx_cache_loader_process_handler',
+        'cache manager process',
+        0
+    );
+    return $ngx_cache_loader_ctx;
+}
+
 function ngx_cache_manager_process_handler(ngx_event_t $ev)
 {
 //time_t        next, n;
@@ -158,20 +176,6 @@ function ngx_cache_manager_process_handler(ngx_event_t $ev)
     ngx_add_timer($ev, $next * 1000);
 }
 
-function ngx_cache_manager_process_handler_closure(){
-
-    return function(ngx_event_t $ev){
-        ngx_cache_manager_process_handler($ev);
-    };
-}
-
-function ngx_cache_manager_ctx(){
-    static $ngx_cache_manager_ctx = array(
-        ngx_cache_manager_process_handler_closure(),
-        "cache manager process",
-        0);
-    return $ngx_cache_manager_ctx;
-}
 
 
 function ngx_cache_loader_process_handler(ngx_event_t $ev)
@@ -1343,5 +1347,113 @@ function ngx_worker_process_exit(ngx_cycle_t $cycle)
 
     exit(0);
 }
+
+
+function ngx_start_cache_manager_processes(ngx_cycle_t $cycle,  $respawn)
+{
+//    ngx_uint_t       i, manager, loader;
+//    ngx_path_t     **path;
+//    ngx_channel_t    ch;
+//
+    $manager = 0;
+    $loader = 0;
+    $ngx_cycle  = ngx_cycle();
+
+    $path = $ngx_cycle->paths;
+    for ($i = 0; $i < count($path); $i++) {
+
+        if ($path[$i]->manager) {
+            $manager = 1;
+        }
+
+        if ($path[$i]->loader) {
+            $loader = 1;
+        }
+    }
+
+    if ($manager == 0) {
+        return;
+    }
+
+    ngx_spawn_process($cycle, 'ngx_cache_manager_process_cycle',
+        ngx_cache_manager_ctx(), "cache manager process",
+        $respawn ? NGX_PROCESS_JUST_RESPAWN : NGX_PROCESS_RESPAWN);
+
+    //ngx_memzero(&ch, sizeof(ngx_channel_t));
+    $ch = new ngx_channel_t();
+
+    $ngx_processes_slot = ngx_processes(ngx_process_slot());
+    $ch->command = NGX_CMD_OPEN_CHANNEL;
+    $ch->pid = $ngx_processes_slot->pid;
+    $ch->slot = ngx_process_slot();
+    $ch->fd = $ngx_processes_slot->channel[0];
+
+    ngx_pass_open_channel($cycle, $ch);
+
+    if ($loader == 0) {
+        return;
+    }
+
+    ngx_spawn_process($cycle, 'ngx_cache_manager_process_cycle',
+        ngx_cache_loader_ctx(), "cache loader process",
+        $respawn ? NGX_PROCESS_JUST_SPAWN : NGX_PROCESS_NORESPAWN);
+
+    $ngx_processes_slot = ngx_processes(ngx_process_slot());
+    $ch->command = NGX_CMD_OPEN_CHANNEL;
+    $ch->pid = $ngx_processes_slot->pid;
+    $ch->slot = ngx_process_slot();
+    $ch->fd = $ngx_processes_slot->channel[0];
+    ngx_pass_open_channel($cycle, $ch);
+}
+
+function ngx_cache_manager_process_cycle(ngx_cycle_t $cycle, $data)
+{
+//ngx_cache_manager_ctx_t *ctx = data;
+//
+//    void         *ident[4];
+//    ngx_event_t   ev;
+
+    /*
+     * Set correct process type since closing listening Unix domain socket
+     * in a master process also removes the Unix domain socket file.
+     */
+    ngx_process(NGX_PROCESS_HELPER);
+
+    ngx_close_listening_sockets($cycle);
+
+    /* Set a moderate number of connections for a helper process. */
+    $cycle->connection_n = 512;
+
+    ngx_worker_process_init($cycle, -1);
+
+    //ngx_memzero(&ev, sizeof(ngx_event_t));
+    $ev = new ngx_event_t();
+    $ev->handler = $ctx->handler;
+    $ident[3] =  -1;
+    $ev->data = $ident;
+    $ev->log = $cycle->log;
+
+    ngx_use_accept_mutex(0);
+
+    ngx_setproctitle($ctx->name);
+
+    ngx_add_timer($ev, $ctx->delay);
+
+    for ( ;; ) {
+
+        if (ngx_terminate() || ngx_quit()) {
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "exiting");
+            exit(0);
+        }
+
+        if (ngx_reopen()) {
+            ngx_reopen(0);
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "reopening logs");
+            ngx_reopen_files($cycle, -1);
+        }
+        ngx_process_events_and_timers($cycle);
+    }
+}
+
 
 
