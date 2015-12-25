@@ -95,7 +95,7 @@ function ngx_add_channel_event(ngx_cycle_t $cycle,  $fd,  $event, callable $hand
 }
 
 
-function ngx_read_channel(ngx_socket_t $s, ngx_channel_t $ch, ngx_log $log)
+function ngx_read_channel($s, ngx_channel_t $ch, ngx_log $log)
 {
 //    ssize_t             n;
 //    ngx_err_t           err;

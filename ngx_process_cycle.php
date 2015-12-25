@@ -85,6 +85,51 @@ function ngx_worker($i = null){
     }
 }
 
+function ngx_exiting($i = null){
+    static $ngx_exiting = null;
+    if(!is_null($i)){
+        $ngx_exiting = $i;
+    }else{
+        return $ngx_exiting;
+    }
+}
+
+function  ngx_exit_log_file (ngx_open_file_s  $file = null){
+    static $ngx_exit_log_file = null;
+    if(!is_null($file) && $file instanceof ngx_open_file_s){
+       $ngx_exit_log_file = $file;
+    }else{
+        if(is_null($ngx_exit_log_file)){
+           $ngx_exit_log_file = new ngx_open_file_s();
+        }
+       return $ngx_exit_log_file;
+    }
+}
+
+function ngx_exit_log(ngx_log $log = null){
+    static $ngx_exit_log = null;
+    if(!is_null($log)){
+       $ngx_exit_log = $log;
+    }else{
+        if(is_null($ngx_exit_log)){
+            $ngx_exit_log = new ngx_log();
+        }
+        return $ngx_exit_log;
+    }
+}
+
+function ngx_exit_cycle(ngx_cycle_t $cycle = null){
+    static $ngx_exit_cycle = null;
+    if(!is_null($cycle)){
+        $ngx_exit_cycle = $cycle;
+    }else{
+        if(is_null($ngx_exit_cycle)){
+            $ngx_exit_cycle = new ngx_cycle_t();
+        }
+        return $ngx_exit_cycle;
+    }
+}
+
 function ngx_cache_manager_process_handler(ngx_event_t $ev)
 {
 //time_t        next, n;
@@ -914,7 +959,7 @@ function ngx_start_worker_processes(ngx_cycle_t $cycle,  $n,  $type)
 
         $ngx_process_slot = ngx_process_slot();
         $ngx_processes_slot = ngx_processes($ngx_process_slot);
-        ngx_spawn_process($cycle, ngx_worker_process_cycle,
+        ngx_spawn_process($cycle, 'ngx_worker_process_cycle',
             $i, "worker process", $type);
 
         $ch->pid = $ngx_processes_slot->pid;
@@ -940,14 +985,16 @@ function ngx_worker_process_cycle(ngx_cycle_t $cycle, $data)
     for ( ;; ) {
 
         if (ngx_exiting()) {
+//todo should complete event method
             ngx_event_cancel_timers();
 
-            if (ngx_event_timer_rbtree.root == ngx_event_timer_rbtree.sentinel)
-            {
-                ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
-
-                ngx_worker_process_exit($cycle);
-            }
+//todo should complete event method
+//            if (ngx_event_timer_rbtree.root == ngx_event_timer_rbtree.sentinel)
+//            {
+//                ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
+//
+//                ngx_worker_process_exit($cycle);
+//            }
         }
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, $cycle->log, 0, "worker cycle");
@@ -968,8 +1015,8 @@ function ngx_worker_process_cycle(ngx_cycle_t $cycle, $data)
 
             if (!ngx_exiting()) {
                 ngx_exiting(1);
-                ngx_close_listening_sockets(cycle);
-                ngx_close_idle_connections(cycle);
+                ngx_close_listening_sockets($cycle);
+                ngx_close_idle_connections($cycle);
             }
         }
 
@@ -978,6 +1025,22 @@ function ngx_worker_process_cycle(ngx_cycle_t $cycle, $data)
             ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "reopening logs");
             ngx_reopen_files($cycle, -1);
         }
+    }
+}
+
+function ngx_close_idle_connections(ngx_cycle_t $cycle)
+{
+//ngx_uint_t         i;
+//    ngx_connection_t  *c;
+
+    $c = $cycle->connections;
+
+    for ($i = 0; $i < $cycle->connection_n; $i++) {
+
+        if ($c[$i]->fd != null && $c[$i]->idle) {
+                $c[$i]->close = 1;
+              call_user_func($c[$i]->read->handler,$c[$i]->read);
+            }
     }
 }
 
@@ -1226,6 +1289,59 @@ function ngx_channel_handler(ngx_event_t $ev)
             break;
         }
     }
+}
+function ngx_worker_process_exit(ngx_cycle_t $cycle)
+{
+//ngx_uint_t         i;
+//    ngx_connection_t  *c;
+
+    for ($i = 0; ngx_modules($i); $i++) {
+        if (ngx_modules($i)->exit_process) {
+            ngx_modules($i)->exit_process($cycle);
+            }
+    }
+
+    if (ngx_exiting()) {
+        $c = $cycle->connections;
+        for ($i = 0; $i < $cycle->connection_n; $i++) {
+            if ($c[$i]->fd != -1
+            && $c[$i]->read
+            && !$c[$i]->read->accept
+            && !$c[$i]->read->channel
+            && !$c[$i]->read->resolver)
+            {
+                ngx_log_error(NGX_LOG_ALERT, $cycle->log, 0,
+                              "*%uA open socket #%d left in connection %ui",
+                              array($c[$i]->number, $c[$i]->fd, $i));
+                ngx_debug_quit(1);
+            }
+        }
+    }
+
+    /*
+     * Copy ngx_cycle->log related data to the special static exit cycle,
+     * log, and log file structures enough to allow a signal handler to log.
+     * The handler may be called when standard ngx_cycle->log allocated from
+     * ngx_cycle->pool is already destroyed.
+     */
+
+    $ngx_cycle = ngx_cycle();
+    //$ngx_exit_log = ngx_log_get_file_log($ngx_cycle->log);
+
+    $ngx_exit_log = ngx_exit_log();
+    $ngx_exit_log_file = ngx_exit_log_file();
+    $ngx_exit_log_file->fd = $ngx_exit_log->file->fd;
+    $ngx_exit_log->file = $ngx_exit_log_file;
+
+    $ngx_exit_cycle = ngx_exit_cycle();
+    $ngx_exit_cycle->log = $ngx_exit_log;
+    $ngx_exit_cycle->files = $ngx_cycle->files;
+    $ngx_exit_cycle->files_n = $ngx_cycle->files_n;
+    $ngx_cycle = $ngx_exit_cycle;
+
+    ngx_log_error(NGX_LOG_NOTICE, $ngx_cycle->log, 0, "exit");
+
+    exit(0);
 }
 
 

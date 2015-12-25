@@ -118,6 +118,40 @@ function ngx_event_expire_timers()
 //    }
 }
 
+//todo should complete event method
+function ngx_event_cancel_timers()
+{
+//ngx_event_t        *ev;
+//    ngx_rbtree_node_t  *node, *root, *sentinel;
+//
+//    sentinel = ngx_event_timer_rbtree.sentinel;
+//
+//    for ( ;; ) {
+//        root = ngx_event_timer_rbtree.root;
+//
+//        if (root == sentinel) {
+//            return;
+//        }
+//
+//        node = ngx_rbtree_min(root, sentinel);
+//
+//        ev = (ngx_event_t *) ((char *) node - offsetof(ngx_event_t, timer));
+//
+//        if (!ev->cancelable) {
+//            return;
+//        }
+//
+//        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
+//                       "event timer cancel: %d: %M",
+//                       ngx_event_ident(ev->data), ev->timer.key);
+//
+//        ngx_rbtree_delete(&ngx_event_timer_rbtree, &ev->timer);
+//
+//        ev->timer_set = 0;
+//
+//        ev->handler(ev);
+}
+
 function event_base(){
    static $base;
     if(is_null($base)){

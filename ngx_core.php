@@ -45,18 +45,6 @@ class ngx_open_file_s {
         return $this->$property_name;
     }
 
-//    public function set_fd($fd){
-//       $this->fd = $fd;
-//    }
-//    public function get_fd(){
-//       return $this->fd;
-//    }
-//    public function set_name($name){
-//       $this->name = $name;
-//    }
-//    public function get_name(){
-//       return $this->name;
-//    }
 }
 
 function ngx_cfg($ngx_cfg,$value = null){
