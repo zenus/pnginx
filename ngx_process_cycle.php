@@ -1300,6 +1300,7 @@ function ngx_worker_process_exit(ngx_cycle_t $cycle)
 //ngx_uint_t         i;
 //    ngx_connection_t  *c;
 
+
     for ($i = 0; ngx_modules($i); $i++) {
         if (ngx_modules($i)->exit_process) {
             ngx_modules($i)->exit_process($cycle);
