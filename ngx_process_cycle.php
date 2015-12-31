@@ -1297,6 +1297,7 @@ function ngx_channel_handler(ngx_event_t $ev)
 
 function ngx_worker_process_exit(ngx_cycle_t $cycle)
 {
+
 //ngx_uint_t         i;
 //    ngx_connection_t  *c;
 
