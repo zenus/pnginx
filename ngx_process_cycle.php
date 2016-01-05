@@ -1416,6 +1416,7 @@ function ngx_cache_manager_process_cycle(ngx_cycle_t $cycle, $data)
 //    void         *ident[4];
 //    ngx_event_t   ev;
 
+
     /*
      * Set correct process type since closing listening Unix domain socket
      * in a master process also removes the Unix domain socket file.
