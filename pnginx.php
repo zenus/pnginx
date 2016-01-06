@@ -1071,11 +1071,11 @@ function ngx_set_environment(ngx_cycle_t $cycle, $last)
     $var = $ccf->env;
 
     for ($i = 0; $i < count($ccf->env); $i++) {
-    if (ngx_strcmp($var[$i], "TZ") == 0
-    || ngx_strncmp($var[$i], "TZ=", 3) == 0)
-        {
-            goto tz_found;
-        }
+        if (ngx_strcmp($var[$i], "TZ") == 0
+        || ngx_strncmp($var[$i], "TZ=", 3) == 0)
+            {
+                goto tz_found;
+            }
     }
 
 //    var = ngx_array_push(&ccf->env);
@@ -1153,7 +1153,7 @@ tz_found:
     return $env;
 }
 
-function ngx_get_cpu_affinity( $n)
+function ngx_get_cpu_affinity($n)
 {
 //    ngx_core_conf_t  *ccf;
 
@@ -1170,6 +1170,81 @@ function ngx_get_cpu_affinity( $n)
 
     return $ccf->cpu_affinity[$ccf->cpu_affinity_n - 1];
 }
+
+function ngx_exec_new_binary(ngx_cycle_t $cycle, $argv)
+{
+//    char             **env, *var;
+//    u_char            *p;
+//    ngx_uint_t         i, n;
+//    ngx_pid_t          pid;
+//    ngx_exec_ctx_t     ctx;
+//    ngx_core_conf_t   *ccf;
+//    ngx_listening_t   *ls;
+
+    //ngx_memzero(&ctx, sizeof(ngx_exec_ctx_t));
+    $ctx = new ngx_exec_ctx_t();
+    $ctx->path = $argv[0];
+    $ctx->name = "new binary process";
+    $ctx->argv = $argv;
+
+    $n = 2;
+    $env = ngx_set_environment($cycle, $n);
+    if ($env == NULL) {
+        return NGX_INVALID_PID;
+    }
+
+//    var = ngx_alloc(sizeof(NGINX_VAR)
+//    + cycle->listening.nelts * (NGX_INT32_LEN + 1) + 2,
+//                    cycle->log);
+//    if (var == NULL) {
+//    ngx_free(env);
+//    return NGX_INVALID_PID;
+//    }
+
+    //p = ngx_cpymem(var, NGINX_VAR "=", sizeof(NGINX_VAR));
+    $p = NGINX_VAR.'=';
+
+    $ls = $cycle->listening;
+    for ($i = 0; $i < count($cycle->listening); $i++) {
+        $p = ngx_sprintf($p, "%ud;", $ls[$i]->fd);
+    }
+
+    $env[$n++] = $p;
+
+    $ctx->envp = $env;
+
+    $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
+    if (ngx_rename_file($ccf->pid, $ccf->oldpid) == NGX_FILE_ERROR) {
+        ngx_log_error(NGX_LOG_ALERT, $cycle->log, NGX_FRNERROR,
+                          ngx_rename_file_n ." %s to %s failed ".
+                          "before executing new binary process \"%s\"",
+                          array($ccf->pid, $ccf->oldpid, $argv[0]));
+
+        unset($env);
+        unset($p);
+
+        return NGX_INVALID_PID;
+    }
+
+    $pid = ngx_execute($cycle, $ctx);
+
+    if ($pid == NGX_INVALID_PID) {
+        if (ngx_rename_file($ccf->oldpid, $ccf->pid)
+            == NGX_FILE_ERROR)
+        {
+            ngx_log_error(NGX_LOG_ALERT, $cycle->log, NGX_FRNERROR,
+                          ngx_rename_file_n ." %s back to %s failed after ".
+                          "an attempt to execute new binary process \"%s\"",
+                          array($ccf->oldpid, $ccf->pid, $argv[0]));
+        }
+    }
+    unset($env);
+    unset($p);
+    return $pid;
+}
+
+
 
 
 

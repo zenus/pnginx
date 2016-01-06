@@ -49,8 +49,8 @@ function ngx_event_process_posted(ngx_cycle_t $cycle, ngx_queue_t $posted)
                       "posted event %p", $ev);
 
         ngx_delete_posted_event($ev);
-
         $ev->handler($ev);
         $posted->next();
     }
+
 }

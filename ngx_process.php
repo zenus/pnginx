@@ -40,6 +40,19 @@ class ngx_process_t {
     }
 }
 
+class ngx_exec_ctx_t {
+  private  /*** char  **/       $path;
+  private  /** char  **/       $name;
+  private /** char *const ***/ $argv;
+  private /** char *const ***/ $envp;
+    public function __set($name,$value){
+       $this->$name = $value;
+    }
+    public function __get($name){
+       return $this->name;
+    }
+}
+
 function ngx_signal_value($n){
    return ngx_signal_helper($n);
 }
@@ -65,12 +78,14 @@ function ngx_os_argv($i,$v=null){
     }
 }
 
-function ngx_argv($mixed) {
+function ngx_argv($mixed = null) {
     static $ngx_argv = null;
     if(is_array($mixed)){
         $ngx_argv = $mixed;
-    }else{
+    }elseif(!is_null($mixed)){
         return $ngx_argv[$mixed];
+    }else{
+        return $ngx_argv;
     }
 }
 
@@ -718,4 +733,29 @@ function ngx_spawn_process(ngx_cycle_t $cycle, /**ngx_spawn_proc_pt**/  closure 
 
     return $pid;
 }
+
+
+function ngx_execute(ngx_cycle_t $cycle, ngx_exec_ctx_t $ctx)
+{
+    return ngx_spawn_process($cycle, $ngx_execute_proc, $ctx, $ctx->name,
+                             NGX_PROCESS_DETACHED);
+}
+
+
+function ngx_execute_proc(ngx_cycle_t $cycle, $data)
+{
+//ngx_exec_ctx_t  *ctx = data;
+    $ctx = $data;
+
+    //todo should fix it execv = fork + exec
+    if (pcntl_exec($ctx->path, $ctx->argv, $ctx->envp) == -1) {
+          ngx_log_error(NGX_LOG_ALERT, $cycle->log, pcntl_get_last_error(),
+                      "execve() failed while executing %s \"%s\"",
+                      array($ctx->name, $ctx->path));
+    }
+    exit(1);
+}
+
+
+
 

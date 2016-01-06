@@ -400,7 +400,7 @@ function ngx_single_process_cycle(ngx_cycle_t $cycle)
         }
     }
 }
-
+/**unfinish**/
 function ngx_master_process_cycle(ngx_cycle_t $cycle)
 {
 //char              *title;
@@ -456,7 +456,7 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
         $title .= ngx_argv($i);
     }
 
-    //todo self idea may have problem
+    //todo todo self idea may have problem
     ngx_setproctitle($title);
 
 
@@ -535,88 +535,83 @@ function ngx_master_process_cycle(ngx_cycle_t $cycle)
             }
             continue;
         }
-//
-//        if (ngx_quit) {
-//            ngx_signal_worker_processes(cycle,
-//                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
-//
-//            ls = cycle->listening.elts;
-//            for (n = 0; n < cycle->listening.nelts; n++) {
-//                if (ngx_close_socket(ls[n].fd) == -1) {
-//                    ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno,
-//                                  ngx_close_socket_n " %V failed",
-//                                  &ls[n].addr_text);
-//                }
-//            }
-//            cycle->listening.nelts = 0;
-//
-//            continue;
-//        }
-//
-//        if (ngx_reconfigure) {
-//            ngx_reconfigure = 0;
-//
-//            if (ngx_new_binary) {
-//                ngx_start_worker_processes(cycle, ccf->worker_processes,
-//                                           NGX_PROCESS_RESPAWN);
-//                ngx_start_cache_manager_processes(cycle, 0);
-//                ngx_noaccepting = 0;
-//
-//                continue;
-//            }
-//
-//            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
-//
-//            cycle = ngx_init_cycle(cycle);
-//            if (cycle == NULL) {
-//                cycle = (ngx_cycle_t *) ngx_cycle;
-//                continue;
-//            }
-//
-//            ngx_cycle = cycle;
-//            ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx,
-//                                                   ngx_core_module);
-//            ngx_start_worker_processes(cycle, ccf->worker_processes,
-//                                       NGX_PROCESS_JUST_RESPAWN);
-//            ngx_start_cache_manager_processes(cycle, 1);
-//
-//            /* allow new processes to start */
-//            ngx_msleep(100);
-//
-//            live = 1;
-//            ngx_signal_worker_processes(cycle,
-//                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
-//        }
-//
-//        if (ngx_restart) {
-//            ngx_restart = 0;
-//            ngx_start_worker_processes(cycle, ccf->worker_processes,
-//                                       NGX_PROCESS_RESPAWN);
-//            ngx_start_cache_manager_processes(cycle, 0);
-//            live = 1;
-//        }
-//
-//        if (ngx_reopen) {
-//            ngx_reopen = 0;
-//            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");
-//            ngx_reopen_files(cycle, ccf->user);
-//            ngx_signal_worker_processes(cycle,
-//                ngx_signal_value(NGX_REOPEN_SIGNAL));
-//        }
-//
-//        if (ngx_change_binary) {
-//            ngx_change_binary = 0;
-//            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "changing binary");
-//            ngx_new_binary = ngx_exec_new_binary(cycle, ngx_argv);
-//        }
-//
-//        if (ngx_noaccept) {
-//            ngx_noaccept = 0;
-//            ngx_noaccepting = 1;
-//            ngx_signal_worker_processes(cycle,
-//                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
-//        }
-//    }
+
+        if (ngx_quit()) {
+            ngx_signal_worker_processes($cycle,
+                ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
+
+            $ls = $cycle->listening;
+            for ($n = 0; $n < count($cycle->listening); $n++) {
+                if (ngx_close_socket($ls[$n]->fd) == false)  {
+                    ngx_log_error(NGX_LOG_EMERG, $cycle->log, socket_last_error(),
+                                  ngx_close_socket_n ." %V failed",
+                                  $ls[$n]->addr_text);
+                }
+            }
+            //empty listening array
+            $cycle->listening = array();
+
+            continue;
+        }
+
+        if (ngx_reconfigure()) {
+            ngx_reconfigure(0);
+
+            if (ngx_new_binary()) {
+                ngx_start_worker_processes($cycle, $ccf->worker_processes,
+                                           NGX_PROCESS_RESPAWN);
+                ngx_start_cache_manager_processes($cycle, 0);
+                ngx_noaccepting(0);
+
+                continue;
+            }
+
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "reconfiguring");
+
+            $cycle = ngx_init_cycle($cycle);
+            if ($cycle == NULL) {
+                $cycle = ngx_cycle();
+                continue;
+            }
+
+            ngx_cycle($cycle);
+            $ccf = ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+            ngx_start_worker_processes($cycle, $ccf->worker_processes, NGX_PROCESS_JUST_RESPAWN);
+            ngx_start_cache_manager_processes($cycle, 1);
+
+            /* allow new processes to start */
+            ngx_msleep(100);
+
+            $live = 1;
+            ngx_signal_worker_processes($cycle, ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
+        }
+
+        if (ngx_restart()) {
+            ngx_restart(0);
+            ngx_start_worker_processes($cycle, $ccf->worker_processes, NGX_PROCESS_RESPAWN);
+            ngx_start_cache_manager_processes($cycle, 0);
+            $live = 1;
+        }
+
+        if (ngx_reopen()) {
+            ngx_reopen(0);
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "reopening logs");
+            ngx_reopen_files($cycle, $ccf->user);
+            ngx_signal_worker_processes($cycle, ngx_signal_value(NGX_REOPEN_SIGNAL));
+        }
+
+        if (ngx_change_binary()) {
+            ngx_change_binary(0);
+            ngx_log_error(NGX_LOG_NOTICE, $cycle->log, 0, "changing binary");
+            ngx_new_binary(ngx_exec_new_binary($cycle, ngx_argv()));
+        }
+
+        if (ngx_noaccept()) {
+            ngx_noaccept(0);
+            ngx_noaccepting(1);
+            ngx_signal_worker_processes($cycle, ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
+        }
+    }
     }
 
 
@@ -723,28 +718,28 @@ function ngx_signal_worker_processes(ngx_cycle_t $cycle, $signo)
     }
 }
 
-    function ngx_exit_log_file(ngx_open_file_s $file = null)
-    {
-        static $ngx_exit_log_file = null;
-        if (!is_null($file)) {
-            $ngx_exit_log_file = $file;
-        } else {
-            return $ngx_exit_log_file;
-        }
+//    function ngx_exit_log_file(ngx_open_file_s $file = null)
+//    {
+//        static $ngx_exit_log_file = null;
+//        if (!is_null($file)) {
+//            $ngx_exit_log_file = $file;
+//        } else {
+//            return $ngx_exit_log_file;
+//        }
+//
+//    }
 
-    }
-
-    function ngx_exit_cycle(ngx_cycle_t $cycle = null)
-    {
-
-        static $ngx_exit_cycle = null;
-        if (!is_null($ngx_exit_cycle)) {
-            $ngx_exit_cycle = $cycle;
-        } else {
-            return $ngx_exit_cycle;
-        }
-
-    }
+//    function ngx_exit_cycle(ngx_cycle_t $cycle = null)
+//    {
+//
+//        static $ngx_exit_cycle = null;
+//        if (!is_null($ngx_exit_cycle)) {
+//            $ngx_exit_cycle = $cycle;
+//        } else {
+//            return $ngx_exit_cycle;
+//        }
+//
+//    }
 
     /**
      * @param ngx_cycle_t $cycle
