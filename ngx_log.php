@@ -43,20 +43,24 @@ define('NGX_LOG_DEBUG_ALL',        0x7ffffff0);
 //    "debug"
 //);
 
-function  err_levels($i){
+function  err_levels($i = null){
 
      static  $err_levels = array(
-            "",
-        "emerg",
-        "alert",
-        "crit",
-        "error",
-        "warn",
-        "notice",
-        "info",
-        "debug"
+                "",
+            "emerg",
+            "alert",
+            "crit",
+            "error",
+            "warn",
+            "notice",
+            "info",
+            "debug"
          );
-    return $err_levels[$i];
+    if(!is_null($i)){
+        return $err_levels[$i];
+    }else{
+       return $err_levels;
+    }
 }
 
 function debug_levels($i)
@@ -229,19 +233,6 @@ function  ngx_use_stderr($i = null){
 
 
 function ngx_log_init(){
-     $err_levels = array(
-        '',
-        "emerg",
-        "alert",
-        "crit",
-        "error",
-        "warn",
-        "notice",
-        "info",
-        "debug"
-    );
-    ngx_cfg('err_levels',$err_levels);
-    ngx_cfg('ngx_use_stderr',1);
     $ngx_log_file = new ngx_open_file_s();
     $ngx_log = new ngx_log();
     $ngx_log->file = $ngx_log_file;
@@ -274,13 +265,13 @@ function ngx_log_error_core($level, ngx_log $log, $err_no,
 
     $p = date("Y-m-d H:i:s");
 
-    $err_levels = ngx_cfg('err_levels');
+    $err_levels = err_levels();
 
     $p = ngx_slprintf($p,  " [%V] ", (array) $err_levels[$level]);
 
     /* pid#tid */
     $p = ngx_slprintf($p,  "%P#",
-                    ngx_cfg('ngx_pid'));
+                    ngx_pid());
 
     if ($log->connection) {
     $p = ngx_slprintf($p, "*%uA ", $log->connection);
@@ -347,7 +338,7 @@ function ngx_log_error_core($level, ngx_log $log, $err_no,
         $log = $log->_next();
     }
 
-    if (!ngx_cfg('ngx_use_stderr')
+    if (ngx_use_stderr()
         || $level > NGX_LOG_WARN
         || $wrote_stderr)
     {
@@ -456,7 +447,7 @@ function ngx_errlog_commands(){
         array(
               'name'=>"error_log",
               'type'=>NGX_MAIN_CONF|NGX_CONF_1MORE,
-              'set'=>ngx_error_log_closure(),
+              'set'=>'ngx_error_log',
               'conf'=>0,
             //  0,
               'post'=>NULL
@@ -483,11 +474,11 @@ function ngx_errlog_commands(){
 //    NULL
 //};
 
-function ngx_error_log_closure(){
-    return  function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
-     ngx_error_log($cf,$cmd,$conf);
-    };
-}
+//function ngx_error_log_closure(){
+//    return  function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+//     ngx_error_log($cf,$cmd,$conf);
+//    };
+//}
 
 function ngx_error_log(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -779,11 +770,11 @@ function ngx_log_file(ngx_open_file_s $file = null){
     }
 }
 
-function ngx_use_stderr(){
-
-    static $ngx_use_stderr = 1;
-    return $ngx_use_stderr;
-}
+//function ngx_use_stderr(){
+//
+//    static $ngx_use_stderr = 1;
+//    return $ngx_use_stderr;
+//}
 
 function ngx_log_redirect_stderr(ngx_cycle_t $cycle)
 {

@@ -126,80 +126,80 @@ function ngx_process_slot($i = null){
 //    char   *name;
 //    void  (*handler)(int signo);
 //} ngx_signal_t;
-function ngx_conf_set_num_slot_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_conf_set_num_slot($cf,  $cmd, $conf);
-    } ;
-}
+//function ngx_conf_set_num_slot_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_conf_set_num_slot($cf,  $cmd, $conf);
+//    } ;
+//}
 
 //typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
 
-function ngx_signal_handler_closure(){
-    return function($signo){
-       ngx_signal_handler($signo);
-    };
-}
+//function ngx_signal_handler_closure(){
+//    return function($signo){
+//       ngx_signal_handler($signo);
+//    };
+//}
 function signals($i = 0){
    static  $signals = array(
          array(
             'signo'=> ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_RECONFIGURE_SIGNAL),
              'name'=>'reload',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=> ngx_signal_value(NGX_REOPEN_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_REOPEN_SIGNAL),
              'name'=>'reopen',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=> ngx_signal_value(NGX_NOACCEPT_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_NOACCEPT_SIGNAL),
              'name'=>'',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=> ngx_signal_value(NGX_TERMINATE_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_TERMINATE_SIGNAL),
              'name'=>'stop',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=> ngx_signal_value(NGX_SHUTDOWN_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_SHUTDOWN_SIGNAL),
              'name'=>'quit',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=> ngx_signal_value(NGX_CHANGEBIN_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_CHANGEBIN_SIGNAL),
              'name'=>'',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=>SIGALRM,
              'signame'=>"SIGALRM",
              'name'=>'',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=>SIGINT,
              'signame'=>"SIGINT",
              'name'=>'',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=>SIGIO,
              'signame'=>"SIGIO",
              'name'=>'',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=>SIGCHLD,
              'signame'=>"SIGCHLD",
              'name'=>'',
-             'handler'=>ngx_signal_handler_closure(),
+             'handler'=>'ngx_signal_handler',
          ),
          array(
              'signo'=>SIGSYS,
@@ -561,7 +561,7 @@ function ngx_init_signals(ngx_log $log)
     return NGX_OK;
 }
 
-function ngx_spawn_process(ngx_cycle_t $cycle, /**ngx_spawn_proc_pt**/  closure  $proc, $data, $name,  $respawn)
+function ngx_spawn_process(ngx_cycle_t $cycle, /**ngx_spawn_proc_pt func name**/  $proc, $data, $name,  $respawn)
 {
 //    u_long     on;
 //    ngx_pid_t  pid;
@@ -671,8 +671,11 @@ function ngx_spawn_process(ngx_cycle_t $cycle, /**ngx_spawn_proc_pt**/  closure 
         case 0:
             $ngx_pid = ngx_getpid();
             ngx_pid($ngx_pid);
-            /**php7 new feature***/
-            $proc->call($cycle, $data);
+            if(is_callable($proc)){
+                call_user_func($proc,$cycle, $data);
+            }else{
+                ngx_log_error(NGX_LOG_ALERT, $cycle->log, 0, $proc."is not callbale");
+            }
             break;
 
         default:
@@ -737,7 +740,7 @@ function ngx_spawn_process(ngx_cycle_t $cycle, /**ngx_spawn_proc_pt**/  closure 
 
 function ngx_execute(ngx_cycle_t $cycle, ngx_exec_ctx_t $ctx)
 {
-    return ngx_spawn_process($cycle, $ngx_execute_proc, $ctx, $ctx->name,
+    return ngx_spawn_process($cycle, 'ngx_execute_proc', $ctx, $ctx->name,
                              NGX_PROCESS_DETACHED);
 }
 

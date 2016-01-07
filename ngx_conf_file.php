@@ -66,6 +66,22 @@ define('NGX_ANY_CONF',0x0F000000);
 define('NGX_MAX_CONF_ERRSTR',1024);
 
 
+/* The eight fixed arguments */
+
+function argument_number($i){
+    static $argument_number = [
+            NGX_CONF_NOARGS,
+            NGX_CONF_TAKE1,
+            NGX_CONF_TAKE2,
+            NGX_CONF_TAKE3,
+            NGX_CONF_TAKE4,
+            NGX_CONF_TAKE5,
+            NGX_CONF_TAKE6,
+            NGX_CONF_TAKE7
+            ];
+    return $argument_number($i);
+}
+
 class ngx_module_t {
 /** ngx_uint_t **/ private $ctx_index;
 /** ngx_uint_t **/ private $index;
@@ -326,7 +342,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
 
         $type = parse_file;
 
-        if (ngx_cfg('ngx_dump_config'))
+        if (ngx_dump_config())
         {
 
 
@@ -824,11 +840,11 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
     $found = 0;
 
-    $ngx_modules = ngx_cfg('ngx_modules');
-    for ($i = 0; $ngx_modules[$i]; $i++) {
+//    $ngx_modules = ngx_modules();
+    for ($i = 0; ngx_modules($i); $i++) {
 
-        $cmds = $ngx_modules[$i]->commands;
-        if (empty($cmd)) {
+        $cmds = ngx_modules($i)->commands;
+        if (empty($cmds)) {
             continue;
         }
 
@@ -845,8 +861,8 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
             $found = 1;
 
-        if ($ngx_modules[$i]->type != NGX_CONF_MODULE
-        && $ngx_modules[$i]->type != $cf->module_type)
+        if (ngx_modules($i)->type != NGX_CONF_MODULE
+        && ngx_modules($i)->type != $cf->module_type)
             {
                 continue;
             }
@@ -858,21 +874,21 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
         }
 
         if (!($cmd->type & NGX_CONF_BLOCK) && $last != NGX_OK) {
-        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
             "directive \"%s\" is not terminated by \";\"",
             $name);
             return NGX_ERROR;
         }
 
         if (($cmd->type & NGX_CONF_BLOCK) && $last != NGX_CONF_BLOCK_START) {
-        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
             "directive \"%s\" has no opening \"{\"",
             $name);
             return NGX_ERROR;
         }
 
             /* is the directive's argument count right ? */
-            $argument_number = ngx_cfg('argument_number');
+            //$argument_number = ngx_cfg('argument_number');
 
             if (!($cmd->type & NGX_CONF_ANY)) {
 
@@ -898,7 +914,7 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
                 goto invalid;
 
-            } else if (!($cmd->type & $argument_number[count($cf->args) - 1]))
+            } else if (!($cmd->type & argument_number(count($cf->args) - 1)))
                 {
                     goto invalid;
                 }
@@ -910,16 +926,16 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
             if ($cmd->type & NGX_DIRECT_CONF) {
                 //todo 0 offset is ok?
-            $conf =  $cf->ctx[0][$ngx_modules[$i]->index];
+            $conf =  $cf->ctx[0][ngx_modules($i)->index];
                 //conf = ((void **) cf->ctx)[ngx_modules[i]->index];
             } else if ($cmd->type & NGX_MAIN_CONF) {
                 //todo  direct_conf and main_conf should use the same offset
-            $conf = $cf->ctx[0][$ngx_modules[$i]->index];
+            $conf = $cf->ctx[0][ngx_modules($i)->index];
                 //todo should know why use & or not
                 //conf = &((void **) cf->ctx)[ngx_modules[i]->index];
             } else if ($cf->ctx) {
             //$confp = $cf->ctx + $cmd->conf;
-            $conf = $cf->ctx[$cmd->conf][$ngx_modules[$i]->ctx_index];
+            $conf = $cf->ctx[$cmd->conf][ngx_modules($i)->ctx_index];
             }
 
             $rv = $cmd->handle($cf, $cmd, $conf);
@@ -1266,22 +1282,6 @@ function ngx_conf_open_file(ngx_cycle_t $cycle, $name)
     //todo we evently use array
     $cycle->open_files->push(array($file));
     return $file;
-}
-
-function argument_number($i){
-
-    static  $argument_number = array(
-                NGX_CONF_NOARGS,
-                NGX_CONF_TAKE1,
-                NGX_CONF_TAKE2,
-                NGX_CONF_TAKE3,
-                NGX_CONF_TAKE4,
-                NGX_CONF_TAKE5,
-                NGX_CONF_TAKE6,
-                NGX_CONF_TAKE7
-                  );
-   return $argument_number[$i];
-
 }
 
 function ngx_get_conf($conf_ctx,ngx_module_t $module){

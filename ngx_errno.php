@@ -203,11 +203,27 @@ define('NGX_EAGAIN',EAGAIN);
 define('NGX_SYS_NERR',133);
 
 
+function ngx_sys_errlist($mix = null){
+
+    static $ngx_sys_errlist = null;
+
+    if(!is_null($ngx_sys_errlist)){
+
+        if(is_int($mix)){
+
+           return $ngx_sys_errlist[$i];
+        }else{
+           $ngx_sys_errlist = $mix;
+        }
+    }else{
+        return $ngx_sys_errlist;
+    }
+}
+
 function ngx_strerror($err, $errstr)
 {
 
-    $msg = $err < NGX_SYS_NERR ? ngx_cfg('ngx_sys_errlist')[$err]:$ngx_cfg('ngx_unknown_error');
-
+    $msg = $err < NGX_SYS_NERR ? ngx_sys_errlist($err):'ngx_unknown_error';
     return $errstr.$msg;
 }
 
@@ -352,7 +368,7 @@ function ngx_strerror_init()
         133=>' Memory page has hardware error ',
     );
 
-    ngx_cfg('ngx_sys_errlist',$ngx_sys_errlist);
+    ngx_sys_errlist($ngx_sys_errlist);
 
     return NGX_OK;
 

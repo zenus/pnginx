@@ -8,6 +8,33 @@
  * @return int
  */
 
+function  ngx_ncpu($i = null){
+    static $ngx_ncpu = null;
+    if(!is_null($i)){
+       $ngx_ncpu = $i ;
+    }else{
+       return $ngx_ncpu;
+    }
+}
+
+function ngx_max_sockets($i = null){
+    static $ngx_max_sockets = null;
+    if(!is_null($i)){
+        $ngx_max_sockets = $i;
+    }else{
+        return $ngx_max_sockets;
+    }
+}
+
+function ngx_inherited_nonblocking($i = null){
+    static $ngx_inherited_nonblocking = null;
+    if(!is_null($i)){
+       $ngx_inherited_nonblocking = $i;
+    }else{
+       return $ngx_inherited_nonblocking;
+    }
+}
+
 function ngx_os_init(ngx_log &$log)
 {
 
@@ -28,7 +55,7 @@ function ngx_os_init(ngx_log &$log)
 //
 //    if (ngx_ncpu < 1) {
     //todo  find way to get the  cpu amount
-        ngx_cfg('ngx_ncpu',1);
+        ngx_ncpu(1);
     //}
 
     //todo find way to get cup info
@@ -40,11 +67,11 @@ function ngx_os_init(ngx_log &$log)
         return NGX_ERROR;
     }
 
-    ngx_cfg('ngx_max_sockets',$rlimit['soft openfiles']);
+    ngx_max_sockets($rlimit['soft openfiles']);
 
 //#if (NGX_HAVE_INHERITED_NONBLOCK || NGX_HAVE_ACCEPT4)
     // todo find how to do this
-    ngx_cfg('ngx_inherited_nonblocking', 1);
+    ngx_inherited_nonblocking(1);
 //#else
 //    ngx_inherited_nonblocking = 0;
 //#endif

@@ -25,17 +25,12 @@ define('NGX_CONFIGURE','');
  * Time: 14:56
  * @param null $i
  * @return int
- * @internal param $ngx_cfg
  * @internal param $value
  * @internal param $name
  * @internal param $argc
  * @internal param array $argv
  */
 
-//function ngx_cfg($ngx_cfg,$value = null){
-//    static $cfg = array();
-//    return  is_null($value) ? (isset($cfg[$ngx_cfg]) ? $cfg[$ngx_cfg] : false) : $cfg[$ngx_cfg] = $value;
-//}
 //static $ngx_show_version = 0;
 //static $ngx_show_help = 0;
 //static $ngx_show_configure = 0;
@@ -60,6 +55,15 @@ function ngx_show_help($i = null){
     }
 }
 
+function ngx_show_version($i = null){
+    static $ngx_show_version = null;
+    if(!is_null($i)){
+        $ngx_show_version = $i;
+    }else{
+        return $ngx_show_version;
+    }
+}
+
 function ngx_show_configure($i = null){
    static $ngx_show_configure = null;
     if(!is_null($i)){
@@ -78,6 +82,24 @@ function ngx_signal($char = null){
     }
 }
 
+function ngx_prefix($char = null){
+    static $ngx_prefix = null;
+    if(!is_null($char)){
+        $ngx_prefix = $char;
+    }else{
+        return $ngx_prefix;
+    }
+}
+
+function ngx_conf_file($char = null){
+    static $ngx_conf_file = null;
+    if(!is_null($ngx_conf_file)){
+        $ngx_conf_file = $char;
+    }else{
+        return $ngx_conf_file;
+    }
+}
+
 function ngx_pid($i = null){
     static $ngx_pid = null;
     if(!is_null($i)){
@@ -88,18 +110,46 @@ function ngx_pid($i = null){
 
 }
 
-function main($argc, array $argv){
+function ngx_os_argv($arr = null ){
+    static $ngx_os_argv = null;
+    if(!is_null($arr)){
+       $ngx_os_argv = $arr;
+    }else{
+       return $ngx_os_argv;
+    }
+}
 
+function ngx_argc($i = null){
+    static $ngx_argc = null;
+    if(!is_null($i)){
+        $ngx_argc = $i;
+    }else{
+       return $ngx_argc;
+    }
+}
+
+function ngx_argv($arr = null){
+    static $ngx_argv = null;
+    if(!is_null($arr)){
+       $ngx_argv = $arr;
+    }else{
+       return $ngx_argv;
+    }
+}
+
+
+function main($argc, array $argv){
 
     /***ngx_log_s***/ $log = null;
 
-    /***ngx_cycle_s***/ $cycle = null; $init_cycle = null;
+    /***ngx_cycle_s***/ $cycle = null;
+    $init_cycle = null;
 
     if (ngx_strerror_init() != NGX_OK) {
         return 1;
     }
 
-    if(ngx_get_options($argc,$argv) != NGX_OK){
+    if(ngx_get_options($argc,$argv) != NGX_OK) {
        return 1;
     }
     ngx_write_stderr("nginx version: ". NGINX_VER_BUILD. NGX_LINEFEED);
@@ -172,7 +222,6 @@ function main($argc, array $argv){
     }
 
     $ngx_max_module = 0;
-    //$ngx_modules = ngx_cfg('ngx_modules');
     for ($i = 0; ngx_modules($i); $i++) {
         ngx_modules($i,'index',$ngx_max_module++);
     }
@@ -292,42 +341,40 @@ function ngx_get_options($argc ,array $argv)
 
                 case '?':
                 case 'h':
-                    ngx_cfg('ngx_show_version',1);
-                    ngx_cfg('ngx_show_help',1);
+                    ngx_show_version(1);
+                    ngx_show_help(1);
                     break;
 
                 case 'v':
-                    ngx_cfg('ngx_show_version',1);
+                    ngx_show_version(1);
                     break;
 
                 case 'V':
-                    ngx_cfg('ngx_show_version',1);
-                    ngx_cfg('ngx_show_configure',1);
+                    ngx_show_version(1);
+                    ngx_show_configure(1);
                     break;
 
                 case 't':
-                    ngx_cfg('ngx_test_config',1);
+                    ngx_test_config(1);
                     break;
 
                 case 'T':
-                    ngx_cfg('ngx_test_config',1);
-                    ngx_cfg('ngx_dump_config',1);
+                    ngx_test_config(1);
+                    ngx_dump_config(1);
                     break;
 
                 case 'q':
-                    ngx_cfg('ngx_quiet_mode',1);
+                    ngx_quiet_mode(1);
                     break;
 
                 case 'p':
                     if (ngx_strhas($p,$ptr)) {
-                        //$ngx_prefix = substr($p,$ptr);
-                        ngx_cfg('ngx_prefix',substr($p,$ptr));
+                        ngx_prefix(substr($p,$ptr));
                         goto next;
                     }
 
                     if ($argv[++$i]) {
-                        //$ngx_prefix = substr($p,$ptr);
-                        ngx_cfg('ngx_prefix',$argv[$i]);
+                        ngx_prefix($argv[$i]);
                         goto next;
                     }
 
@@ -336,14 +383,12 @@ function ngx_get_options($argc ,array $argv)
 
                 case 'c':
                     if (ngx_strhas($p,$ptr)) {
-                        //$ngx_conf_file = substr($p,$ptr);
-                        ngx_cfg('ngx_conf_file',substr($p,$ptr));
+                        ngx_conf_file(substr($p,$ptr));
                         goto next;
                     }
 
                     if ($argv[++$i]) {
-                        //$ngx_conf_file = $argv[$i];
-                        ngx_cfg('ngx_conf_file',$argv[$i]);
+                        ngx_conf_file($argv[$i]);
                         goto next;
                     }
 
@@ -352,14 +397,12 @@ function ngx_get_options($argc ,array $argv)
 
                 case 'g':
                     if (ngx_strhas($p,$ptr)) {
-                        ngx_cfg('ngx_conf_params',substr($p,$ptr));
-                        //$ngx_conf_params = substr($p,$ptr);
+                        ngx_conf_params(substr($p,$ptr));
                         goto next;
                     }
 
                     if ($argv[++$i]) {
-                        //$ngx_conf_params = $argv[$i];
-                        ngx_cfg('ngx_conf_params',$argv[$i]);
+                        ngx_conf_params($argv[$i]);
                         goto next;
                     }
 
@@ -368,29 +411,26 @@ function ngx_get_options($argc ,array $argv)
 
                 case 's':
                     if (ngx_strhas($p,$ptr)) {
-                        //$ngx_signal = substr($p,$ptr);
-                        ngx_cfg('ngx_signal',substr($p,$ptr));
+                        ngx_signal(substr($p,$ptr));
 
                     } else if ($argv[++$i]) {
-                        //$ngx_signal = $argv[$i];
-                        ngx_cfg('ngx_signal',$argv[$i]);
+                        ngx_signal($argv[$i]);
 
                     } else {
                         ngx_log_stderr(0, "option \"-s\" requires parameter");
                         return NGX_ERROR;
                     }
 
-                    if (ngx_strcmp(ngx_cfg('ngx_signal'), "stop") == 0
-                        || ngx_strcmp(ngx_cfg('ngx_signal'), "quit") == 0
-                        || ngx_strcmp(ngx_cfg('ngx_signal'), "reopen") == 0
-                        || ngx_strcmp(ngx_cfg('ngx_signal'), "reload") == 0
+                    if (ngx_strcmp(ngx_signal(), "stop") == 0
+                        || ngx_strcmp(ngx_signal(), "quit") == 0
+                        || ngx_strcmp(ngx_signal(), "reopen") == 0
+                        || ngx_strcmp(ngx_signal(), "reload") == 0
                     ) {
-                        ngx_cfg('ngx_process',NGX_PROCESS_SIGNALLER);
-                        //$ngx_process = NGX_PROCESS_SIGNALLER;
+                        ngx_process(NGX_PROCESS_SIGNALLER);
                         goto next;
                     }
 
-                    ngx_log_stderr(0, "invalid option: \"-s %s\"", $ngx_signal);
+                    ngx_log_stderr(0, "invalid option: \"-s %s\"", ngx_signal());
                     return NGX_ERROR;
 
                 default:
@@ -408,9 +448,9 @@ function ngx_get_options($argc ,array $argv)
 function ngx_save_argv( $argc, $argv)
 {
 
-    ngx_cfg('ngx_os_argv',$argv);
-    ngx_cfg('ngx_argc', $argc);
-    ngx_cfg('ngx_argv', $argv);
+    ngx_os_argv($argv);
+    ngx_argc($argc);
+    ngx_argv($argv);
 
     if (empty($argv)) {
         return NGX_ERROR;
@@ -425,7 +465,8 @@ function ngx_save_argv( $argc, $argv)
 
 function ngx_process_options(ngx_cycle_t &$cycle)
 {
-    if ($conf_file = ngx_cfg('ngx_conf_file')) {
+    $conf_file = ngx_conf_file();
+    if ($conf_file) {
         $cycle->conf_file = $conf_file;
     } else {
         $cycle->conf_file = NGX_CONF_PATH;
@@ -487,7 +528,7 @@ function ngx_add_inherited_sockets(ngx_cycle_t $cycle)
         }
     }
 
-    ngx_cfg('ngx_inherited', 1);
+    ngx_inherited(1);
 
     return ngx_set_inherited_sockets($cycle);
 }
@@ -537,7 +578,7 @@ function ngx_core_commands()
         array(
             'name'=>"daemon",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_FLAG,
-            'set'=>ngx_conf_set_flag_slot_closure(),
+            'set'=>'ngx_conf_set_flag_slot',
             'conf'=>0,
             //todo if it really need do this
 //      //offsetof(ngx_core_conf_t, daemon),
@@ -547,7 +588,7 @@ function ngx_core_commands()
         array(
            'name'=> "master_process",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_FLAG,
-            'set'=>ngx_conf_set_flag_slot_closure(),
+            'set'=>'ngx_conf_set_flag_slot',
             'conf'=>0,
             ////offsetof(ngx_core_conf_t, master),
           'post'=>NULL
@@ -556,7 +597,7 @@ function ngx_core_commands()
         array(
             'name'=>"timer_resolution",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_msec_slot_closure(),
+            'set'=>'ngx_conf_set_msec_slot',
             'conf'=>0,
             ////offsetof(ngx_core_conf_t, timer_resolution),
             'post'=>NULL
@@ -565,7 +606,7 @@ function ngx_core_commands()
         array(
             'name'=>"pid",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_str_slot_closure(),
+            'set'=>'ngx_conf_set_str_slot',
             'conf'=>0,
             //offsetof(ngx_core_conf_t, pid),
            'post'=>NULL
@@ -574,7 +615,7 @@ function ngx_core_commands()
         array(
             'name'=>"lock_file",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_str_slot_closure(),
+            'set'=>'ngx_conf_set_str_slot',
             'conf'=>0,
             //offsetof(ngx_core_conf_t, lock_file),
             'post'=>NULL
@@ -583,7 +624,7 @@ function ngx_core_commands()
         array(
             'name'=>"worker_processes",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_set_worker_processes_closure(),
+            'set'=>'ngx_set_worker_processes',
             'conf'=>0,
             //0,
             'post'=>NULL
@@ -592,7 +633,7 @@ function ngx_core_commands()
         array(
             'name'=>"debug_points",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_enum_slot_closure(),
+            'set'=>'ngx_conf_set_enum_slot',
             'conf'=>0,
             //offsetof(ngx_core_conf_t, debug_points),
            'post'=>ngx_debug_points()
@@ -601,7 +642,7 @@ function ngx_core_commands()
         array(
             'name'=>"user",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE12,
-            'set'=>ngx_set_user_closure(),
+            'set'=>'ngx_set_user',
             'conf'=>0,
            // 0,
            'post'=>NULL
@@ -610,7 +651,7 @@ function ngx_core_commands()
         array(
             'name'=>"worker_priority",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_set_priority_closure(),
+            'set'=>'ngx_set_priority',
             'conf'=>0,
             //0,
             'post'=>NULL
@@ -619,7 +660,7 @@ function ngx_core_commands()
         array(
            'name'=>"worker_cpu_affinity",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_1MORE,
-            'set'=>ngx_set_cpu_affinity_closure(),
+            'set'=>'ngx_set_cpu_affinity',
             'conf'=>0,
            // 0,
            'post'=>NULL
@@ -628,7 +669,7 @@ function ngx_core_commands()
         array(
            'name'=>"worker_rlimit_nofile",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_num_slot_closure(),
+            'set'=>'ngx_conf_set_num_slot',
             'conf'=>0,
             //offsetof(ngx_core_conf_t, rlimit_nofile),
             'post'=>NULL
@@ -637,16 +678,16 @@ function ngx_core_commands()
         array(
             'name'=>"worker_rlimit_core",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_off_slot_closure(),
+            'set'=>'ngx_conf_set_off_slot',
             'conf'=>0,
             //offsetof(ngx_core_conf_t, rlimit_core),
            'post'=>NULL
         ),
 
         array(
-            'name'="working_directory",
+            'name'=>"working_directory",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_conf_set_str_slot_closure(),
+            'set'=>'ngx_conf_set_str_slot',
             'conf'=>0,
             //offsetof(ngx_core_conf_t, working_directory),
             'post'=>NULL
@@ -655,7 +696,7 @@ function ngx_core_commands()
         array(
             'name'=>"env",
             'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_TAKE1,
-            'set'=>ngx_set_env_closure(),
+            'set'=>'ngx_set_env',
             'conf'=>0,
             //0,
             'post'=>NULL
@@ -842,11 +883,11 @@ function ngx_core_module_init_conf(ngx_cycle_t $cycle, ngx_core_conf_t $conf)
     return NGX_CONF_OK;
 }
 
-function ngx_set_worker_processes_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-               ngx_set_worker_processes($cf,$cmd,$conf);
-    };
-}
+//function ngx_set_worker_processes_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//               ngx_set_worker_processes($cf,$cmd,$conf);
+//    };
+//}
 
 
 function ngx_os_environ($var = null){
@@ -875,17 +916,16 @@ function ngx_set_worker_processes(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 
     $value = $cf->args;
 
-    $ngx_ncpu = ngx_cfg('ngx_ncpu',1);
 
     if (ngx_strcmp($value[1], "auto") == 0) {
-       $ccf->worker_processes = $ngx_ncpu;
+       $ccf->worker_processes = ngx_ncpu();
         return NGX_CONF_OK;
     }
 
     $ccf->worker_processes = ngx_atoi($value[1]);
     if ($ccf->worker_processes == NGX_ERROR) {
     return "invalid value";
-}
+    }
     return NGX_CONF_OK;
 }
 
@@ -898,11 +938,11 @@ function  ngx_debug_points(){
     return $ngx_debug_points;
 }
 
-function ngx_set_user_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_set_user($cf,$cmd,$conf);
-    };
-}
+//function ngx_set_user_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_set_user($cf,$cmd,$conf);
+//    };
+//}
 
 function ngx_set_user(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -949,16 +989,16 @@ function ngx_set_user(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
         return NGX_CONF_ERROR;
     }
 
-    $ccf->group = $grp->['gid'];
+    $ccf->group = $grp['gid'];
 
     return NGX_CONF_OK;
 }
 
-function ngx_set_priority_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_set_priority($cf,$cmd,$conf);
-    };
-}
+//function ngx_set_priority_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_set_priority($cf,$cmd,$conf);
+//    };
+//}
 
 function ngx_set_priority(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -997,11 +1037,11 @@ function ngx_set_priority(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return NGX_CONF_OK;
 }
 
-function ngx_set_cpu_affinity_closure(){
-   return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-       ngx_set_cpu_affinity($cf, $cmd, $conf);
-   } ;
-}
+//function ngx_set_cpu_affinity_closure(){
+//   return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//       ngx_set_cpu_affinity($cf, $cmd, $conf);
+//   } ;
+//}
 
 function ngx_set_cpu_affinity(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -1012,11 +1052,11 @@ function ngx_set_cpu_affinity(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return NGX_CONF_OK;
 }
 
-function ngx_set_env_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_set_env($cf,  $cmd, $conf);
-    };
-}
+//function ngx_set_env_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_set_env($cf,  $cmd, $conf);
+//    };
+//}
 
 function ngx_set_env(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
