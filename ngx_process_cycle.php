@@ -200,21 +200,21 @@ function ngx_cache_loader_process_handler(ngx_event_t $ev)
     exit(0);
 }
 
-function ngx_cache_loader_process_handler_closure(){
+//function ngx_cache_loader_process_handler_closure(){
+//
+//    return function(ngx_event_t $ev){
+//        ngx_cache_loader_process_handler($ev);
+//    };
+//}
 
-    return function(ngx_event_t $ev){
-        ngx_cache_loader_process_handler($ev);
-    };
-}
 
-
-function ngx_cache_loader_ctx(){
-    static $ngx_cache_loader_ctx = array(
-        ngx_cache_loader_process_handler_closure(),
-        "cache loader process",
-        60000);
-    return $ngx_cache_loader_ctx;
-}
+//function ngx_cache_loader_ctx(){
+//    static $ngx_cache_loader_ctx = array(
+//        ngx_cache_loader_process_handler_closure(),
+//        "cache loader process",
+//        60000);
+//    return $ngx_cache_loader_ctx;
+//}
 
 function ngx_new_binary($i = null){
     static $ngx_new_binary = null;

@@ -528,7 +528,7 @@ function ngx_log_set_log(ngx_conf_t $cf, ngx_log $head)
             return NGX_CONF_ERROR;
         }
 
-        $new_log->writer = ngx_syslog_writer_closure();
+        $new_log->writer = 'ngx_syslog_writer';
         $new_log->wdata = $peer;
 
     } else {
@@ -556,11 +556,11 @@ function  ngx_log_insert(ngx_log $log, ngx_log $new_log)
     $log->push($new_log->current());
 }
 
-function ngx_syslog_writer_closure(){
-    return function(ngx_log $log, $level, $buf){
-        ngx_syslog_writer($log,$level,$buf);
-    };
-}
+//function ngx_syslog_writer_closure(){
+//    return function(ngx_log $log, $level, $buf){
+//        ngx_syslog_writer($log,$level,$buf);
+//    };
+//}
 
 function ngx_syslog_writer(ngx_log $log, $level, $buf)
 {

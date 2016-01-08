@@ -84,13 +84,13 @@ function ngx_os_init(ngx_log &$log)
 
 function ngx_os_io()
 {
-    static $ngx_os_io;
-     $ngx_os_io = new ngx_os_io_t();
-    $ngx_os_io->recv = ngx_unix_recv_closure();
-    $ngx_os_io->recv_chain = ngx_readv_chain_closure();
-    $ngx_os_io->udp_recv =ngx_udp_unix_recv_closure();
-    $ngx_os_io->send=ngx_unix_send_closure();
-    $ngx_os_io->send_chain=ngx_writev_chain_closure();
+     static $ngx_os_io = new ngx_os_io_t();
+    //todo finish function
+    $ngx_os_io->recv = 'ngx_unix_recv';
+    $ngx_os_io->recv_chain = 'ngx_readv_chain';
+    $ngx_os_io->udp_recv ='ngx_udp_unix_recv';
+    $ngx_os_io->send='ngx_unix_send';
+    $ngx_os_io->send_chain='ngx_writev_chain';
     $ngx_os_io->flags=0;
     return $ngx_os_io;
 }
@@ -104,4 +104,6 @@ function ngx_os_status(ngx_log $log)
         "getrlimit(RLIMIT_NOFILE): %r:%r",
         array($limit['soft openfiles'], $limit['hard openfiles']));
 }
+
+
 

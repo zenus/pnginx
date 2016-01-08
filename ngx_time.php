@@ -129,7 +129,7 @@ function cached_http_log_iso8601($arr = null){
 
 }
 
-function  cached_syslog_time(){
+function  cached_syslog_time($arr = null){
     static $cached_syslog_time  = null;
     if(!is_null($arr)){
        $cached_syslog_time = $arr ;
@@ -581,7 +581,6 @@ function ngx_time_sigsafe_update()
   //  p2 = cached_syslog_time[slot][0];
      $p2 = cached_syslog_time($slot);
       //slot($slot);
-
      ngx_sprintf($p2, "%s %2d %02d:%02d:%02d",
                       array(months($tm->tm_mon - 1), $tm->tm_mday,
                        $tm->tm_hour, $tm->tm_min, $tm->tm_sec));

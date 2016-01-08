@@ -998,11 +998,11 @@ function ngx_conf_full_name(ngx_cycle_t $cycle, $name, $conf_prefix)
     return ngx_get_full_name($prefix, $name);
 }
 
-function ngx_conf_set_flag_slot_closure(){
-   return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
-      ngx_conf_set_flag_slot($cf,$cmd,$conf);
-   };
-}
+//function ngx_conf_set_flag_slot_closure(){
+//   return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+//      ngx_conf_set_flag_slot($cf,$cmd,$conf);
+//   };
+//}
 
 function ngx_conf_set_flag_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -1049,11 +1049,11 @@ function offsetof( $obj,$property){
     //return $obj->$property;
 }
 
-function ngx_conf_set_msec_slot_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
-        ngx_conf_set_msec_slot($cf,$cmd,$conf);
-    };
-}
+//function ngx_conf_set_msec_slot_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+//        ngx_conf_set_msec_slot($cf,$cmd,$conf);
+//    };
+//}
 function ngx_conf_set_msec_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
    $p = $conf;
@@ -1077,11 +1077,11 @@ function ngx_conf_set_msec_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return NGX_CONF_OK;
 }
 
-function ngx_conf_set_str_slot_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
-        ngx_conf_set_str_slot($cf,$cmd,$conf);
-    };
-}
+//function ngx_conf_set_str_slot_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
+//        ngx_conf_set_str_slot($cf,$cmd,$conf);
+//    };
+//}
 
 function ngx_conf_set_str_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -1105,11 +1105,11 @@ function ngx_conf_set_str_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return NGX_CONF_OK;
 }
 
-function ngx_conf_set_enum_slot_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_conf_set_enum_slot($cf,$cmd,$conf);
-    };
-}
+//function ngx_conf_set_enum_slot_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_conf_set_enum_slot($cf,$cmd,$conf);
+//    };
+//}
 
 function ngx_conf_set_enum_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -1145,11 +1145,11 @@ function ngx_conf_set_enum_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return NGX_CONF_ERROR;
 }
 
-function ngx_conf_set_num_slot_closure(){
-   return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_conf_set_num_slot($cf,  $cmd, $conf);
-   } ;
-}
+//function ngx_conf_set_num_slot_closure(){
+//   return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_conf_set_num_slot($cf,  $cmd, $conf);
+//   } ;
+//}
 
 function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -1182,11 +1182,11 @@ function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return NGX_CONF_OK;
 }
 
-function ngx_conf_set_off_slot_closure(){
-    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-        ngx_conf_set_off_slot( $cf,  $cmd, $conf);
-    };
-}
+//function ngx_conf_set_off_slot_closure(){
+//    return function(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//        ngx_conf_set_off_slot( $cf,  $cmd, $conf);
+//    };
+//}
 
 function ngx_conf_set_off_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
@@ -1284,7 +1284,8 @@ function ngx_conf_open_file(ngx_cycle_t $cycle, $name)
     return $file;
 }
 
-function ngx_get_conf($conf_ctx,ngx_module_t $module){
+function ngx_get_conf($conf_ctx,ngx_module_t $module)
+{
    return $conf_ctx[$module->index];
 }
 
