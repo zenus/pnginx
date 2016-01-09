@@ -211,7 +211,7 @@ function ngx_sys_errlist($mix = null){
 
         if(is_int($mix)){
 
-           return $ngx_sys_errlist[$i];
+           return $ngx_sys_errlist[$mix];
         }else{
            $ngx_sys_errlist = $mix;
         }

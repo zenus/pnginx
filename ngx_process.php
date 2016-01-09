@@ -23,7 +23,7 @@ define('NGX_MAX_PROCESSES',         1024);
 class ngx_process_t {
 /** ngx_pid_t **/ private $pid;
 /** int **/ private $status;
-/**    ngx_socket_t **/  private      $channel[2];
+/**    ngx_socket_t **/  private      $channel;
 /** ngx_spawn_proc_pt **/ private $proc;
 /** void **/ private $data;
 /** char **/ private $name;
@@ -60,34 +60,9 @@ function ngx_signal_helper($n){
    return 'SIG##'.$n;
 }
 
-function ngx_argc($i = null){
-    static $ngx_argc = null;
-    if(!is_null($ngx_argc)){
-       $ngx_argc = $i;
-    }else{
-       return $ngx_argc;
-    }
-}
 
-function ngx_os_argv($i,$v=null){
-    static $ngx_os_argv = null;
-    if(is_null($v)){
-       return $ngx_os_argv[$i];
-    }else{
-       $ngx_os_argv[$i] = $v;
-    }
-}
 
-function ngx_argv($mixed = null) {
-    static $ngx_argv = null;
-    if(is_array($mixed)){
-        $ngx_argv = $mixed;
-    }elseif(!is_null($mixed)){
-        return $ngx_argv[$mixed];
-    }else{
-        return $ngx_argv;
-    }
-}
+
 
 function ngx_channel($i = null){
     static $ngx_channel = null;
@@ -140,7 +115,7 @@ function ngx_process_slot($i = null){
 //    };
 //}
 function signals($i = 0){
-   static  $signals = array(
+     $signals = array(
          array(
             'signo'=> ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
              'signame'=>"SIG ".ngx_value(NGX_RECONFIGURE_SIGNAL),

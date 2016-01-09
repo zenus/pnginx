@@ -392,11 +392,15 @@ function ngx_log_debug0($level, $log, $err, $fmt){
 
 
 function ngx_errlog_module(){
-    static $ngx_errlog_module = new ngx_module_t();
+    static $ngx_errlog_module;
+    if(is_null($ngx_errlog_module)){
+        $obj = new ngx_module_t();
+        $ngx_errlog_module = $obj;
         $ngx_errlog_module->version = 1;
         $ngx_errlog_module->ctx = ngx_errlog_module_ctx();
         $ngx_errlog_module->commands = ngx_errlog_commands();
         $ngx_errlog_module->type = NGX_CORE_MODULE;
+    }
         return $ngx_errlog_module;
 //    static  $ngx_errlog_module = array(
 //        'ctx_index'=>0,
@@ -428,22 +432,20 @@ function ngx_errlog_module(){
 }
 function ngx_errlog_module_ctx(){
 
-    static $ngx_errlog_module_ctx = new ngx_core_module_t();
-    $ngx_errlog_module_ctx->name = 'errlog';
-    $ngx_errlog_module_ctx->create_conf = null;
-    $ngx_errlog_module_ctx->init_conf = null;
-//    static $ngx_errlog_module_ctx = array(
-//           'name'=>"errlog",
-//           'create_conf'=>NULL,
-//           'init_conf'=>NULL
-//    );
-
+    static $ngx_errlog_module_ctx;
+    if(is_null($ngx_errlog_module_ctx)){
+        $obj= new ngx_core_module_t();
+        $ngx_errlog_module_ctx = $obj;
+        $ngx_errlog_module_ctx->name = 'errlog';
+        $ngx_errlog_module_ctx->create_conf = null;
+        $ngx_errlog_module_ctx->init_conf = null;
+    }
     return $ngx_errlog_module_ctx;
 }
 
 function ngx_errlog_commands(){
 
-    static $ngx_errlog_commands = array(
+     $ngx_errlog_commands = array(
         array(
               'name'=>"error_log",
               'type'=>NGX_MAIN_CONF|NGX_CONF_1MORE,

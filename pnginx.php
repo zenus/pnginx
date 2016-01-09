@@ -535,7 +535,8 @@ function ngx_add_inherited_sockets(ngx_cycle_t $cycle)
 
 function ngx_core_module()
 {
-   static $ngx_core_module = new ngx_module_t();
+    static $ngx_core_module ;
+    $ngx_core_module = new ngx_module_t();
     $ngx_core_module->version = 1;
     $ngx_core_module->ctx = ngx_core_module_ctx();
     $ngx_core_module->commands = ngx_core_commands();
@@ -574,10 +575,10 @@ function ngx_core_module()
 function ngx_core_commands()
 {
 
-    static $ngx_core_commands = array(
+     $ngx_core_commands = array(
         array(
             'name'=>"daemon",
-            'type'=>NGX_MAIN_CONF | NGX_DIRECT_CONF | NGX_CONF_FLAG,
+            'type'=>NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
             'set'=>'ngx_conf_set_flag_slot',
             'conf'=>0,
             //todo if it really need do this
@@ -715,10 +716,14 @@ function ngx_core_commands()
 
 function ngx_core_module_ctx(){
 
-    static $ngx_core_module_ctx = new ngx_core_module_t();
-    $ngx_core_module_ctx->name = 'core';
-    $ngx_core_module_ctx->create_conf = create_core_module_conf('create');
-    $ngx_core_module_ctx->init_conf = create_core_module_conf('init');
+    static $ngx_core_module_ctx ;
+    if(!is_null($ngx_core_module_ctx)){
+        $obj = new ngx_core_module_t();
+        $ngx_core_module_ctx = $obj;
+        $ngx_core_module_ctx->name = 'core';
+        $ngx_core_module_ctx->create_conf = create_core_module_conf('create');
+        $ngx_core_module_ctx->init_conf = create_core_module_conf('init');
+    }
 //    static  $ngx_core_module_ctx = array(
 //      'name'=>"core",
 //      'create_conf'=>create_core_module_conf('create'),

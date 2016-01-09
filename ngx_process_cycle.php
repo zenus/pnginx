@@ -400,7 +400,6 @@ function ngx_single_process_cycle(ngx_cycle_t $cycle)
         }
     }
 }
-/**unfinish**/
 function ngx_master_process_cycle(ngx_cycle_t $cycle)
 {
 //char              *title;
