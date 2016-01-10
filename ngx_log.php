@@ -194,7 +194,9 @@ class ngx_log_s {
 
 function ngx_log_stderr($no, $fmt, $var = array()){
     $line = "pnginx[%d]:".$fmt;
-    array_unshift($var,$no);
+    if(!empty($var)){
+        array_unshift($var,$no);
+    }
     $log = vsprintf($line,$var);
     ngx_linefeed($log);
     ngx_write_console(ngx_stderr, $log);
@@ -241,7 +243,7 @@ function ngx_log_init(){
     if($fd == NGX_INVALID_FILE){
         ngx_log_stderr(NGX_FERROR,
             "[alert] could not open error log file: ".
-                       ngx_open_file_n." \"%s\" failed", NGX_ERROR_LOG_PATH);
+                       ngx_open_file_n." \"%s\" failed", array(NGX_ERROR_LOG_PATH));
     }
     $ngx_log_file->fd = $fd;
 

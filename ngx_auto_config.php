@@ -204,7 +204,6 @@ define('NGX_HAVE_PWRITE',1);
 
 
 
-define('NGX_SYS_NERR',135);
 
 
 
@@ -338,7 +337,6 @@ define('NGX_SBIN_PATH',"");
 
 
 
-define('NGX_CONF_PATH',"conf/nginx.conf");
 
 
 
@@ -353,7 +351,6 @@ define('NGX_LOCK_PATH',"logs/nginx.lock");
 
 
 
-define('NGX_ERROR_LOG_PATH',"logs/error.log");
 
 
 

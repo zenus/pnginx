@@ -15,7 +15,6 @@ define('NGINX_VAR',"NGINX");
 define('NGX_OLDPID_EXT',".oldbin");
 define('NGX_CONF_PATH',__DIR__.DS.'conf'.DS.'pnginx.conf');
 define('NGX_ERROR_LOG_PATH',__DIR__.DS.'log'.DS.'error.log');
-define('NGX_CONFIGURE','');
 
 
 /**
@@ -46,96 +45,20 @@ define('NGX_CONFIGURE','');
 //static $ngx_conf_file = '';
 //static $ngx_conf_params = '';
 //static $ngx_signal = '';
-function ngx_show_help($i = null){
-    static $ngx_show_help = null;
-    if(!is_null($i)){
-       $ngx_show_help = $i;
-    }else{
-       return $ngx_show_help;
+
+ini_set('include_path', get_include_path()
+    . ':' .dirname(__FILE__)
+);
+$dir = dirname(__FILE__);
+foreach(scandir(dirname(__FILE__)) as $file){
+    $path = $dir.'/'.$file;
+    $info = pathinfo($path);
+    if($info['extension'] == 'php' && $info['filename'] != 'pnginx'){
+        require_once $dir.'/'.$file;
     }
 }
 
-function ngx_show_version($i = null){
-    static $ngx_show_version = null;
-    if(!is_null($i)){
-        $ngx_show_version = $i;
-    }else{
-        return $ngx_show_version;
-    }
-}
 
-function ngx_show_configure($i = null){
-   static $ngx_show_configure = null;
-    if(!is_null($i)){
-       $ngx_show_configure = $i;
-    }else{
-       return $ngx_show_configure;
-    }
-}
-
-function ngx_signal($char = null){
-    static $ngx_signal = null;
-    if(!is_null($char)){
-       $ngx_signal = $char;
-    }else{
-       return $ngx_signal;
-    }
-}
-
-function ngx_prefix($char = null){
-    static $ngx_prefix = null;
-    if(!is_null($char)){
-        $ngx_prefix = $char;
-    }else{
-        return $ngx_prefix;
-    }
-}
-
-function ngx_conf_file($char = null){
-    static $ngx_conf_file = null;
-    if(!is_null($ngx_conf_file)){
-        $ngx_conf_file = $char;
-    }else{
-        return $ngx_conf_file;
-    }
-}
-
-function ngx_pid($i = null){
-    static $ngx_pid = null;
-    if(!is_null($i)){
-       $ngx_pid = $i;
-    }else{
-       return $ngx_pid;
-    }
-
-}
-
-function ngx_os_argv($arr = null ){
-    static $ngx_os_argv = null;
-    if(!is_null($arr)){
-       $ngx_os_argv = $arr;
-    }else{
-       return $ngx_os_argv;
-    }
-}
-
-function ngx_argc($i = null){
-    static $ngx_argc = null;
-    if(!is_null($i)){
-        $ngx_argc = $i;
-    }else{
-       return $ngx_argc;
-    }
-}
-
-function ngx_argv($arr = null){
-    static $ngx_argv = null;
-    if(!is_null($arr)){
-       $ngx_argv = $arr;
-    }else{
-       return $ngx_argv;
-    }
-}
 
 
 function main($argc, array $argv){
@@ -252,7 +175,7 @@ function main($argc, array $argv){
 
                 $b = $cd[$i]->buffer;
 
-                //todo should hava a good method to deal  with  ngx_buf_t struct
+                //todo should have a good method to deal  with  ngx_buf_t struct
                  ngx_write_fd(ngx_stdout, $b->pos);
                 ngx_write_stdout(NGX_LINEFEED);
             }
@@ -271,6 +194,7 @@ function main($argc, array $argv){
     ngx_cycle($cycle);
 
     $ccf =  ngx_get_conf($cycle->conf_ctx, ngx_core_module());
+
 
     if ($ccf->master && ngx_process() == NGX_PROCESS_SINGLE) {
         ngx_process(NGX_PROCESS_MASTER);
@@ -319,8 +243,6 @@ function main($argc, array $argv){
     }
 
     return 0;
-
-
 
 }
 
@@ -1287,6 +1209,97 @@ function ngx_exec_new_binary(ngx_cycle_t $cycle, $argv)
     unset($env);
     unset($p);
     return $pid;
+}
+
+function ngx_show_help($i = null){
+    static $ngx_show_help = null;
+    if(!is_null($i)){
+        $ngx_show_help = $i;
+    }else{
+        return $ngx_show_help;
+    }
+}
+
+function ngx_show_version($i = null){
+    static $ngx_show_version = null;
+    if(!is_null($i)){
+        $ngx_show_version = $i;
+    }else{
+        return $ngx_show_version;
+    }
+}
+
+function ngx_show_configure($i = null){
+    static $ngx_show_configure = null;
+    if(!is_null($i)){
+        $ngx_show_configure = $i;
+    }else{
+        return $ngx_show_configure;
+    }
+}
+
+function ngx_signal($char = null){
+    static $ngx_signal = null;
+    if(!is_null($char)){
+        $ngx_signal = $char;
+    }else{
+        return $ngx_signal;
+    }
+}
+
+function ngx_prefix($char = null){
+    static $ngx_prefix = null;
+    if(!is_null($char)){
+        $ngx_prefix = $char;
+    }else{
+        return $ngx_prefix;
+    }
+}
+
+function ngx_conf_file($char = null){
+    static $ngx_conf_file = null;
+    if(!is_null($ngx_conf_file)){
+        $ngx_conf_file = $char;
+    }else{
+        return $ngx_conf_file;
+    }
+}
+
+function ngx_pid($i = null){
+    static $ngx_pid = null;
+    if(!is_null($i)){
+        $ngx_pid = $i;
+    }else{
+        return $ngx_pid;
+    }
+
+}
+
+function ngx_os_argv($arr = null ){
+    static $ngx_os_argv = null;
+    if(!is_null($arr)){
+        $ngx_os_argv = $arr;
+    }else{
+        return $ngx_os_argv;
+    }
+}
+
+function ngx_argc($i = null){
+    static $ngx_argc = null;
+    if(!is_null($i)){
+        $ngx_argc = $i;
+    }else{
+        return $ngx_argc;
+    }
+}
+
+function ngx_argv($arr = null){
+    static $ngx_argv = null;
+    if(!is_null($arr)){
+        $ngx_argv = $arr;
+    }else{
+        return $ngx_argv;
+    }
 }
 
 

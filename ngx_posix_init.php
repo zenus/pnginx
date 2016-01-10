@@ -35,7 +35,7 @@ function ngx_inherited_nonblocking($i = null){
     }
 }
 
-function ngx_os_init(ngx_log &$log)
+function ngx_os_init(ngx_log $log)
 {
 
 
@@ -61,7 +61,7 @@ function ngx_os_init(ngx_log &$log)
     //todo find way to get cup info
 ///    ngx_cpuinfo();
 
-    if (!empty($rlimit = posix_getrlimit())) {
+    if (empty($rlimit = posix_getrlimit())) {
         ngx_log_error(NGX_LOG_ALERT, $log, posix_get_last_error(),
             "getrlimit(RLIMIT_NOFILE) failed)");
         return NGX_ERROR;
@@ -84,8 +84,12 @@ function ngx_os_init(ngx_log &$log)
 
 function ngx_os_io()
 {
-     static $ngx_os_io = new ngx_os_io_t();
+     static $ngx_os_io ;
+     $obj = new ngx_os_io_t();
     //todo finish function
+    if(is_null($ngx_os_io)){
+       $ngx_os_io = $obj;
+    }
     $ngx_os_io->recv = 'ngx_unix_recv';
     $ngx_os_io->recv_chain = 'ngx_readv_chain';
     $ngx_os_io->udp_recv ='ngx_udp_unix_recv';

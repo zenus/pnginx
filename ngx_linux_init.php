@@ -6,7 +6,6 @@
  * Time: 上午7:10
  */
 
-include_once 'ngx_log.php';
 
 function ngx_os_specific_init(ngx_log $log)
 {

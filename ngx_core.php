@@ -13,8 +13,8 @@ define('NGX_DONE ',-4);
 define('NGX_DECLINED',-5);
 define('NGX_ABORT',-6);
 
-define('LF','\n');
-define('CR','\r');
+define('LF',"\n");
+define('CR',"\r");
 define('CRLF',"\r\n");
 
 class ngx_open_file_s {

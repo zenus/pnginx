@@ -28,8 +28,7 @@ function ngx_shmtx_trylock($mtx)
 
 }
 
-//todo should complete lock method
-function ngx_shmtx_trylock($mtx)
+
 function ngx_shmtx_unlock($mtx)
 {
 //    if (mtx->spin != (ngx_uint_t) -1) {

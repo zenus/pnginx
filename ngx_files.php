@@ -12,7 +12,7 @@ define('NGX_FILE_RDWR',            'rw');
 define('NGX_FILE_CREATE_OR_OPEN',  'c');
 define('NGX_FILE_OPEN',           'r');
 define('NGX_FILE_TRUNCATE',        'w');
-define('NGX_FILE_APPEND',          'a');
+define('NGX_FILE_APPEND',          'a+');
 
 define('NGX_FILE_DEFAULT_ACCESS',  0644);
 define('NGX_FILE_OWNER_ACCESS',   0600);
