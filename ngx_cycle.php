@@ -301,18 +301,18 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
     $cycle->hostname = $hostname;
 //    ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
     //$ngx_modules = ngx_cfg('ngx_modules');
-    for ($i = 0; ngx_modules($i); $i++) {
-    if (ngx_modules($i,'type') != NGX_CORE_MODULE) {
-        continue;
-    }
+    for ($i = 0; $module = ngx_modules($i); $i++) {
+        if ($module->type != NGX_CORE_MODULE) {
+            continue;
+        }
 
-        $module = ngx_modules($i,'ctx');
-        if ($create_conf = $module->create_conf) {
+        //$module = ngx_modules($i,'ctx');
+        if ($create_conf = $module->ctx->create_conf) {
             $rv = $create_conf($cycle);
             if ($rv == NULL) {
                 return NULL;
             }
-            $cycle->conf_ctx[ngx_modules($i,'index')] = $rv;
+            $cycle->conf_ctx[$module->index] = $rv;
         }
     }
 //
@@ -350,15 +350,17 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
             $cycle->conf_file);
     }
 
-    for ($i = 0; ngx_modules($i); $i++) {
-    if (ngx_modules($i,'type') != NGX_CORE_MODULE) {
-        continue;
-    }
+    for ($i = 0; $module = ngx_modules($i); $i++) {
+        //if (ngx_modules($i,'type') != NGX_CORE_MODULE) {
+        if ($module->type != NGX_CORE_MODULE) {
+            continue;
+        }
 
-        $module = ngx_modules($i,'ctx');
+        //$module = ngx_modules($i,'ctx');
 
-        if ($module->init_conf) {
-        if ($module->init_conf($cycle, $cycle->conf_ctx[ngx_modules($i,'index')])
+        if ($init_conf = $module->ctx->init_conf) {
+        //if ($init_conf($cycle, $cycle->conf_ctx[ngx_modules($i,'index')])
+        if ($init_conf($cycle, $cycle->conf_ctx[$module->index])
                 == NGX_CONF_ERROR)
             {
                 //environ = senv;
@@ -403,6 +405,7 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //
 //
     if (ngx_test_lockfile($cycle->lock_file, $log) != NGX_OK) {
+        dd('hi');
             goto failed;
         }
 //

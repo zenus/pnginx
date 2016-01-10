@@ -639,12 +639,12 @@ function ngx_core_commands()
 function ngx_core_module_ctx(){
 
     static $ngx_core_module_ctx ;
-    if(!is_null($ngx_core_module_ctx)){
+    if(is_null($ngx_core_module_ctx)){
         $obj = new ngx_core_module_t();
         $ngx_core_module_ctx = $obj;
         $ngx_core_module_ctx->name = 'core';
-        $ngx_core_module_ctx->create_conf = create_core_module_conf('create');
-        $ngx_core_module_ctx->init_conf = create_core_module_conf('init');
+        $ngx_core_module_ctx->create_conf = 'ngx_core_module_create_conf';
+        $ngx_core_module_ctx->init_conf = 'ngx_core_module_init_conf';
     }
 //    static  $ngx_core_module_ctx = array(
 //      'name'=>"core",
@@ -654,18 +654,18 @@ function ngx_core_module_ctx(){
     return $ngx_core_module_ctx;
 }
 
-function create_core_module_conf($type){
-
-    if($type == 'create'){
-       return function(ngx_cycle_t $cycle) {
-           ngx_core_module_create_conf($cycle);
-       };
-    }else{
-        return function(ngx_cycle_t $cycle, ngx_core_conf_t $conf) {
-            ngx_core_module_init_conf($cycle, $conf);
-        };
-    }
-}
+//function create_core_module_conf($type){
+//
+//    if($type == 'create'){
+//       return function(ngx_cycle_t $cycle) {
+//           ngx_core_module_create_conf($cycle);
+//       };
+//    }else{
+//        return function(ngx_cycle_t $cycle, ngx_core_conf_t $conf) {
+//            ngx_core_module_init_conf($cycle, $conf);
+//        };
+//    }
+//}
 
 function ngx_core_module_create_conf(ngx_cycle_t $cycle)
 {
@@ -1300,6 +1300,10 @@ function ngx_argv($arr = null){
     }else{
         return $ngx_argv;
     }
+}
+
+function dd($var){
+    var_dump($var);die;
 }
 
 
