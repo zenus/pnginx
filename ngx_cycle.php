@@ -73,7 +73,7 @@ function ngx_cleaner_event(ngx_event_t $event = null){
 
 
 class ngx_cycle_t {
-    /**void **/        private         /**   ****conf_ctx  ****/ $conf_ctx;
+    /**void **/        public         /**   ****conf_ctx  ****/ $conf_ctx;
     //ngx_pool_t               *pool;
 
     /**ngx_log_t**/  private     $log;
@@ -87,7 +87,7 @@ class ngx_cycle_t {
 
     /**ngx_queue_t**/  private    $reusable_connections_queue;
 
-    /**ngx_array_t**/  private             $listening;
+    /**ngx_array_t**/  public             $listening;
     /**ngx_array_t**/  private             $paths;
     /**ngx_array_t**/  private             $config_dump;
     /**ngx_list_t**/   private             $open_files;
@@ -113,8 +113,6 @@ class ngx_cycle_t {
     public function __set($property, $value){
         if($property == 'log' && $value instanceof ngx_log){
             $this->log = $value;
-        }elseif($property == 'listening' && $value instanceof ngx_listening_s){
-            $this->listening[] =  $value;
         }elseif($property == 'old_cycle' && $value instanceof ngx_cycle_t){
             $this->old_cycle =  $value;
         }else{
@@ -201,6 +199,7 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //                old_cycle->conf_file.len + 1);
 //
     $cycle->conf_param = $old_cycle->conf_param;
+    $cycle->prefix = $old_cycle->prefix;
 //
 //
 //    n = old_cycle->paths.nelts ? old_cycle->paths.nelts : 10;
@@ -215,6 +214,7 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //    cycle->paths.size = sizeof(ngx_path_t *);
 //    cycle->paths.nalloc = n;
 //    cycle->paths.pool = pool;
+      $cycle->paths = array();
 //
 //
 //    if (ngx_array_init(&cycle->config_dump, pool, 1, sizeof(ngx_conf_dump_t))
@@ -223,6 +223,7 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //        ngx_destroy_pool(pool);
 //        return NULL;
 //    }
+     $cycle->config_dump = array();
 //    if ($old_cycle->open_files.part.nelts) {
 //    n = old_cycle->open_files.part.nelts;
 //        for (part = old_cycle->open_files.part.next; part; part = part->next) {
@@ -239,6 +240,8 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //        ngx_destroy_pool(pool);
 //        return NULL;
 //    }
+
+      $cycle->open_files =  new ngx_list_t();
 //
 //    if (old_cycle->shared_memory.part.nelts) {
 //    n = old_cycle->shared_memory.part.nelts;
@@ -264,7 +267,8 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //    if (cycle->listening.elts == NULL) {
 //    ngx_destroy_pool(pool);
 //    return NULL;
-//}
+       //}
+    $cycle->listening = new ngx_listening_s();
 //
 //    cycle->listening.nelts = 0;
 //    cycle->listening.size = sizeof(ngx_listening_t);
@@ -273,12 +277,15 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
 //
 //
 //    ngx_queue_init(&cycle->reusable_connections_queue);
+     $cycle->reusable_connections_queue = new ngx_list_t();
 //
 //
 //    cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
 //    if (cycle->conf_ctx == NULL) {
 //    ngx_destroy_pool(pool);
 //    return NULL;
+    //todo very complicated struct
+    $cycle->conf_ctx = array();
 //}
 //
 //
@@ -402,8 +409,7 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
             ngx_delete_pidfile($old_cycle);
         }
     }
-//
-//
+
     if (ngx_test_lockfile($cycle->lock_file, $log) != NGX_OK) {
         dd('hi');
             goto failed;
@@ -928,7 +934,6 @@ function ngx_delete_pidfile(ngx_cycle_t $cycle)
 
 function ngx_test_lockfile($file, ngx_log $log)
 {
-//ngx_fd_t  fd;
 
     $fd = ngx_open_file($file, NGX_FILE_RDWR, NGX_FILE_DEFAULT_ACCESS);
 

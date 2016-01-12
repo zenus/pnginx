@@ -136,6 +136,10 @@ function main($argc, array $argv){
         return 1;
     }
 
+    if (ngx_process_options($init_cycle) != NGX_OK) {
+        return 1;
+    }
+
     if (ngx_os_init($log) != NGX_OK) {
         return 1;
     }
@@ -385,8 +389,47 @@ function ngx_save_argv( $argc, $argv)
 }
 
 
-function ngx_process_options(ngx_cycle_t &$cycle)
+function ngx_process_options(ngx_cycle_t $cycle)
 {
+
+    $ngx_prefix =  ngx_prefix();
+    if (!empty($ngx_prefix)) {
+        $len = ngx_strlen($ngx_prefix);
+        $p = $ngx_prefix;
+
+        if ($len && !ngx_path_separator($p[$len - 1])) {
+            $p[$len++] = '/';
+        }
+
+        $cycle->conf_prefix = $p;
+        $cycle->prefix = $p;
+
+    } else {
+
+        if(!defined('NGX_PREFIX')) {
+
+
+            if ($p = ngx_getcwd() == false) {
+                ngx_log_stderr(0, "[emerg]: ". ngx_getcwd_n ." failed");
+                return NGX_ERROR;
+               }
+
+            $len = ngx_strlen($p);
+
+            $p[$len++] = '/';
+
+            $cycle->conf_prefix  = $p;
+            $cycle->prefix  = $p;
+        }else {
+                if(defined('NGX_CONF_PREFIX')) {
+                    $cycle->conf_prefix = NGX_CONF_PREFIX;
+                }else {
+                    $cycle->conf_prefix = NGX_PREFIX;
+                }
+                    $cycle->prefix =  NGX_PREFIX;
+                }
+    }
+
     $conf_file = ngx_conf_file();
     if ($conf_file) {
         $cycle->conf_file = $conf_file;
@@ -459,39 +502,17 @@ function ngx_core_module()
 {
     static $ngx_core_module ;
     $ngx_core_module = new ngx_module_t();
+    $ngx_core_module->ctx_index = 0;
+    $ngx_core_module->index = 0;
+    $ngx_core_module->spare0 = 0;
+    $ngx_core_module->spare1 = 0;
+    $ngx_core_module->spare2 = 0;
+    $ngx_core_module->spare3 = 0;
     $ngx_core_module->version = 1;
     $ngx_core_module->ctx = ngx_core_module_ctx();
     $ngx_core_module->commands = ngx_core_commands();
     $ngx_core_module->type = NGX_CORE_MODULE;
     return $ngx_core_module;
-//   static  $ngx_core_module = array(
-//    //NGX_MODULE_V1,
-//    'ctx_index'=>0,
-//    'index'=>0,
-//    'spare0'=>0,
-//    'spare1'=>0,
-//    'spare2'=>0,
-//    'spare3'=>0,
-//    'version'=>1,
-//    'ctx'=>ngx_core_module_ctx(),                  /* module context */
-//    'commands'=>ngx_core_commands(),                     /* module directives */
-//    'type'=>NGX_CORE_MODULE,                       /* module type */
-//    'init_master'=>NULL,                                  /* init master */
-//    'init_module'=>NULL,                                  /* init module */
-//    'init_process'=>NULL,                                  /* init process */
-//    'init_thread'=>NULL,                                  /* init thread */
-//    'exit_thread'=>NULL,                                  /* exit thread */
-//    'exit_process'=>NULL,                                  /* exit process */
-//    'exit_master'=>NULL,                                  /* exit master */
-//    'spare_hook0'=>0,
-//    'spare_hook1'=>0,
-//    'spare_hook2'=>0,
-//    'spare_hook3'=>0,
-//    'spare_hook4'=>0,
-//    'spare_hook5'=>0,
-//    'spare_hook6'=>0,
-//    'spare_hook7'=>0
-//    );
     }
 
 function ngx_core_commands()
@@ -654,18 +675,7 @@ function ngx_core_module_ctx(){
     return $ngx_core_module_ctx;
 }
 
-//function create_core_module_conf($type){
-//
-//    if($type == 'create'){
-//       return function(ngx_cycle_t $cycle) {
-//           ngx_core_module_create_conf($cycle);
-//       };
-//    }else{
-//        return function(ngx_cycle_t $cycle, ngx_core_conf_t $conf) {
-//            ngx_core_module_init_conf($cycle, $conf);
-//        };
-//    }
-//}
+
 
 function ngx_core_module_create_conf(ngx_cycle_t $cycle)
 {

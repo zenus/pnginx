@@ -8,7 +8,7 @@ define('STDERR_FILENO',	STDERR);	/* Standard error output.  */
 define('NGX_LINEFEED',"\x0a");
 define('NGX_FILE_RDONLY',         'r');
 define('NGX_FILE_WRONLY',          'w');
-define('NGX_FILE_RDWR',            'rw');
+define('NGX_FILE_RDWR',            'w+');
 define('NGX_FILE_CREATE_OR_OPEN',  'c');
 define('NGX_FILE_OPEN',           'r');
 define('NGX_FILE_TRUNCATE',        'w');
@@ -66,6 +66,8 @@ function ngx_path_separator($c){
 function ngx_set_stderr(ngx_log $log){
     $log->file->fd = ngx_stderr;
 }
+
+define('ngx_getcwd_n', 'getcwd()');
 
 function ngx_fd_info($fd){
     return fstat($fd);
@@ -167,5 +169,7 @@ function ngx_create_dir($name, $access)
 function ngx_rename_file($o, $n){
     return rename($o, $n);
 }
-
+function ngx_getcwd(){
+   return getcwd();
+}
 
