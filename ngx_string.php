@@ -107,7 +107,7 @@ function ngx_vslprintf($s, $fmt, $args)
 //    ngx_variable_value_t  *vv;
 
     $ptr = 0;
-    while (!empty($fmt)) {
+    while (!empty($fmt[$ptr])) {
 
     /*
      * "buf < last" means that we could copy at least one character:
@@ -181,7 +181,7 @@ function ngx_vslprintf($s, $fmt, $args)
 
             switch ($fmt[$ptr++]) {
 
-        case 'V':
+            case 'V':
 
             $v = array_shift($args);
             $s .= $v;
@@ -374,7 +374,7 @@ function ngx_vslprintf($s, $fmt, $args)
                 continue;
 
             default:
-                $s .= $args[$ptr];
+                $s .= $fmt[$ptr];
                 $ptr++;
                 continue;
             }
@@ -389,12 +389,14 @@ function ngx_vslprintf($s, $fmt, $args)
                 }
             }
 
+
             $s = ngx_sprintf_num($s, $ui64, $zero, $hex, $width);
 
+            dd($s);
             $ptr++;
 
         } else {
-        $s .= $args[$ptr];
+        $s .= $fmt[$ptr];
         $ptr++;
         }
     }
@@ -421,7 +423,7 @@ function ngx_sprintf_num($s,  $ui64, $zero,
     if ($hexadecimal == 0) {
 
             do {
-                $dn = $ui64 % 10 . '0';
+                $dn = ($ui64 % 10) + '0';
                 $p = $dn.$p;
             } while ($ui64 /= 10);
 

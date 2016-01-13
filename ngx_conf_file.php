@@ -298,7 +298,7 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
         if ($fd == NGX_INVALID_FILE) {
             ngx_conf_log_error(NGX_LOG_EMERG,$cf,NGX_FERROR ,
                 ngx_open_file_n ." \"%s\" failed",
-                               $filename);
+                               array($filename));
             return NGX_CONF_ERROR;
         }
 
@@ -508,13 +508,13 @@ function ngx_conf_log_error($level, ngx_conf_t $cf, $err, $fmt, array $args = ar
     }
 
     if ($cf->conf_file == NULL) {
-    ngx_log_error($level, $cf->log, 0, "%*s", array($p));
-        return;
+            ngx_log_error($level, $cf->log, 0, "%*s", array($p));
+                return;
     }
 
     if ($cf->conf_file->file->fd == NGX_INVALID_FILE) {
-    ngx_log_error($level, $cf->log, 0, "%*s in command line",
-                      array($p));
+            ngx_log_error($level, $cf->log, 0, "%*s in command line",
+                              array($p));
         return;
     }
 
