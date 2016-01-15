@@ -48,8 +48,8 @@
 //    }
 //    $start = 0;
 //    $end = count($arr) - 1 ;
-//    while($start <= $end){
-//        $mid = $start + round(($end - $start)/2);
+//    while($start <= $end){round
+//        $mid = $start + (($end - $start)/2);
 //        if($val == $arr[$mid]){
 //           return $mid;
 //        }elseif($val < $arr[$mid]){
@@ -60,7 +60,5 @@
 //    }
 //    return null;
 //}
-//echo BinarySearch($arr,4);
-
 
 

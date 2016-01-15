@@ -307,37 +307,22 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
         $conf_file = new ngx_conf_file_t();
         $buf = new ngx_buf_t();
         $cf->conf_file = $conf_file;
-
-        if ($cf->conf_file->file->info = ngx_fd_info($fd) == NGX_FILE_ERROR) {
+        if ( ($stat = ngx_fd_info($fd)) == NGX_FILE_ERROR) {
             ngx_log_error(NGX_LOG_EMERG, $cf->log, NGX_FERROR,
                           ngx_fd_info_n ." \"%s\" failed", $filename);
         }
 
-        $cf->conf_file->buffer = $buf;
-
-        $file_size = ngx_file_size($cf->conf_file->file->info);
-
-        $n = ngx_read_file($cf->conf_file->file, $buf->data, $file_size,
-            $cf->conf_file->file->offset);
-        if ($n == NGX_ERROR) {
-            return NGX_ERROR;
-        }
-
-        if ($n != $file_size) {
-            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-                ngx_read_file_n ." returned ".
-                "only %z bytes instead of %z",
-                array($n, $file_size));
-            return NGX_ERROR;
-        }
+        $cf->conf_file->file  = new stdClass();
+        $cf->conf_file->file->info = new ArrayObject($stat);
         $buf->pos = $buf->start = 0;
-        $buf->last = $n-1;
-        $buf->end = $n-1;
+        $buf->last =$buf->start;
+        //$buf->end = $n-1;
         $buf->temporary = 1;
 
         $cf->conf_file->file->fd = $fd;
         $cf->conf_file->file->name = $filename;
         $cf->conf_file->file->log = $cf->log;
+        $cf->conf_file->buffer = $buf;
         $cf->conf_file->line = 1;
 
         $type = parse_file;
@@ -349,12 +334,12 @@ function ngx_conf_parse(ngx_conf_t $cf, $filename)
             $tbuf = new ngx_buf_t();
 
             $cd = new ngx_conf_dump_t();
-             $cf->cycle->config_dump[] = $cd;
 
             $cd->name =  $filename;
-
+            $cd->buffer =  $tbuf;
+            $cf->cycle->config_dump[] = $cd;
             $cf->conf_file->dump = $tbuf;
-            $tbuf->last = $n;
+            //$tbuf->last = $n;
 
         } else {
             $cf->conf_file->dump = NULL;
@@ -546,6 +531,7 @@ function ngx_conf_read_token(ngx_conf_t $cf)
     $s_quoted = 0;
     $d_quoted = 0;
 
+    $dump = $cf->conf_file->dump;
     $b = $cf->conf_file->buffer;
     $start = $b->pos;
     $start_line = $cf->conf_file->line;
@@ -577,63 +563,63 @@ function ngx_conf_read_token(ngx_conf_t $cf)
                 return NGX_CONF_FILE_DONE;
             }
 
-//            len = b->pos - start;
-           //   $len = strlen($b);
+            $len = $b->pos - $start;
 
-//            if ($len == NGX_CONF_BUFFER) {
-//                $cf->conf_file->line = $start_line;
-//
-//                if ($d_quoted) {
-//                    $ch = '"';
-//
-//                } else if ($s_quoted) {
-//                    $ch = '\'';
-//
-//                } else {
-//                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-//                        "too long parameter \"%*s...\" started",
-//                        array(10, $b));
-//                    return NGX_ERROR;
-//                }
-//
-//                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-//                    "too long parameter, probably ".
-//                                   "missing terminating \"%c\" character", $ch);
-//                return NGX_ERROR;
-//            }
+            if ($len == NGX_CONF_BUFFER) {
 
-//            if (len) {
-//                ngx_memmove(b->start, start, len);
-//            }
+                $cf->conf_file->line = $start_line;
 
-            //$size = $file_size - $cf->conf_file->file->offset;
+                if ($d_quoted) {
+                    $ch = '"';
 
-//            if ($size > $b->end - ($b->start + $len)) {
-//                $size = $b->end - ($b->start + $len);
-//            }
+                } else if ($s_quoted) {
+                    $ch = '\'';
 
-//            $n = ngx_read_file($cf->conf_file->file, $b, $file_size,
-//                              $cf->conf_file->file->offset);
+                } else {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                        "too long parameter \"%*s...\" started",
+                        array(10, $b));
+                    return NGX_ERROR;
+                }
 
-//            if ($n == NGX_ERROR) {
-//                return NGX_ERROR;
-//            }
-//
-//            if ($n != $file_size) {
-//                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
-//                    ngx_read_file_n ." returned ".
-//                                   "only %z bytes instead of %z",
-//                                   array($n, $file_size));
-//                return NGX_ERROR;
-//            }
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                    "too long parameter, probably ".
+                                   "missing terminating \"%c\" character", $ch);
+                return NGX_ERROR;
+            }
 
-//            b->pos = b->start + len;
-//            b->last = b->pos + n;
-//            start = b->start;
+            if ($len) {
+                $b->data = substr($b->data,$start,$len);
+            }
 
-//            if ($dump) {
-//                $dump = $b;
-//            }
+            $size = $file_size - $cf->conf_file->file->offset;
+
+            if ($size > $b->end - ($b->start + $len)) {
+                $size = $b->end - ($b->start + $len);
+            }
+
+            $n = ngx_read_file($cf->conf_file->file, $b->data, $size,
+                              $cf->conf_file->file->offset);
+
+            if ($n == NGX_ERROR) {
+                return NGX_ERROR;
+            }
+
+            if ($n != $file_size) {
+                ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                    ngx_read_file_n ." returned ".
+                                   "only %z bytes instead of %z",
+                                   array($n, $file_size));
+                return NGX_ERROR;
+            }
+
+            $b->pos = $b->start + $len;
+            $b->last = $b->pos + $n;
+            $start = $b->start;
+
+            if ($dump) {
+                $dump = substr($b->data,$b->pos,$size);
+            }
        }
 
         $ch = $b->data[$b->pos++];

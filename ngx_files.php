@@ -74,14 +74,14 @@ function ngx_fd_info($fd){
 }
 function ngx_file_size($sb){
 
-    return $sb['size'];
+    return $sb->size;
 }
 
 function  ngx_close_file($fd){
    return fclose($fd);
 }
 
-function ngx_read_file(ngx_file_t $file, &$buf, $size, $offset)
+function ngx_read_file(ngx_file_t $file, $buf, $size, $offset)
 {
 
     ngx_log_debug4(NGX_LOG_DEBUG_CORE, $file->log, 0,
@@ -97,15 +97,17 @@ function ngx_read_file(ngx_file_t $file, &$buf, $size, $offset)
         $file->sys_offset = $offset;
     }
 
-    $buf = fread($file->fd,  $size);
+    $o = fread($file->fd,  $size);
 
-    if ($buf == false) {
+    if ($o == false) {
         ngx_log_error(NGX_LOG_CRIT, $file->log, NGX_FERROR,
                       "read() \"%s\" failed", $file->name);
         return NGX_ERROR;
     }
 
-    $n = strlen($buf);
+    $buf .= $o;
+
+    $n = strlen($o);
 
     $file->sys_offset += $n;
 

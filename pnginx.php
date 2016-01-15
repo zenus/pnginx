@@ -13,7 +13,7 @@ define('NGINX_VER',"pnginx/".NGINX_VERSION);
 define('NGINX_VER_BUILD',NGINX_VER);
 define('NGINX_VAR',"NGINX");
 define('NGX_OLDPID_EXT',".oldbin");
-define('NGX_CONF_PATH',__DIR__.DS.'conf'.DS.'pnginx.conf');
+define('NGX_CONF_PATH',__DIR__.DS.'conf'.DS.'pnginx.log');
 define('NGX_ERROR_LOG_PATH',__DIR__.DS.'log'.DS.'error.log');
 
 

@@ -411,7 +411,6 @@ function ngx_init_cycle(ngx_cycle_t $old_cycle)
     }
 
     if (ngx_test_lockfile($cycle->lock_file, $log) != NGX_OK) {
-        dd('hi');
             goto failed;
         }
 //
