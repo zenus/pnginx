@@ -392,7 +392,6 @@ function ngx_vslprintf($s, $fmt, $args)
 
             $s = ngx_sprintf_num($s, $ui64, $zero, $hex, $width);
 
-            dd($s);
             $ptr++;
 
         } else {

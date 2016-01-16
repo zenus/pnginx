@@ -165,6 +165,9 @@ function ngx_delete_file($name)
 }
 function ngx_create_dir($name, $access)
 {
+    if(empty($name)){
+       return false;
+    }
     return mkdir($name, $access);
 }
 
