@@ -81,6 +81,7 @@ function ngx_create_paths(ngx_cycle_t $cycle,  $user)
         {
         //    ngx_file_info_t   fi;
 
+
         if ($fi = ngx_file_info($path[$i]->name)
             == NGX_FILE_ERROR)
         {
