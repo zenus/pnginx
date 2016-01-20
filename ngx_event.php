@@ -91,6 +91,9 @@ define('NGX_READ_EVENT', EV_READ);
 define('NGX_WRITE_EVENT',EV_WRITE);
 define('NGX_CLOSE_EVENT',1);
 
+
+define('DEFAULT_CONNECTIONS', 512);
+
 define('NGX_UPDATE_TIME',1);
 define('NGX_POST_EVENTS',2);
 define('NGX_DISABLE_EVENT',2);
@@ -504,6 +507,90 @@ function ngx_events_commands(){
 
 }
 
+function ngx_event_core_module(){
+    static $ngx_event_core_module;
+    if(is_null($ngx_event_core_module)){
+        $obj = new ngx_module_t();
+        $ngx_event_core_module = $obj;
+        $ngx_event_core_module->version = 1;
+        $ngx_event_core_module->ctx = ngx_event_core_module_ctx();
+        $ngx_event_core_module->commands = ngx_event_core_commands();
+        $ngx_event_core_module->type = NGX_EVENT_MODULE;
+        $ngx_event_core_module->init_module = 'ngx_event_module_init';
+        $ngx_event_core_module->init_process = 'ngx_event_process_init';
+    }
+    return $ngx_event_core_module;
+}
+function ngx_event_core_module_ctx(){
+
+    static $ngx_events_module_ctx;
+    if(is_null($ngx_events_module_ctx)){
+        $obj= new ngx_core_module_t();
+        $ngx_events_module_ctx = $obj;
+        $ngx_events_module_ctx->name = 'event_core';
+        $ngx_events_module_ctx->create_conf = 'ngx_event_core_create_conf';
+        $ngx_events_module_ctx->init_conf = 'ngx_event_core_init_conf';
+    }
+    return $ngx_events_module_ctx;
+}
+
+function ngx_event_core_commands(){
+
+    $ngx_event_core_commands = array(
+        array(
+            'name'=>"work_connections",
+            'type'=>NGX_EVENT_CONF|NGX_CONF_TAKE1,
+            'set'=>'ngx_event_connections',
+            'conf'=>0,
+           // 'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>"use",
+            'type'=>NGX_EVENT_CONF|NGX_CONF_TAKE1,
+            'set'=>'ngx_event_use',
+            'conf'=>0,
+            //'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>"multi_accept",
+            'type'=>NGX_EVENT_CONF|NGX_CONF_FLAG,
+            'set'=>'ngx_conf_set_flag_slot',
+            'conf'=>0,
+            //'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>"multi_mutex_delay",
+            'type'=>NGX_EVENT_CONF|NGX_CONF_TAKE1,
+            'set'=>'ngx_conf_set_msec_slot',
+            'conf'=>0,
+            //'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>"debug_connection",
+            'type'=>NGX_EVENT_CONF|NGX_CONF_TAKE1,
+            'set'=>'ngx_event_debug_connection',
+            'conf'=>0,
+            //'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>'',
+            'type'=>0,
+            'set'=>NULL,
+            'conf'=>0,
+            //0,
+            'post'=>NULL
+        ),
+    );
+
+    return $ngx_event_core_commands;
+
+}
+
 function ngx_event_max_module($i = null){
    static $ngx_event_max_module  = null;
     if(!is_null($i)){
@@ -596,4 +683,210 @@ function ngx_events_block(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 
     return NGX_CONF_OK;
 }
+
+function ngx_event_init_conf(ngx_cycle_t $cycle, $conf)
+{
+    if (ngx_get_conf($cycle->conf_ctx, ngx_events_module()) == NULL) {
+            ngx_log_error(NGX_LOG_EMERG, $cycle->log, 0,
+                      "no \"events\" section in configuration");
+            return NGX_CONF_ERROR;
+    }
+
+    return NGX_CONF_OK;
+}
+
+class ngx_event_conf_t {
+    private    $connections;
+    private    $use;
+
+    private    $multi_accept;
+    private    $accept_mutex;
+
+    private    $accept_mutex_delay;
+
+    private    $name;
+
+    public function __set($name,$value){
+       $this->$name = $value;
+    }
+    public function __get($name){
+       return $this->$name;
+    }
+}
+
+function ngx_event_core_create_conf(ngx_cycle_t $cycle)
+{
+
+//ngx_event_conf_t  *ecf;
+    $ecf = new ngx_event_conf_t();
+
+
+    $ecf->connections = NGX_CONF_UNSET_UINT;
+    $ecf->use = NGX_CONF_UNSET_UINT;
+    $ecf->multi_accept = NGX_CONF_UNSET;
+    $ecf->accept_mutex = NGX_CONF_UNSET;
+    $ecf->accept_mutex_delay = NGX_CONF_UNSET_MSEC;
+    $ecf->name =  NGX_CONF_UNSET;
+
+    return $ecf;
+}
+
+function ngx_event_core_init_conf(ngx_cycle_t $cycle, $conf)
+{
+//ngx_event_conf_t  *ecf = conf;
+    $ecf = $conf;
+
+//    int                  fd;
+//    ngx_int_t            i;
+//    ngx_module_t        *module;
+//    ngx_event_module_t  *event_module;
+
+    $module = NULL;
+
+
+//    fd = epoll_create(100);
+//
+//    if (fd != -1) {
+//        (void) close(fd);
+//        module = &ngx_epoll_module;
+//
+//    } else if (ngx_errno != NGX_ENOSYS) {
+//        module = &ngx_epoll_module;
+//    }
+
+    //todo should find the best event method
+    //$module = ngx_epoll_module();
+
+
+
+    if ($module == NULL) {
+        for ($i = 0; ngx_modules($i); $i++) {
+
+            if (ngx_modules($i)->type != NGX_EVENT_MODULE) {
+                continue;
+            }
+
+            $event_module = ngx_modules($i)->ctx;
+
+            if (ngx_strcmp($event_module->name, 'event_core') == 0)
+            {
+                continue;
+            }
+
+            $module = ngx_modules($i);
+            break;
+        }
+    }
+
+    if ($module == NULL) {
+        ngx_log_error(NGX_LOG_EMERG, $cycle->log, 0, "no events module found");
+        return NGX_CONF_ERROR;
+    }
+
+    ngx_conf_init_uint_value($ecf->connections, DEFAULT_CONNECTIONS);
+    $cycle->connection_n = $ecf->connections;
+
+    ngx_conf_init_uint_value($ecf->use, $module->ctx_index);
+
+    $event_module = $module->ctx;
+    ngx_conf_init_ptr_value($ecf->name, $event_module->name);
+
+    ngx_conf_init_value($ecf->multi_accept, 0);
+    ngx_conf_init_value($ecf->accept_mutex, 1);
+    ngx_conf_init_msec_value($ecf->accept_mutex_delay, 500);
+
+    return NGX_CONF_OK;
+}
+
+
+function ngx_event_connections(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+    $ecf = $conf;
+
+   // ngx_str_t  *value;
+
+    if ($ecf->connections != NGX_CONF_UNSET_UINT) {
+    return "is duplicate";
+    }
+
+    $value = $cf->args;
+    $ecf->connections = ngx_atoi($value[1]);
+    if ($ecf->connections ==  NGX_ERROR) {
+        ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+        "invalid number \"%V\"", $value[1]);
+
+        return NGX_CONF_ERROR;
+    }
+
+    $cf->cycle->connection_n = $ecf->connections;
+
+    return NGX_CONF_OK;
+}
+
+function ngx_event_get_conf($conf_ctx, $module)
+{
+
+    return  (ngx_get_conf($conf_ctx, ngx_events_module())[$module->ctx_index];
+}
+
+function ngx_event_use(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+    $ecf = $conf;
+
+//    ngx_int_t             m;
+//    ngx_str_t            *value;
+//    ngx_event_conf_t     *old_ecf;
+//    ngx_event_module_t   *module;
+
+    if ($ecf->use != NGX_CONF_UNSET_UINT) {
+        return "is duplicate";
+    }
+
+    $value = $cf->args;
+
+    if ($cf->cycle->old_cycle->conf_ctx) {
+        $old_ecf = ngx_event_get_conf($cf->cycle->old_cycle->conf_ctx, ngx_event_core_module());
+    } else {
+        $old_ecf = NULL;
+    }
+
+
+    for ($m = 0; ngx_modules($m); $m++) {
+        if (ngx_modules($m)->type != NGX_EVENT_MODULE) {
+            continue;
+        }
+
+        $module = ngx_modules($m)->ctx;
+        //if (module->name->len == value[1].len) {
+            if (ngx_strcmp($module->name, $value[1]) == 0) {
+                $ecf->use = ngx_modules($m)->ctx_index;
+                $ecf->name = $module->name;
+
+                if (ngx_process() == NGX_PROCESS_SINGLE
+                    && $old_ecf
+                    && $old_ecf->use != $ecf->use)
+                {
+                    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+                        "when the server runs without a master process ".
+                               "the \"%V\" event type must be the same as ".
+                               "in previous configuration - \"%s\" ".
+                               "and it cannot be changed on the fly, ".
+                               "to change it you need to stop server ".
+                               "and start it again",
+                               array($value[1], $old_ecf->name));
+
+                    return NGX_CONF_ERROR;
+                }
+
+                return NGX_CONF_OK;
+            }
+        //}
+    }
+
+    ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+        "invalid event type \"%V\"", $value[1]);
+
+    return NGX_CONF_ERROR;
+}
+
 

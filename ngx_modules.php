@@ -67,7 +67,7 @@ function ngx_modules($i,$k = null,$v = null)
           ngx_errlog_module(),
           ngx_conf_module(),
           ngx_events_module(),
-//          ngx_event_core_module(),
+          ngx_event_core_module(),
 //          ngx_epoll_module(),
 //          ngx_regex_module(),
 //          ngx_http_module(),

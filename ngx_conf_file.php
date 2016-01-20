@@ -1405,5 +1405,18 @@ function ngx_conf_flush_files(ngx_cycle_t $cycle)
     }
 }
 
+function ngx_conf_init_uint_value($conf, $default){
+    if ($conf == NGX_CONF_UNSET_UINT) {
+    $conf = $default;
+    }
+}
+
+function ngx_conf_init_ptr_value($conf, $default){
+    if ($conf == NGX_CONF_UNSET_PTR) {
+        $conf = $default;
+    }
+}
+
+
 
 
