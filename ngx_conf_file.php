@@ -167,6 +167,46 @@ class ngx_conf_t {
     }
 }
 
+function ngx_conf_module(){
+    static $ngx_conf_module;
+    if(is_null($ngx_conf_module)){
+        $obj = new ngx_module_t();
+        $ngx_conf_module = $obj;
+        $ngx_conf_module->version = 1;
+        $ngx_conf_module->ctx = null;
+        $ngx_conf_module->commands = ngx_conf_commands();
+        $ngx_conf_module->type = NGX_CONF_MODULE;
+        $ngx_conf_module->exit_process = 'ngx_conf_flush_files';
+    }
+    return $ngx_conf_module;
+
+}
+
+function ngx_conf_commands(){
+
+    $ngx_conf_commands = array(
+        array(
+            'name'=>"include",
+            'type'=>NGX_ANY_CONF|NGX_CONF_TAKE1,
+            'set'=>'ngx_conf_include',
+            'conf'=>0,
+            'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>'',
+            'type'=>0,
+            'set'=>NULL,
+            'conf'=>0,
+            'offset'=>0,
+            'post'=>NULL
+        ),
+    );
+
+    return $ngx_conf_commands;
+
+}
+
 class ngx_core_module_t {
  /***   ngx_str_t **/   private         $name;
  /**   void  **/        private     $create_conf; /****(*create_conf)(ngx_cycle_t *cycle); ***/
@@ -1275,17 +1315,95 @@ function ngx_get_conf($conf_ctx,ngx_module_t $module)
    return $conf_ctx[$module->index];
 }
 
-//ngx_module_t  ngx_conf_module = {
-//    NGX_MODULE_V1,
-//    NULL,                                  /* module context */
-//    ngx_conf_commands,                     /* module directives */
-//    NGX_CONF_MODULE,                       /* module type */
-//    NULL,                                  /* init master */
-//    NULL,                                  /* init module */
-//    NULL,                                  /* init process */
-//    NULL,                                  /* init thread */
-//    NULL,                                  /* exit thread */
-//    ngx_conf_flush_files,                  /* exit process */
-//    NULL,                                  /* exit master */
-//    NGX_MODULE_V1_PADDING
-//};
+
+function ngx_conf_include(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//char        *rv;
+//ngx_int_t    n;
+//    ngx_str_t   *value, file, name;
+//    ngx_glob_t   gl;
+
+    $value = $cf->args;
+    $file = $value[1];
+
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, $cf->log, 0, "include %s", $file);
+
+    if (ngx_conf_full_name($cf->cycle, $file, 1) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (strpbrk($file, "*?[") == NULL) {
+
+        ngx_log_debug1(NGX_LOG_DEBUG_CORE, $cf->log, 0, "include %s", $file);
+
+        return ngx_conf_parse($cf, $file);
+    }
+
+    //ngx_memzero(&gl, sizeof(ngx_glob_t));
+
+//    gl.pattern = file.data;
+//    gl.log = cf->log;
+//    gl.test = 1;
+
+    if ($paths = ngx_open_glob($file) == NGX_ERROR) {
+            ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
+            ngx_open_glob_n ." \"%s\" failed", array($file));
+        return NGX_CONF_ERROR;
+    }
+
+    $rv = NGX_CONF_OK;
+
+    $count = count($paths);
+    $n = 0;
+    for ( ;; ) {
+
+        if ($n < $count) {
+            $file = $paths[$n];
+            $n++;
+            if (empty($file)) {
+                return NGX_CONF_ERROR;
+            }
+            ngx_log_debug1(NGX_LOG_DEBUG_CORE, $cf->log, 0, "include %s", $file);
+            $rv = ngx_conf_parse($cf, $file);
+            if ($rv != NGX_CONF_OK) {
+                break;
+            }
+        }
+        break;
+
+    }
+
+    return $rv;
+}
+
+
+function ngx_conf_flush_files(ngx_cycle_t $cycle)
+{
+//ngx_uint_t        i;
+//    ngx_list_part_t  *part;
+//    ngx_open_file_t  *file;
+
+    ngx_log_debug0(NGX_LOG_DEBUG_CORE, $cycle->log, 0, "flush files");
+
+    $open_files_list = $cycle->open_files;
+    $files = $open_files_list->current();
+
+    for ($i = 0; /* void */ ; $i++) {
+
+        if ($i >= count($files)) {
+            $open_files_list->next();
+            $files = $open_files_list->current();
+            if (empty($files)) {
+                break;
+            }
+            $i = 0;
+        }
+
+        if ($files[$i]->flush) {
+            $files[$i]->flush($files[$i], $cycle->log);
+        }
+    }
+}
+
+
+

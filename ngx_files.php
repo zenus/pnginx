@@ -31,6 +31,7 @@ define('ngx_create_dir_n',"mkdir()");
 define('ngx_file_info_n',"stat()");
 define('ngx_set_stderr_n',"set_stderr(STDERR_FILENO)");
 define('ngx_rename_file_n', "rename()");
+define('ngx_open_glob_n',"glob()");
 
 include_once 'ngx_core.php';
 /**
@@ -177,4 +178,17 @@ function ngx_rename_file($o, $n){
 function ngx_getcwd(){
    return getcwd();
 }
+
+function ngx_open_glob($pattern)
+{
+
+    $n = glob($pattern);
+
+    if (empty($n)) {
+        return NGX_ERROR;
+    }
+
+    return $n;
+}
+
 

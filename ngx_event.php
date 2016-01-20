@@ -84,6 +84,9 @@ define('NGX_USE_EVENTPORT_EVENT',0x00001000);
  */
 define('NGX_USE_VNODE_EVENT',0x00002000);
 
+define('NGX_EVENT_MODULE',0x544E5645);
+define('NGX_EVENT_CONF',0x02000000);
+
 define('NGX_READ_EVENT', EV_READ);
 define('NGX_WRITE_EVENT',EV_WRITE);
 define('NGX_CLOSE_EVENT',1);
@@ -451,5 +454,146 @@ function ngx_del_event(ngx_event_t $ev,  $event,  $flags)
 }
 //ngx_int_t             ngx_accept_disabled;
 
+function ngx_events_module(){
+    static $ngx_events_module;
+    if(is_null($ngx_events_module)){
+        $obj = new ngx_module_t();
+        $ngx_events_module = $obj;
+        $ngx_events_module->version = 1;
+        $ngx_events_module->ctx = ngx_events_module_ctx();
+        $ngx_events_module->commands = ngx_events_commands();
+        $ngx_events_module->type = NGX_CORE_MODULE;
+    }
+    return $ngx_events_module;
+}
+function ngx_events_module_ctx(){
 
+    static $ngx_events_module_ctx;
+    if(is_null($ngx_events_module_ctx)){
+        $obj= new ngx_core_module_t();
+        $ngx_events_module_ctx = $obj;
+        $ngx_events_module_ctx->name = 'events';
+        $ngx_events_module_ctx->create_conf = null;
+        $ngx_events_module_ctx->init_conf = 'ngx_event_init_conf';
+    }
+    return $ngx_events_module_ctx;
+}
+
+function ngx_events_commands(){
+
+    $ngx_events_commands = array(
+        array(
+            'name'=>"events",
+            'type'=>NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+            'set'=>'ngx_events_block',
+            'conf'=>0,
+            //'offset'=>0,
+            'post'=>NULL
+        ),
+        array(
+            'name'=>'',
+            'type'=>0,
+            'set'=>NULL,
+            'conf'=>0,
+            //0,
+            'post'=>NULL
+        ),
+    );
+
+    return $ngx_events_commands;
+
+}
+
+function ngx_event_max_module($i = null){
+   static $ngx_event_max_module  = null;
+    if(!is_null($i)){
+       $ngx_event_max_module = $i;
+    }else{
+       return $ngx_event_max_module;
+    }
+}
+
+function ngx_events_block(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+{
+//char                 *rv;
+//    void               ***ctx;
+//    ngx_uint_t            i;
+//    ngx_conf_t            pcf;
+//    ngx_event_module_t   *m;
+
+    if ($conf) {
+        return "is duplicate";
+        }
+
+    /* count the number of the event modules and set up their indices */
+
+    ngx_event_max_module(0);
+    for ($i = 0; ngx_modules($i); $i++) {
+        if (ngx_modules($i)->type != NGX_EVENT_MODULE) {
+            continue;
+        }
+
+        $max = ngx_event_max_module();
+        ngx_modules($i)->ctx_index = $max++;
+        ngx_event_max_module($max);
+
+    }
+
+//    ctx = ngx_pcalloc(cf->pool, sizeof(void *));
+//    if (ctx == NULL) {
+//        return NGX_CONF_ERROR;
+//    }
+//
+//    *ctx = ngx_pcalloc(cf->pool, ngx_event_max_module * sizeof(void *));
+//    if (*ctx == NULL) {
+//    return NGX_CONF_ERROR;
+//}
+    $ctx = array();
+    $conf = $ctx;
+
+    for ($i = 0; ngx_modules($i); $i++) {
+        if (ngx_modules($i)->type != NGX_EVENT_MODULE) {
+            continue;
+        }
+
+        $m = ngx_modules($i)->ctx;
+
+        if ($m->create_conf) {
+            $ctx[ngx_modules($i)->ctx_index] = $m->create_conf($cf->cycle);
+            if ($ctx[ngx_modules($i)->ctx_index] == NULL) {
+                return NGX_CONF_ERROR;
+            }
+        }
+    }
+
+    $pcf = $cf;
+    $cf->ctx = $ctx;
+    $cf->module_type = NGX_EVENT_MODULE;
+    $cf->cmd_type = NGX_EVENT_CONF;
+
+    $rv = ngx_conf_parse($cf, NULL);
+
+    $cf = $pcf;
+
+    if ($rv != NGX_CONF_OK) {
+        return $rv;
+    }
+
+    for ($i = 0; ngx_modules($i); $i++) {
+        if (ngx_modules($i)->type != NGX_EVENT_MODULE) {
+            continue;
+        }
+
+        $m = ngx_modules($i)->ctx;
+
+        if ($m->init_conf) {
+            $rv = $m->init_conf($cf->cycle, $ctx[ngx_modules($i)->ctx_index]);
+                if ($rv != NGX_CONF_OK) {
+                    return $rv;
+                }
+            }
+    }
+
+    return NGX_CONF_OK;
+}
 

@@ -404,33 +404,6 @@ function ngx_errlog_module(){
         $ngx_errlog_module->type = NGX_CORE_MODULE;
     }
         return $ngx_errlog_module;
-//    static  $ngx_errlog_module = array(
-//        'ctx_index'=>0,
-//        'index'=>0,
-//        'spare0'=>0,
-//        'spare1'=>0,
-//        'spare2'=>0,
-//        'spare3'=>0,
-//        'version'=>1,
-//        'ctx'=>ngx_errlog_module_ctx(),                  /* module context */
-//        'commands'=>ngx_errlog_commands(),                     /* module directives */
-//        'type'=>NGX_CORE_MODULE,                       /* module type */
-//        'init_master'=>NULL,                                  /* init master */
-//        'init_module'=>NULL,                                  /* init module */
-//        'init_process'=>NULL,                                  /* init process */
-//        'init_thread'=>NULL,                                  /* init thread */
-//        'exit_thread'=>NULL,                                  /* exit thread */
-//        'exit_process'=>NULL,                                  /* exit process */
-//        'exit_master'=>NULL,                                  /* exit master */
-//        'spare_hook0'=>0,
-//        'spare_hook1'=>0,
-//        'spare_hook2'=>0,
-//        'spare_hook3'=>0,
-//        'spare_hook4'=>0,
-//        'spare_hook5'=>0,
-//        'spare_hook6'=>0,
-//        'spare_hook7'=>0
-//    );
 }
 function ngx_errlog_module_ctx(){
 
@@ -471,18 +444,7 @@ function ngx_errlog_commands(){
 }
 
 
-//
-//static ngx_core_module_t  ngx_errlog_module_ctx = {
-//    ngx_string("errlog"),
-//    NULL,
-//    NULL
-//};
 
-//function ngx_error_log_closure(){
-//    return  function(ngx_conf_t $cf, ngx_command_t $cmd,$conf){
-//     ngx_error_log($cf,$cmd,$conf);
-//    };
-//}
 
 function ngx_error_log(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 {
