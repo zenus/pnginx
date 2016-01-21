@@ -161,7 +161,7 @@ class ngx_conf_t {
        return $this->$property;
     }
 
-    public function handle(ngx_conf_t $cf, ngx_command_t $cmd ,$s){
+    public function handle(ngx_conf_t $cf, /*ngx_command_t*/ $cmd ,$s){
 
         return call_user_func($this->handler,$cf,$cmd,$s);
     }
@@ -224,34 +224,34 @@ class ngx_core_module_t {
 
 }
 
-class ngx_command_t {
-/** ngx_str_t **/ private $name; 
-/** ngx_uint_t **/ private $type; 
-/**    char  **/   private $set;/*(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);*/
-/** ngx_uint_t **/ private $conf; 
-/** ngx_uint_t **/ private $offset; 
-/** void **/ private $post;
-
-    public function __set($property, $value){
-        if($property == 'set'){
-            if($value instanceof Closure){
-                $this->set = $value ;
-            }else{
-                die('ngx_command_t handler type');
-            }
-        }else{
-            $this->$property = $value;
-        }
-    }
-    public function __get($property){
-       return $this->$property;
-    }
-
-    public function handle(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
-
-        return call_user_func($this->set,$cf,$cmd,$conf);
-    }
-}
+//class ngx_command_t {
+///** ngx_str_t **/ private $name;
+///** ngx_uint_t **/ private $type;
+///**    char  **/   private $set;/*(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);*/
+///** ngx_uint_t **/ private $conf;
+///** ngx_uint_t **/ private $offset;
+///** void **/ private $post;
+//
+//    public function __set($property, $value){
+//        if($property == 'set'){
+//            if($value instanceof Closure){
+//                $this->set = $value ;
+//            }else{
+//                die('ngx_command_t handler type');
+//            }
+//        }else{
+//            $this->$property = $value;
+//        }
+//    }
+//    public function __get($property){
+//       return $this->$property;
+//    }
+//
+//    public function handle(ngx_conf_t $cf, ngx_command_t $cmd, $conf){
+//
+//        return call_user_func($this->set,$cf,$cmd,$conf);
+//    }
+//}
 
 function ngx_conf_param(ngx_conf_t $cf)
 {
@@ -862,7 +862,7 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 //    ngx_str_t      *name;
 //    ngx_command_t  *cmd;
 
-    $name = $cf->args->elts;
+    $name = current($cf->args);
 
     $found = 0;
 
@@ -877,11 +877,11 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
         //for ( /* void */ ; cmd->name.len; cmd++) {
         foreach($cmds as $cmd){
 
-        if (strlen($name)!= strlen($cmd->name)) {
+        if (strlen($name)!= strlen($cmd['name'])) {
             continue;
         }
 
-        if (ngx_strcmp($name, $cmd->name) != 0) {
+        if (ngx_strcmp($name, $cmd['name']) != 0) {
             continue;
         }
 
@@ -895,18 +895,18 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
             /* is the directive's location right ? */
 
-        if (!($cmd->type & $cf->cmd_type)) {
+        if (!($cmd['type'] & $cf->cmd_type)) {
             continue;
         }
 
-        if (!($cmd->type & NGX_CONF_BLOCK) && $last != NGX_OK) {
+        if (!($cmd['type'] & NGX_CONF_BLOCK) && $last != NGX_OK) {
             ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
             "directive \"%s\" is not terminated by \";\"",
             $name);
             return NGX_ERROR;
         }
 
-        if (($cmd->type & NGX_CONF_BLOCK) && $last != NGX_CONF_BLOCK_START) {
+        if (($cmd['type'] & NGX_CONF_BLOCK) && $last != NGX_CONF_BLOCK_START) {
                 ngx_conf_log_error(NGX_LOG_EMERG, $cf, 0,
             "directive \"%s\" has no opening \"{\"",
             $name);
@@ -916,21 +916,21 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
             /* is the directive's argument count right ? */
             //$argument_number = ngx_cfg('argument_number');
 
-            if (!($cmd->type & NGX_CONF_ANY)) {
+            if (!($cmd['type'] & NGX_CONF_ANY)) {
 
-            if ($cmd->type & NGX_CONF_FLAG) {
+            if ($cmd['type'] & NGX_CONF_FLAG) {
 
                 if (count($cf->args) != 2) {
                     goto invalid;
                 }
 
-                } else if ($cmd->type & NGX_CONF_1MORE) {
+                } else if ($cmd['type'] & NGX_CONF_1MORE) {
 
                 if (count($cf->args) < 2) {
                     goto invalid;
                 }
 
-                } else if ($cmd->type & NGX_CONF_2MORE) {
+                } else if ($cmd['type'] & NGX_CONF_2MORE) {
 
                 if (count($cf->args) < 3) {
                     goto invalid;
@@ -940,7 +940,7 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
                 goto invalid;
 
-            } else if (!($cmd->type & argument_number(count($cf->args) - 1)))
+            } else if (!($cmd['type'] & argument_number(count($cf->args) - 1)))
                 {
                     goto invalid;
                 }
@@ -950,21 +950,21 @@ function ngx_conf_handler(ngx_conf_t $cf, $last)
 
             $conf = NULL;
 
-            if ($cmd->type & NGX_DIRECT_CONF) {
+            if ($cmd['type'] & NGX_DIRECT_CONF) {
                 //todo 0 offset is ok?
             $conf =  $cf->ctx[0][ngx_modules($i)->index];
                 //conf = ((void **) cf->ctx)[ngx_modules[i]->index];
-            } else if ($cmd->type & NGX_MAIN_CONF) {
+            } else if ($cmd['type'] & NGX_MAIN_CONF) {
                 //todo  direct_conf and main_conf should use the same offset
             $conf = $cf->ctx[0][ngx_modules($i)->index];
                 //todo should know why use & or not
                 //conf = &((void **) cf->ctx)[ngx_modules[i]->index];
             } else if ($cf->ctx) {
             //$confp = $cf->ctx + $cmd->conf;
-            $conf = $cf->ctx[$cmd->conf][ngx_modules($i)->ctx_index];
+            $conf = $cf->ctx[$cmd['conf']][ngx_modules($i)->ctx_index];
             }
 
-            $rv = $cmd->handle($cf, $cmd, $conf);
+            $rv = $cmd['set']($cf, $cmd, $conf);
 
             if ($rv == NGX_CONF_OK) {
                 return NGX_OK;
@@ -1030,7 +1030,7 @@ function ngx_conf_full_name(ngx_cycle_t $cycle, $name, $conf_prefix)
 //   };
 //}
 
-function ngx_conf_set_flag_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_set_flag_slot(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
 //char  *p = conf;
     $p = $conf;
@@ -1041,7 +1041,7 @@ function ngx_conf_set_flag_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 
     //todo know why should do this
 //fp = (ngx_flag_t *) (p + cmd->offset);
-  $fp =  $p[$cmd->offset];
+  $fp =  $p[$cmd['offset']];
 
     if ($fp != NGX_CONF_UNSET) {
     return "is duplicate";
@@ -1062,10 +1062,9 @@ function ngx_conf_set_flag_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
         return NGX_CONF_ERROR;
     }
 
-    if ($cmd->post) {
-    $post = $cmd->post;
-        //todo how to do this
-        return $post->post_handler($cf, $post, $fp);
+    if ($cmd['post']) {
+        $post = $cmd['post'];
+        return $post($cf, $post, $fp);
     }
 
     return NGX_CONF_OK;
@@ -1080,11 +1079,11 @@ function offsetof( $obj,$property){
 //        ngx_conf_set_msec_slot($cf,$cmd,$conf);
 //    };
 //}
-function ngx_conf_set_msec_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_set_msec_slot(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
    $p = $conf;
 //msp = (ngx_msec_t *) (p + cmd->offset);
-    $msp =  $p[$cmd->offset];
+    $msp =  $p[$cmd['offset']];
     if ($msp != NGX_CONF_UNSET_MSEC) {
     return "is duplicate";
      }
@@ -1096,9 +1095,9 @@ function ngx_conf_set_msec_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return "invalid value";
      }
 
-    if ($cmd->post) {
-        $post = $cmd->post;
-        return $post->post_handler($cf, $post, $msp);
+    if ($cmd['post']) {
+        $post = $cmd['post'];
+        return $post($cf, $post, $msp);
     }
     return NGX_CONF_OK;
 }
@@ -1109,12 +1108,12 @@ function ngx_conf_set_msec_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 //    };
 //}
 
-function ngx_conf_set_str_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_set_str_slot(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
       $p = $conf;
 
 //    field = (ngx_str_t *) (p + cmd->offset);
-      $field = $p[$cmd->offset];
+      $field = $p[$cmd['offset']];
 
     if (!empty($field)) {
     return "is duplicate";
@@ -1124,9 +1123,9 @@ function ngx_conf_set_str_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 
     $field = $value[1];
 
-    if ($cmd->post) {
-    $post = $cmd->post;
-        return $post->post_handler($cf, $post, $field);
+    if ($cmd['post']) {
+        $post = $cmd['post'];
+        return $post($cf, $post, $field);
     }
     return NGX_CONF_OK;
 }
@@ -1137,7 +1136,7 @@ function ngx_conf_set_str_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 //    };
 //}
 
-function ngx_conf_set_enum_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_set_enum_slot(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
     $p = $conf;
 
@@ -1146,14 +1145,14 @@ function ngx_conf_set_enum_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 //    ngx_conf_enum_t  *e;
 
 //    np = (ngx_uint_t *) (p + cmd->offset);
-      $np = $p[$cmd->offset];
+      $np = $p[$cmd['offset']];
 
     if ($np != NGX_CONF_UNSET_UINT) {
         return "is duplicate";
         }
 
     $value = $cf->args;
-    $e = $cmd->post;
+    $e = $cmd['post'];
 
     for ($i = 0; $e[$i]; $i++) {
     if (ngx_strcasecmp($e[$i]->name, $value[1]) != 0)
@@ -1177,7 +1176,7 @@ function ngx_conf_set_enum_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 //   } ;
 //}
 
-function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_set_num_slot(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
 //char  *p = conf;
       $p = $conf;
@@ -1188,7 +1187,7 @@ function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 
 
     //np = (ngx_int_t *) (p + cmd->offset);
-    $np = $p[$cmd->offset];
+    $np = $p[$cmd['offset']];
 
     if ($np != NGX_CONF_UNSET) {
          return "is duplicate";
@@ -1200,9 +1199,9 @@ function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return "invalid number";
     }
 
-    if ($cmd->post) {
-        $post = $cmd->post;
-        return $post->post_handler($cf, $post, $np);
+    if ($cmd['post']) {
+        $post = $cmd['post'];
+        return $post($cf, $post, $np);
     }
 
     return NGX_CONF_OK;
@@ -1214,7 +1213,7 @@ function ngx_conf_set_num_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 //    };
 //}
 
-function ngx_conf_set_off_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_set_off_slot(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
 //char  *p = conf;
     $p = $conf;
@@ -1225,7 +1224,7 @@ function ngx_conf_set_off_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
 
 
     //op = (off_t *) (p + cmd->offset);
-    $op = $p[$cmd->offset];
+    $op = $p[$cmd['offset']];
     if ($op != NGX_CONF_UNSET) {
         return "is duplicate";
     }
@@ -1237,9 +1236,9 @@ function ngx_conf_set_off_slot(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
     return "invalid value";
     }
 
-    if ($cmd->post) {
-    $post = $cmd->post;
-        return $post->post_handler($cf, $post, $op);
+    if ($cmd['post']) {
+    $post = $cmd['post'];
+        return $post($cf, $post, $op);
     }
 
     return NGX_CONF_OK;
@@ -1316,7 +1315,7 @@ function ngx_get_conf($conf_ctx,ngx_module_t $module)
 }
 
 
-function ngx_conf_include(ngx_conf_t $cf, ngx_command_t $cmd, $conf)
+function ngx_conf_include(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
 //char        *rv;
 //ngx_int_t    n;
