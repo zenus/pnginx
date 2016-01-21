@@ -9,3 +9,8 @@
 class ngx_queue_t  extends SplDoublyLinkedList{
 
 }
+
+function ngx_queue_init($obj){
+    $queue = new ngx_queue_t();
+    return $obj = $queue;
+}

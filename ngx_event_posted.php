@@ -7,7 +7,7 @@
  * @param ngx_queue_t $accept_event
  * @return ngx_queue_t
  */
-function  ngx_posted_accept_events(ngx_queue_t $accept_event = null){
+function  ngx_posted_accept_events($accept_event = null){
     static $ngx_posted_accept_events = null;
     if(!is_null($accept_event)){
         $ngx_posted_accept_events = $accept_event;
@@ -16,7 +16,7 @@ function  ngx_posted_accept_events(ngx_queue_t $accept_event = null){
     }
 
 }
-function ngx_posted_events (ngx_queue_t  $posted_events = null){
+function ngx_posted_events ($posted_events = null){
     static $ngx_posted_events = null;
     if(!is_null($posted_events)){
        $ngx_posted_events = $posted_events;

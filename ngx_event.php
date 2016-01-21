@@ -574,6 +574,7 @@ function ngx_event_core_module_ctx(){
         $ngx_events_module_ctx->name = 'event_core';
         $ngx_events_module_ctx->create_conf = 'ngx_event_core_create_conf';
         $ngx_events_module_ctx->init_conf = 'ngx_event_core_init_conf';
+
     }
     return $ngx_events_module_ctx;
 }
@@ -1076,34 +1077,34 @@ function ngx_event_process_init(ngx_cycle_t $cycle)
 
 
 
-    ngx_queue_init(&ngx_posted_accept_events);
-    ngx_queue_init(&ngx_posted_events);
+    ngx_queue_init(ngx_posted_accept_events());
+    ngx_queue_init(ngx_posted_events());
 
-    if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
-    return NGX_ERROR;
-}
-
-    for (m = 0; ngx_modules[m]; m++) {
-    if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
-        continue;
+    if (ngx_event_timer_init($cycle->log) == NGX_ERROR) {
+        return NGX_ERROR;
     }
 
-        if (ngx_modules[m]->ctx_index != ecf->use) {
-        continue;
-    }
+    for ($m = 0; ngx_modules($m); $m++) {
+        if (ngx_modules($m)->type != NGX_EVENT_MODULE) {
+            continue;
+        }
 
-        module = ngx_modules[m]->ctx;
+        if (ngx_modules($m)->ctx_index != $ecf->use) {
+            continue;
+        }
 
-        if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
+        $module = ngx_modules($m)->ctx;
+
+        if ($module->init($cycle, ngx_timer_resolution()) != NGX_OK) {
         /* fatal */
         exit(2);
-    }
+        }
 
         break;
     }
 
 
-    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
+    if (ngx_timer_resolution() && !(ngx_event_flags() & NGX_USE_TIMER_EVENT)) {
         struct sigaction  sa;
         struct itimerval  itv;
 
