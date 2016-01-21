@@ -62,3 +62,5 @@
 //}
 
 
+$arr = posix_getrlimit();
+var_dump($arr);

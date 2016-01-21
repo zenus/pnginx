@@ -115,5 +115,14 @@ function ngx_create_paths(ngx_cycle_t $cycle,  $user)
     return NGX_OK;
 }
 
+function  ngx_random_number($i = null) {
+   static $ngx_random_number = 123456;
+    if(!is_null($i)){
+       $ngx_random_number  = $i;
+    }else{
+       return $ngx_random_number;
+    }
+}
+
 
 
