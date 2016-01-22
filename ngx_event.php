@@ -155,6 +155,16 @@ function ngx_accept_disabled($i = null){
     }
 }
 
+function ngx_event_timer_alarm($i = null){
+
+    static $ngx_event_timer_alarm = null;
+    if(!is_null($i)){
+       $ngx_event_timer_alarm = $i;
+    }else{
+       return $ngx_event_timer_alarm;
+    }
+}
+
 
 class ngx_event_t {
 /**   void  **/    private  $data;
@@ -297,43 +307,10 @@ function ngx_accept_mutex_ptr($ptr = null){
 //ngx_atomic_t         *ngx_accept_mutex_ptr;
 //ngx_shmtx_t           ngx_accept_mutex;
 //ngx_uint_t            ngx_use_accept_mutex;
-function ngx_use_accept_mutex($i = null){
-    static $ngx_use_accept_mutex = null;
-    if(!is_null($i)){
-       $ngx_use_accept_mutex = $i;
-    }else{
-        return $ngx_use_accept_mutex;
-    }
-
-}
 //ngx_uint_t            ngx_accept_events;
-function ngx_accept_events($i = null){
-   static $ngx_accept_events = null;
-    if(!is_null($i)){
-       $ngx_accept_events = $i;
-    }else{
-       return $ngx_accept_events;
-    }
-}
 //ngx_uint_t            ngx_accept_mutex_held;
-function ngx_accept_mutex_held($i = null){
-    static $ngx_accept_mutex_held = null;
-    if(!is_null($i)){
-       $ngx_accept_mutex_held = $i;
-    }else{
-       return $ngx_accept_mutex_held;
-    }
-}
 //ngx_msec_t            ngx_accept_mutex_delay;
-function ngx_accept_mutex_delay($i = null){
-    static $ngx_accept_mutex_delay = null;
-    if(!is_null($i)){
-        $ngx_accept_mutex_delay = $i;
-    }else{
-       return $ngx_accept_mutex_delay;
-    }
 
-}
 
 function ngx_timer_resolution($i = null){
     static $ngx_timer_resolution = null;
@@ -344,14 +321,6 @@ function ngx_timer_resolution($i = null){
     }
 }
 
-function ngx_accept_disabled($i = null){
-    static $ngx_accept_disabled = null;
-    if(!is_null($i)){
-       $ngx_accept_disabled =  $i;
-    }else{
-       return $ngx_accept_disabled;
-    }
-}
 
 function  ngx_accept_mutex($shmtx = null){
     static $ngx_accept_mutex = null;
@@ -1105,19 +1074,20 @@ function ngx_event_process_init(ngx_cycle_t $cycle)
 
 
     if (ngx_timer_resolution() && !(ngx_event_flags() & NGX_USE_TIMER_EVENT)) {
-        struct sigaction  sa;
-        struct itimerval  itv;
+//        struct sigaction  sa;
+//        struct itimerval  itv;
+//
+//        ngx_memzero(&sa, sizeof(struct sigaction));
+        //sa.sa_handler = ngx_timer_signal_handler;
+        //sigemptyset(&sa.sa_mask);
 
-        ngx_memzero(&sa, sizeof(struct sigaction));
-        sa.sa_handler = ngx_timer_signal_handler;
-        sigemptyset(&sa.sa_mask);
-
-        if (sigaction(SIGALRM, &sa, NULL) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
+        if (pcntl_signal(SIGALRM, 'ngx_timer_signal_handler', NULL) == false) {
+            ngx_log_error(NGX_LOG_ALERT, $cycle->log, pcntl_get_last_error(),
                           "sigaction(SIGALRM) failed");
             return NGX_ERROR;
         }
-
+#####################################################################################
+        //todo should have my own function of set timer
         itv.it_interval.tv_sec = ngx_timer_resolution / 1000;
         itv.it_interval.tv_usec = (ngx_timer_resolution % 1000) * 1000;
         itv.it_value.tv_sec = ngx_timer_resolution / 1000;
@@ -1128,129 +1098,127 @@ function ngx_event_process_init(ngx_cycle_t $cycle)
                           "setitimer() failed");
         }
     }
+#########################################################################################
 
-    if (ngx_event_flags & NGX_USE_FD_EVENT) {
-        struct rlimit  rlmt;
+    if (ngx_event_flags() & NGX_USE_FD_EVENT) {
+        //struct rlimit  rlmt;
 
-        if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
+        if ($rlmt = posix_getrlimit() == false) {
+            ngx_log_error(NGX_LOG_ALERT, $cycle->log, posix_get_last_error(),
                           "getrlimit(RLIMIT_NOFILE) failed");
             return NGX_ERROR;
         }
 
-        cycle->files_n = (ngx_uint_t) rlmt.rlim_cur;
+        $cycle->files_n = $rlmt['soft openfiles'];
 
-        cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n,
-                                  cycle->log);
-        if (cycle->files == NULL) {
-            return NGX_ERROR;
-        }
+        //$cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n,
+        //                               cycle->log);
+        $cycle->files = array();
     }
 
 
 
-    cycle->connections =
-    ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
-    if (cycle->connections == NULL) {
-    return NGX_ERROR;
-}
+   // $cycle->connections = ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
+    $cycle->connections = array();
+//    if (cycle->connections == NULL) {
+//    return NGX_ERROR;
+//}
 
-    c = cycle->connections;
+    $c = $cycle->connections;
 
-    cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
-                                   cycle->log);
-    if (cycle->read_events == NULL) {
-    return NGX_ERROR;
-}
+    //$cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
+     //                              cycle->log);
+    $cycle->read_events = array();
 
-    rev = cycle->read_events;
-    for (i = 0; i < cycle->connection_n; i++) {
-    rev[i].closed = 1;
-        rev[i].instance = 1;
+//    if (cycle->read_events == NULL) {
+//    return NGX_ERROR;
+//}
+
+    //$rev = $cycle->read_events;
+    for ($i = 0; $i < $cycle->connection_n; $i++) {
+        $event = new ngx_event_t();
+        $event->closed = 1;
+        $event->instance = 1;
+        $cycle->read_events[$i] = $event;
     }
 
-    cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
-                                    cycle->log);
-    if (cycle->write_events == NULL) {
-    return NGX_ERROR;
-}
+    //$cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
+    //                                cycle->log);
+    $cycle->write_events = array();
 
-    wev = cycle->write_events;
-    for (i = 0; i < cycle->connection_n; i++) {
-    wev[i].closed = 1;
+
+    for ($i = 0; $i < $cycle->connection_n; $i++) {
+        $event = new ngx_event_t();
+        $event->closed = 1;
+        $cycle->write_events[$i] = $event;
     }
 
-    i = cycle->connection_n;
-    next = NULL;
+    $i = $cycle->connection_n;
+    $next = NULL;
 
     do {
-        i--;
+        $i--;
+        $connection = new ngx_connection_t();
+        $connection->data = $next;
+        $connection->read = $cycle->read_events[$i];
+        $connection->write = $cycle->write_events[$i];
+        $connection->fd = -1;
+        $next = $connection;
+        $cycle->connections[$i] = $connection;
+    } while ($i);
 
-        c[i].data = next;
-        c[i].read = &cycle->read_events[i];
-        c[i].write = &cycle->write_events[i];
-        c[i].fd = (ngx_socket_t) -1;
-
-        next = &c[i];
-    } while (i);
-
-    cycle->free_connections = next;
-    cycle->free_connection_n = cycle->connection_n;
+    $cycle->free_connections = $next;
+    $cycle->free_connection_n = $cycle->connection_n;
 
     /* for each listening socket */
 
-    ls = cycle->listening.elts;
-    for (i = 0; i < cycle->listening.nelts; i++) {
+    $ls = $cycle->listening;
+    for ($i = 0; $i < count($cycle->listening); $i++) {
 
+        $c = ngx_get_connection($ls[$i]->fd, $cycle->log);
 
-
-        c = ngx_get_connection(ls[i].fd, cycle->log);
-
-        if (c == NULL) {
+        if ($c == NULL) {
             return NGX_ERROR;
         }
 
-        c->log = &ls[i].log;
+        $c->log = $ls[$i]->log;
 
-        c->listening = &ls[i];
-        ls[i].connection = c;
+        $c->listening = $ls[$i];
+        $ls[$i]->connection = $c;
 
-        rev = c->read;
-
-        rev->log = c->log;
-        rev->accept = 1;
+        $c->read->log = $c->log;
+        $c->read->accept = 1;
 
 
-        if (!(ngx_event_flags & NGX_USE_IOCP_EVENT)) {
-            if (ls[i].previous) {
+        if (!(ngx_event_flags() & NGX_USE_IOCP_EVENT)) {
+            if ($ls[$i]->previous) {
 
                 /*
                  * delete the old accept events that were bound to
                  * the old cycle read events array
                  */
 
-                old = ls[i].previous->connection;
+                //old = ls[i].previous->connection;
 
-                if (ngx_del_event(old->read, NGX_READ_EVENT, NGX_CLOSE_EVENT)
-                    == NGX_ERROR)
+                if (ngx_del_event($ls[$i]->previous->connection->read, NGX_READ_EVENT, NGX_CLOSE_EVENT) == NGX_ERROR)
                 {
                     return NGX_ERROR;
                 }
 
-                old->fd = (ngx_socket_t) -1;
+                //old->fd = (ngx_socket_t) -1;
+                $ls[$i]->previous->connection->fd = -1;
             }
         }
 
 
-        rev->handler = ngx_event_accept;
+        $c->read->handler = 'ngx_event_accept';
 
-        if (ngx_use_accept_mutex
-           )
+        if (ngx_use_accept_mutex())
         {
             continue;
         }
 
-        if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+        if (ngx_add_event($c->read, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }
 
@@ -1258,6 +1226,13 @@ function ngx_event_process_init(ngx_cycle_t $cycle)
     }
 
     return NGX_OK;
+}
+
+function ngx_timer_signal_handler($signo)
+{
+    ngx_event_timer_alarm(1);
+    $ngx_cycle = ngx_cycle();
+    ngx_log_debug0(NGX_LOG_DEBUG_EVENT, $ngx_cycle->log, 0, "timer signal");
 }
 
 

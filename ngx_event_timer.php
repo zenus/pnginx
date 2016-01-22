@@ -159,3 +159,12 @@ function event_base(){
     }
     return $base;
 }
+
+//todo should complete event method
+function ngx_event_timer_init(ngx_log $log)
+{
+//    ngx_rbtree_init(&ngx_event_timer_rbtree, &ngx_event_timer_sentinel,
+//    ngx_rbtree_insert_timer_value);
+
+    return NGX_OK;
+}
