@@ -83,46 +83,39 @@ function argument_number($i){
 }
 
 class ngx_module_t {
-/** ngx_uint_t **/ private $ctx_index;
-/** ngx_uint_t **/ private $index;
+/** ngx_uint_t **/ public $ctx_index;
+/** ngx_uint_t **/ public $index;
 
-/** ngx_uint_t **/ private $spare0;
-/** ngx_uint_t **/ private $spare1;
-/** ngx_uint_t **/ private $spare2;
-/** ngx_uint_t **/ private $spare3;
+/** ngx_uint_t **/ public $spare0;
+/** ngx_uint_t **/ public $spare1;
+/** ngx_uint_t **/ public $spare2;
+/** ngx_uint_t **/ public $spare3;
 
-/** ngx_uint_t **/ private $version;
+/** ngx_uint_t **/ public $version;
 
-/** void **/ private $ctx;
-/** ngx_command_t **/ private $commands;
-/** ngx_uint_t **/ private $type;
+/** void **/ public $ctx;
+/** ngx_command_t **/ public $commands;
+/** ngx_uint_t **/ public $type;
 
-/**    ngx_int_t           (*init_master)(ngx_log_t *log); **/ private $init_master;
+/**    ngx_int_t           (*init_master)(ngx_log_t *log); **/ public $init_master;
 /**
-/**    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);**/ private $init_module;
+/**    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);**/ public $init_module;
 /**
-/**    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);**/ private $init_process;
-/**    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);**/  private $init_thread;
-/**    void                (*exit_thread)(ngx_cycle_t *cycle);**/  private $exit_thread;
-/**    void                (*exit_process)(ngx_cycle_t *cycle);**/ private $exit_process;
-/**    void                (*exit_master)(ngx_cycle_t *cycle);**/  private $exit_master;
+/**    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);**/ public $init_process;
+/**    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);**/  public $init_thread;
+/**    void                (*exit_thread)(ngx_cycle_t *cycle);**/  public $exit_thread;
+/**    void                (*exit_process)(ngx_cycle_t *cycle);**/ public $exit_process;
+/**    void                (*exit_master)(ngx_cycle_t *cycle);**/  public $exit_master;
 
-/** uintptr_t **/ private $spare_hook0;
-/** uintptr_t **/ private $spare_hook1;
-/** uintptr_t **/ private $spare_hook2;
-/** uintptr_t **/ private $spare_hook3;
-/** uintptr_t **/ private $spare_hook4;
-/** uintptr_t **/ private $spare_hook5;
-/** uintptr_t **/ private $spare_hook6;
-/** uintptr_t **/ private $spare_hook7;
+/** uintptr_t **/ public $spare_hook0;
+/** uintptr_t **/ public $spare_hook1;
+/** uintptr_t **/ public $spare_hook2;
+/** uintptr_t **/ public $spare_hook3;
+/** uintptr_t **/ public $spare_hook4;
+/** uintptr_t **/ public $spare_hook5;
+/** uintptr_t **/ public $spare_hook6;
+/** uintptr_t **/ public $spare_hook7;
 
-    public function __set($property,$value){
-        $this->$property = $value;
-    }
-
-    public function __get($property){
-       return $this->$property;
-    }
 }
 
 class ngx_conf_t {

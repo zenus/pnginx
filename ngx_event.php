@@ -166,6 +166,43 @@ function ngx_event_timer_alarm($i = null){
 }
 
 
+
+class ngx_event_module_t {
+    public  $name;
+
+//void                 *(*create_conf)(ngx_cycle_t *cycle);
+    public $create_conf;
+//char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
+    public $init_conf;
+    //   ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+    public $add;
+    //ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+    public $del;
+
+    //ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+    public $enable;
+    //ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+    public $disable;
+
+    //ngx_int_t  (*add_conn)(ngx_connection_t *c);
+    public $add_conn;
+    //ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
+    public $del_conn;
+
+    //ngx_int_t  (*notify)(ngx_event_handler_pt handler);
+    public $notify;
+
+//    ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
+    //                 ngx_uint_t flags);
+    public $process_events;
+
+    //ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);
+    public $init;
+    //void       (*done)(ngx_cycle_t *cycle);
+    public $done;
+}
+
+
 class ngx_event_t {
 /**   void  **/    private  $data;
 
@@ -538,7 +575,7 @@ function ngx_event_core_module_ctx(){
 
     static $ngx_events_module_ctx;
     if(is_null($ngx_events_module_ctx)){
-        $obj= new ngx_core_module_t();
+        $obj= new ngx_event_module_t();
         $ngx_events_module_ctx = $obj;
         $ngx_events_module_ctx->name = 'event_core';
         $ngx_events_module_ctx->create_conf = 'ngx_event_core_create_conf';
