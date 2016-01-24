@@ -832,10 +832,11 @@ function ngx_event_connections(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 function ngx_event_get_conf($conf_ctx, $module)
 {
 
-    return  (ngx_get_conf($conf_ctx, ngx_events_module())[$module->ctx_index];
+    return  ngx_get_conf($conf_ctx, ngx_events_module())[$module->ctx_index];
 }
 
-function ngx_event_use(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
+function ngx_event_use(ngx_conf_t $cf, $conf)
+//function ngx_event_use(ngx_conf_t $cf, /*ngx_command_t*/ $cmd, $conf)
 {
     $ecf = $conf;
 
@@ -1088,15 +1089,15 @@ function ngx_event_process_init(ngx_cycle_t $cycle)
         }
 #####################################################################################
         //todo should have my own function of set timer
-        itv.it_interval.tv_sec = ngx_timer_resolution / 1000;
-        itv.it_interval.tv_usec = (ngx_timer_resolution % 1000) * 1000;
-        itv.it_value.tv_sec = ngx_timer_resolution / 1000;
-        itv.it_value.tv_usec = (ngx_timer_resolution % 1000 ) * 1000;
-
-        if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "setitimer() failed");
-        }
+//        itv.it_interval.tv_sec = ngx_timer_resolution / 1000;
+//        itv.it_interval.tv_usec = (ngx_timer_resolution % 1000) * 1000;
+//        itv.it_value.tv_sec = ngx_timer_resolution / 1000;
+//        itv.it_value.tv_usec = (ngx_timer_resolution % 1000 ) * 1000;
+//
+//        if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
+//            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
+//                          "setitimer() failed");
+//        }
     }
 #########################################################################################
 

@@ -7,6 +7,15 @@
  */
 
 
+define('NGX_TCP_NOPUSH_UNSET', 0);
+define('NGX_TCP_NOPUSH_SET', 1);
+define('NGX_TCP_NOPUSH_DISABLED', 2);
+
+define('NGX_TCP_NODELAY_UNSET', 0);
+define('NGX_TCP_NODELAY_SET', 1);
+define('NGX_TCP_NODELAY_DISABLED', 2);
+
+
 function ngx_enable_accept_events(ngx_cycle_t $cycle)
 {
 //ngx_uint_t         i;
@@ -283,35 +292,26 @@ function ngx_event_accept(ngx_event_t $ev)
 
         $c->unexpected_eof = 1;
 
-#if (NGX_HAVE_UNIX_DOMAIN)
-        if (c->sockaddr->sa_family == AF_UNIX) {
-            c->tcp_nopush = NGX_TCP_NOPUSH_DISABLED;
-            c->tcp_nodelay = NGX_TCP_NODELAY_DISABLED;
-#if (NGX_SOLARIS)
-            /* Solaris's sendfilev() supports AF_NCA, AF_INET, and AF_INET6 */
-            c->sendfile = 0;
-#endif
-        }
-#endif
-
-        rev = c->read;
-        wev = c->write;
-
-        wev->ready = 1;
-
-        if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
-            rev->ready = 1;
+        if ($c->sockaddr->sa_family == AF_UNIX) {
+            $c->tcp_nopush = NGX_TCP_NOPUSH_DISABLED;
+            $c->tcp_nodelay = NGX_TCP_NODELAY_DISABLED;
         }
 
-        if (ev->deferred_accept) {
-            rev->ready = 1;
-#if (NGX_HAVE_KQUEUE)
-            rev->available = 1;
-#endif
+        $rev = $c->read;
+        $wev = $c->write;
+
+        $wev->ready = 1;
+
+        if (ngx_event_flags() & NGX_USE_IOCP_EVENT) {
+            $rev->ready = 1;
         }
 
-        rev->log = log;
-        wev->log = log;
+        if ($ev->deferred_accept) {
+            $rev->ready = 1;
+        }
+
+        $rev->log = $log;
+        $wev->log = $log;
 
         /*
          * TODO: MT: - ngx_atomic_fetch_add()
@@ -322,114 +322,34 @@ function ngx_event_accept(ngx_event_t $ev)
          *             or protection by critical section or light mutex
          */
 
-        c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
+        //todo .....
+//        $c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
 
-#if (NGX_STAT_STUB)
-        (void) ngx_atomic_fetch_add(ngx_stat_handled, 1);
-#endif
 
-        if (ls->addr_ntop) {
-            c->addr_text.data = ngx_pnalloc(c->pool, ls->addr_text_max_len);
-            if (c->addr_text.data == NULL) {
-                ngx_close_accepted_connection(c);
-                return;
-            }
 
-            c->addr_text.len = ngx_sock_ntop(c->sockaddr, c->socklen,
-                                             c->addr_text.data,
-                                             ls->addr_text_max_len, 0);
-            if (c->addr_text.len == 0) {
-                ngx_close_accepted_connection(c);
+        if ($ls->addr_ntop) {
+
+            $c->addr_text = ngx_sock_ntop($c->sockaddr,$c->addr_text, 0);
+        }
+
+
+        if (is_callable('ngx_add_conn') && (ngx_event_flags() & NGX_USE_EPOLL_EVENT) == 0) {
+            if (ngx_add_conn($c) == NGX_ERROR) {
+                ngx_close_accepted_connection($c);
                 return;
             }
         }
 
-#if (NGX_DEBUG)
-        {
+        $log->data = NULL;
+        $log->handler = NULL;
 
-            ngx_str_t             addr;
-        struct sockaddr_in   *sin;
-        ngx_cidr_t           *cidr;
-        ngx_uint_t            i;
-        u_char                text[NGX_SOCKADDR_STRLEN];
-#if (NGX_HAVE_INET6)
-        struct sockaddr_in6  *sin6;
-        ngx_uint_t            n;
-#endif
+        $ls->handler($c);
 
-        cidr = ecf->debug_connection.elts;
-        for (i = 0; i < ecf->debug_connection.nelts; i++) {
-            if (cidr[i].family != (ngx_uint_t) c->sockaddr->sa_family) {
-                goto next;
-            }
-
-            switch (cidr[i].family) {
-
-#if (NGX_HAVE_INET6)
-            case AF_INET6:
-                sin6 = (struct sockaddr_in6 *) c->sockaddr;
-                for (n = 0; n < 16; n++) {
-                    if ((sin6->sin6_addr.s6_addr[n]
-                    & cidr[i].u.in6.mask.s6_addr[n])
-                        != cidr[i].u.in6.addr.s6_addr[n])
-                    {
-                        goto next;
-                    }
-                }
-                break;
-#endif
-
-#if (NGX_HAVE_UNIX_DOMAIN)
-            case AF_UNIX:
-                break;
-#endif
-
-            default: /* AF_INET */
-                sin = (struct sockaddr_in *) c->sockaddr;
-                if ((sin->sin_addr.s_addr & cidr[i].u.in.mask)
-                    != cidr[i].u.in.addr)
-                {
-                    goto next;
-                }
-                break;
-            }
-
-            log->log_level = NGX_LOG_DEBUG_CONNECTION|NGX_LOG_DEBUG_ALL;
-            break;
-
-        next:
-            continue;
+        if (ngx_event_flags() & NGX_USE_KQUEUE_EVENT) {
+            $ev->available--;
         }
 
-        if (log->log_level & NGX_LOG_DEBUG_EVENT) {
-            addr.data = text;
-            addr.len = ngx_sock_ntop(c->sockaddr, c->socklen, text,
-                                     NGX_SOCKADDR_STRLEN, 1);
-
-            ngx_log_debug3(NGX_LOG_DEBUG_EVENT, log, 0,
-                "*%uA accept: %V fd:%d", c->number, &addr, s);
-        }
-
-        }
-#endif
-
-        if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
-            if (ngx_add_conn(c) == NGX_ERROR) {
-                ngx_close_accepted_connection(c);
-                return;
-            }
-        }
-
-        log->data = NULL;
-        log->handler = NULL;
-
-        ls->handler(c);
-
-        if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
-            ev->available--;
-        }
-
-    } while (ev->available);
+    } while ($ev->available);
 }
 
 function ngx_close_accepted_connection(ngx_connection_t $c)
