@@ -204,14 +204,14 @@ class ngx_event_module_t {
 
 
 class ngx_event_t {
-/**   void  **/    private  $data;
+/**   void  **/ /****ngx_connection_t***/   public  $data;
 
-/**   unsigned  **/    private  $write;
+/**   unsigned  **/    public  $write;
 
-/**   unsigned  **/    private  $accept;
+/**   unsigned  **/    public  $accept;
 
     /* used to detect the stale events in kqueue and epoll */
-/**   unsigned  **/    private  $instance;
+/**   unsigned  **/    public  $instance;
 
     /*
      * the event was passed or would be passed to a kernel;
