@@ -78,16 +78,18 @@ function ngx_epoll_module_ctx(){
         $ngx_epoll_module_ctx->name = 'epoll';
         $ngx_epoll_module_ctx->create_conf = 'ngx_epoll_create_conf';
         $ngx_epoll_module_ctx->init_conf = 'ngx_epoll_init_conf';
-        $ngx_epoll_module_ctx->add = 'ngx_epoll_add_event';             /* add an event */
-       $ngx_epoll_module_ctx->del =  'ngx_epoll_del_event';             /* delete an event */
-       $ngx_epoll_module_ctx->enable = 'ngx_epoll_add_event';             /* enable an event */
-       $ngx_epoll_module_ctx->disable = 'ngx_epoll_del_event';             /* disable an event */
-       $ngx_epoll_module_ctx->add_conn = 'ngx_epoll_add_connection';        /* add an connection */
-       $ngx_epoll_module_ctx->del_conn = 'ngx_epoll_del_connection';        /* delete an connection */
-       $ngx_epoll_module_ctx->notify = NULL;                            /* trigger a notify */
-       $ngx_epoll_module_ctx->process_events = 'ngx_epoll_process_events';        /* process the events */
-       $ngx_epoll_module_ctx->init ='ngx_epoll_init';                  /* init the events */
-       $ngx_epoll_module_ctx->done = 'ngx_epoll_done';                  /* done the events */
+        $event_action = new ngx_event_actions_t();
+        $event_action->add = 'ngx_epoll_add_event';             /* add an event */
+       $event_action->del =  'ngx_epoll_del_event';             /* delete an event */
+       $event_action->enable = 'ngx_epoll_add_event';             /* enable an event */
+       $event_action->disable = 'ngx_epoll_del_event';             /* disable an event */
+       $event_action->add_conn = 'ngx_epoll_add_connection';        /* add an connection */
+       $event_action->del_conn = 'ngx_epoll_del_connection';        /* delete an connection */
+       $event_action->notify = NULL;                            /* trigger a notify */
+       $event_action->process_events = 'ngx_epoll_process_events';        /* process the events */
+       $event_action->init ='ngx_epoll_init';                  /* init the events */
+       $event_action->done = 'ngx_epoll_done';                  /* done the events */
+       $ngx_epoll_module_ctx->actions = $event_action;
     }
     return $ngx_epoll_module_ctx;
 }
@@ -244,9 +246,9 @@ function ngx_epoll_init(ngx_cycle_t $cycle, $timer)
 
     nevents = epcf->events;
 
-    ngx_io = ngx_os_io;
+    ngx_io(ngx_os_io());
 
-    $ngx_event_actions = ngx_epoll_module_ctx()actions;
+    ngx_event_actions(ngx_epoll_module_ctx()->actions);
 
     ngx_event_flags(NGX_USE_LEVEL_EVENT
         |NGX_USE_GREEDY_EVENT

@@ -11,22 +11,22 @@
  define('NGX_ERROR_IGNORE_ECONNRESET',3);
  define('NGX_ERROR_IGNORE_EINVAL',4);
 class ngx_connection_t {
-    /**  void   **/      private       $data;
-    /**  ngx_event_t **/ private      $read;
-    /**  ngx_event_t **/ private      $write;
+    /**  void   **/      public       $data;
+    /**  ngx_event_t **/ public      $read;
+    /**  ngx_event_t **/ public      $write;
 
-    /**  ngx_socket_t **/private       $fd;
+    /**  ngx_socket_t **/public       $fd;
 
-    /**  ngx_recv_pt  **/ private      $recv;
-    /**  ngx_send_pt  **/     private  $send;
-    /**  ngx_recv_chain_pt **/ private $recv_chain;
-    /**  ngx_send_chain_pt **/ private $send_chain;
+    /**  ngx_recv_pt  **/ public      $recv;
+    /**  ngx_send_pt  **/     public  $send;
+    /**  ngx_recv_chain_pt **/ public $recv_chain;
+    /**  ngx_send_chain_pt **/ public $send_chain;
 
-    /**  ngx_listening_t   **/ private $listening;
+    /**  ngx_listening_t   **/ public $listening;
 
-    /**  off_t             **/  private $sent;
+    /**  off_t             **/  public $sent;
 
-    /**  ngx_log_t         **/ private $log;
+    /**  ngx_log_t         **/ public $log;
 
     //  ngx_pool_t         *pool;
 
@@ -42,7 +42,7 @@ class ngx_connection_t {
 
     //  ngx_buf_t        buffer;
 
-    /**  ngx_queue_t      **/ private  $queue;
+    /**  ngx_queue_t      **/ public  $queue;
 
     /**  ngx_atomic_uint_t **/ private $number;
 
@@ -50,7 +50,7 @@ class ngx_connection_t {
 
    /** unsigned  **/       private   $buffered;
 
-   /** unsigned  **/       private   $log_error;     /* ngx_connection_log_error_e */
+   /** unsigned  **/       public   $log_error;     /* ngx_connection_log_error_e */
 
    /** unsigned  **/       private   $unexpected_eof;
    /** unsigned  **/       private   $timedout;
@@ -776,7 +776,8 @@ function ngx_drain_connections()
                        "reusing connection");
 
         $c->close = 1;
-        call_user_func($c->read->handler,$c->read);
+        //call_user_func($c->read->handler,$c->read);
+        $c->read->handler($c->read);
     }
 }
 
@@ -863,4 +864,71 @@ function ngx_close_connection(ngx_connection_t $c)
                       ngx_close_socket_n ." %d failed", $fd);
     }
 }
+
+function ngx_connection_error(ngx_connection_t $c,  $err,  $text)
+{
+//    ngx_uint_t  level;
+
+    /* Winsock may return NGX_ECONNABORTED instead of NGX_ECONNRESET */
+
+    if (($err == NGX_ECONNRESET) && $c->log_error == NGX_ERROR_IGNORE_ECONNRESET)
+    {
+        return 0;
+    }
+
+
+    if ($err == 0
+        || $err == NGX_ECONNRESET
+        || $err == NGX_EPIPE
+        || $err == NGX_ENOTCONN
+        || $err == NGX_ETIMEDOUT
+        || $err == NGX_ECONNREFUSED
+        || $err == NGX_ENETDOWN
+        || $err == NGX_ENETUNREACH
+        || $err == NGX_EHOSTDOWN
+        || $err == NGX_EHOSTUNREACH)
+    {
+        switch ($c->log_error) {
+
+            case NGX_ERROR_IGNORE_EINVAL:
+            case NGX_ERROR_IGNORE_ECONNRESET:
+            case NGX_ERROR_INFO:
+                $level = NGX_LOG_INFO;
+                break;
+            default:
+                $level = NGX_LOG_ERR;
+        }
+
+    } else {
+        $level = NGX_LOG_ALERT;
+    }
+
+    ngx_log_error($level, $c->log, $err, $text);
+
+    return NGX_ERROR;
+}
+
+function ngx_reusable_connection(ngx_connection_t $c, $reusable)
+{
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, $c->log, 0,
+                   "reusable connection: %ui", $reusable);
+
+    if ($c->reusable) {
+        $c->queue->shift();
+        //ngx_queue_remove($c->queue);
+    }
+
+    $c->reusable = $reusable;
+
+    if ($reusable) {
+        /* need cast as ngx_cycle is volatile */
+
+        $ngx_cycle = ngx_cycle();
+//        ngx_queue_insert_head(
+//            $ngx_cycle->reusable_connections_queue, &c->queue);
+        $ngx_cycle->reusable_connections_queue->unshift($c->queue->bottom());
+
+    }
+}
+
 

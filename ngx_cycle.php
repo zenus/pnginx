@@ -76,31 +76,31 @@ class ngx_cycle_t {
     /**void **/        public         /**   ****conf_ctx  ****/ $conf_ctx;
     //ngx_pool_t               *pool;
 
-    /**ngx_log_t**/  private     $log;
-   /** ngx_log_t **/  private   $new_log;
+    /**ngx_log_t**/  public     $log;
+   /** ngx_log_t **/  public   $new_log;
 
-   /**ngx_uint_t***/ private            $log_use_stderr;  /* unsigned  log_use_stderr:1; */
+   /**ngx_uint_t***/ public            $log_use_stderr;  /* unsigned  log_use_stderr:1; */
 
-    /**ngx_connection_t**/ private    /**  **files ***/ $files;
-    /**ngx_connection_t**/ private       $free_connections;
-    /**ngx_uint_t**/       private       $free_connection_n;
+    /**ngx_connection_t**/ public    /**  **files ***/ $files;
+    /**ngx_connection_t**/ public       $free_connections;
+    /**ngx_uint_t**/       public       $free_connection_n;
 
-    /**ngx_queue_t**/  private    $reusable_connections_queue;
+    /**ngx_queue_t**/  public    $reusable_connections_queue;
 
     /**ngx_array_t**/  public             $listening;
-    /**ngx_array_t**/  private             $paths;
-    /**ngx_array_t**/  private             $config_dump;
-    /**ngx_list_t**/   private             $open_files;
+    /**ngx_array_t**/  public             $paths;
+    /**ngx_array_t**/  public             $config_dump;
+    /**ngx_list_t**/   public             $open_files;
     //ngx_list_t                shared_memory;
 
-    /**ngx_uint_t**/       private         $connection_n;
-    /**ngx_uint_t**/       private         $files_n;
+    /**ngx_uint_t**/       public         $connection_n;
+    /**ngx_uint_t**/       public         $files_n;
 
-    /**ngx_connection_t**/ private        $connections;
-    /**ngx_event_t**/      private        $read_events;
-    /**ngx_event_t**/      private        $write_events;
+    /**ngx_connection_t**/ public        $connections;
+    /**ngx_event_t**/      public        $read_events;
+    /**ngx_event_t**/      public        $write_events;
 
-    /**ngx_cycle_t**/      private        $old_cycle;
+    /**ngx_cycle_t**/      public        $old_cycle;
 
     /**ngx_str_t**/        private         $conf_file;
     /**ngx_str_t**/        private         $conf_param;

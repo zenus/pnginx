@@ -165,6 +165,15 @@ function ngx_event_timer_alarm($i = null){
     }
 }
 
+function ngx_event_actions(ngx_event_actions_t $action){
+    static $ngx_event_actions = null;
+    if(!is_null($action)){
+        $ngx_event_actions = $action;
+    }else{
+        return $ngx_event_actions;
+    }
+}
+
 
 
 class ngx_event_module_t {
@@ -174,32 +183,34 @@ class ngx_event_module_t {
     public $create_conf;
 //char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
     public $init_conf;
-    //   ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-    public $add;
-    //ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-    public $del;
+//    //   ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
 
-    //ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-    public $enable;
-    //ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-    public $disable;
-
-    //ngx_int_t  (*add_conn)(ngx_connection_t *c);
-    public $add_conn;
-    //ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
-    public $del_conn;
-
-    //ngx_int_t  (*notify)(ngx_event_handler_pt handler);
-    public $notify;
-
-//    ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
-    //                 ngx_uint_t flags);
-    public $process_events;
-
-    //ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);
-    public $init;
-    //void       (*done)(ngx_cycle_t *cycle);
-    public $done;
+    public /*ngx_event_actions_t*/     $actions;
+//    public $add;
+//    //ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+//    public $del;
+//
+//    //ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+//    public $enable;
+//    //ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+//    public $disable;
+//
+//    //ngx_int_t  (*add_conn)(ngx_connection_t *c);
+//    public $add_conn;
+//    //ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
+//    public $del_conn;
+//
+//    //ngx_int_t  (*notify)(ngx_event_handler_pt handler);
+//    public $notify;
+//
+////    ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer,
+//    //                 ngx_uint_t flags);
+//    public $process_events;
+//
+//    //ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);
+//    public $init;
+//    //void       (*done)(ngx_cycle_t *cycle);
+//    public $done;
 }
 
 
@@ -1084,8 +1095,9 @@ function ngx_event_process_init(ngx_cycle_t $cycle)
 
 
 
-    ngx_queue_init(ngx_posted_accept_events());
-    ngx_queue_init(ngx_posted_events());
+    //use class instance instead
+    ngx_posted_accept_events(new ngx_queue_t());
+    ngx_posted_events(new ngx_queue_t());
 
     if (ngx_event_timer_init($cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
