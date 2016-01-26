@@ -15,6 +15,15 @@ function  ngx_event_flags($event){
     }
 }
 
+function ngx_event_base($base  = null){
+    static $event_base;
+    if(!is_null($base)){
+       $event_base = $base;
+    }else{
+        return $event_base;
+    }
+}
+
 class ngx_event_actions_t {
     //ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
     public $add;
@@ -220,31 +229,33 @@ function ngx_epoll_init(ngx_cycle_t $cycle, $timer)
 
     $epcf = ngx_event_get_conf($cycle->conf_ctx, ngx_epoll_module());
 
-    if (ep == -1) {
-        ep = epoll_create(cycle->connection_n / 2);
+    ngx_event_base(new EventBase());
+//    if (ep == -1) {
+//        ep = epoll_create(cycle->connection_n / 2);
+//
+//        if (ep == -1) {
+//            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
+//                          "epoll_create() failed");
+//            return NGX_ERROR;
+//        }
 
-        if (ep == -1) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "epoll_create() failed");
-            return NGX_ERROR;
-        }
 
 
 
-
-    if (nevents < epcf->events) {
-    if (event_list) {
-        ngx_free(event_list);
-    }
-
-    event_list = ngx_alloc(sizeof(struct epoll_event) * epcf->events,
-                               cycle->log);
-        if (event_list == NULL) {
-            return NGX_ERROR;
-        }
-    }
-
-    nevents = epcf->events;
+    //todo it is useful ?
+//    if (nevents < epcf->events) {
+//    if (event_list) {
+//        ngx_free(event_list);
+//    }
+//
+//    event_list = ngx_alloc(sizeof(struct epoll_event) * epcf->events,
+//                               cycle->log);
+//        if (event_list == NULL) {
+//            return NGX_ERROR;
+//        }
+//    }
+//
+//    nevents = epcf->events;
 
     ngx_io(ngx_os_io());
 

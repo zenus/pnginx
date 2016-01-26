@@ -91,10 +91,10 @@ function ngx_os_io()
        $ngx_os_io = $obj;
     }
     $ngx_os_io->recv = 'ngx_unix_recv';
-    $ngx_os_io->recv_chain = 'ngx_readv_chain';
+    //$ngx_os_io->recv_chain = 'ngx_readv_chain';
     $ngx_os_io->udp_recv ='ngx_udp_unix_recv';
     $ngx_os_io->send='ngx_unix_send';
-    $ngx_os_io->send_chain='ngx_writev_chain';
+    //$ngx_os_io->send_chain='ngx_writev_chain';
     $ngx_os_io->flags=0;
     return $ngx_os_io;
 }
