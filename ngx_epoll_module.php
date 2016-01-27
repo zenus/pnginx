@@ -175,31 +175,36 @@ function ngx_epoll_add_event(ngx_event_t $ev, $event, $flags)
 //    struct epoll_event   ee;
 
     $c = $ev->data;
+/**
+ * Q:  What  happens  if you register the same file descriptor on an epoll  instance twice?
+ *
+ * A: You will probably get EEXIST.
+ * However, it is  possible  to  add  a   duplicate  (dup(2),
+ * dup2(2),  fcntl(2)  F_DUPFD) descriptor to the  same epoll instance.
+ * This can be a useful technique for  filtering   events,
+ * if the duplicate file descriptors are registered with different events masks.*/
 
-    events = (uint32_t) event;
 
-    if (event == NGX_READ_EVENT) {
-        e = c->write;
-        prev = EPOLLOUT;
-#if (NGX_READ_EVENT != EPOLLIN|EPOLLRDHUP)
-        events = EPOLLIN|EPOLLRDHUP;
-#endif
+    $events =  $event;
+
+    if ($event == NGX_READ_EVENT) {
+        $e = $c->write;
+        //todo may have problem
+        $prev = Event::WRITE|Event::PERSIST;
 
     } else {
-        e = c->read;
-        prev = EPOLLIN|EPOLLRDHUP;
-#if (NGX_WRITE_EVENT != EPOLLOUT)
-        events = EPOLLOUT;
-#endif
+        $e = $c->read;
+        $prev = Event::READ|Event::PERSIST;
     }
 
-    if (e->active) {
+    if ($e->active) {
     op = EPOLL_CTL_MOD;
     events |= prev;
 
 } else {
     op = EPOLL_CTL_ADD;
 }
+
 
     ee.events = events | (uint32_t) flags;
     ee.data.ptr = (void *) ((uintptr_t) c | ev->instance);
@@ -209,15 +214,13 @@ function ngx_epoll_add_event(ngx_event_t $ev, $event, $flags)
                    c->fd, op, ee.events);
 
     if (epoll_ctl(ep, op, c->fd, &ee) == -1) {
-    ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_errno,
+         ngx_log_error(NGX_LOG_ALERT, $ev->log, ngx_errno,
                       "epoll_ctl(%d, %d) failed", op, c->fd);
         return NGX_ERROR;
     }
 
-    ev->active = 1;
-#if 0
-    ev->oneshot = (flags & NGX_ONESHOT_EVENT) ? 1 : 0;
-#endif
+    $ev->active = 1;
+
 
     return NGX_OK;
 }
