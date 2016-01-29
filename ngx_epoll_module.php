@@ -15,12 +15,12 @@ function  ngx_event_flags($event){
     }
 }
 
-function ngx_event_base($base  = null){
-    static $event_base;
+function ngx_libevent_base($base  = null){
+    static $ngx_libevent_base;
     if(!is_null($base)){
-       $event_base = $base;
+       $ngx_libevent_base = $base;
     }else{
-        return $event_base;
+        return $ngx_libevent_base;
     }
 }
 
@@ -194,31 +194,34 @@ function ngx_epoll_add_event(ngx_event_t $ev, $event, $flags)
 
     } else {
         $e = $c->read;
+        //todo may have problem
         $prev = Event::READ|Event::PERSIST;
     }
 
+    $add = 0;
     if ($e->active) {
-    op = EPOLL_CTL_MOD;
-    events |= prev;
+        //$op = EPOLL_CTL_MOD;
+        $events |= $prev;
 
-} else {
-    op = EPOLL_CTL_ADD;
-}
-
-
-    ee.events = events | (uint32_t) flags;
-    ee.data.ptr = (void *) ((uintptr_t) c | ev->instance);
-
-    ngx_log_debug3(NGX_LOG_DEBUG_EVENT, ev->log, 0,
-                   "epoll add event: fd:%d op:%d ev:%08XD",
-                   c->fd, op, ee.events);
-
-    if (epoll_ctl(ep, op, c->fd, &ee) == -1) {
-         ngx_log_error(NGX_LOG_ALERT, $ev->log, ngx_errno,
-                      "epoll_ctl(%d, %d) failed", op, c->fd);
-        return NGX_ERROR;
+    } else {
+       // $op = EPOLL_CTL_ADD;
+        $add = 1;
     }
 
+
+    $events = $events | $flags;
+//    ee.data.ptr = (void *) ((uintptr_t) c | ev->instance);
+
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, $ev->log, 0,
+                   "epoll add event: fd:%d  ev:%08XD",
+                   $c->fd,$events);
+
+    if(!$add) {
+        $ev->libevent->del();
+    }
+    //todo complete callbacks
+    $ev->libevent = new Event(ngx_libevent_base(), $c->fd, $events, 'ngx_epoll_process_events');
+    $ev->libevent->add();
     $ev->active = 1;
 
 
@@ -232,7 +235,7 @@ function ngx_epoll_init(ngx_cycle_t $cycle, $timer)
 
     $epcf = ngx_event_get_conf($cycle->conf_ctx, ngx_epoll_module());
 
-    ngx_event_base(new EventBase());
+    ngx_libevent_base(new EventBase());
 //    if (ep == -1) {
 //        ep = epoll_create(cycle->connection_n / 2);
 //
@@ -270,3 +273,281 @@ function ngx_epoll_init(ngx_cycle_t $cycle, $timer)
 
     return NGX_OK;
 }
+
+function ngx_epoll_del_event(ngx_event_t $ev, $event, $flags)
+{
+//    int                  op;
+//    uint32_t             prev;
+//    ngx_event_t         *e;
+//    ngx_connection_t    *c;
+//    struct epoll_event   ee;
+
+    /*
+     * when the file descriptor is closed, the epoll automatically deletes
+     * it from its queue, so we do not need to delete explicitly the event
+     * before the closing the file descriptor
+     */
+
+    if ($flags & NGX_CLOSE_EVENT) {
+        $ev->active = 0;
+        return NGX_OK;
+    }
+
+    $c = $ev->data;
+
+    if ($event == NGX_READ_EVENT) {
+        $e = $c->write;
+        //todo may have problem
+        $prev = Event::WRITE|Event::PERSIST;
+
+    } else {
+        $e = $c->read;
+        //todo may have problem
+        $prev = Event::READ|Event::PERSIST;
+    }
+
+    $del = 0;
+    if ($e->active) {
+        $events = $prev |  $flags;
+//        ee.data.ptr = (void *) ((uintptr_t) c | ev->instance);
+
+    } else {
+        $del = 1;
+        $events = 0;
+    //ee.data.ptr = NULL;
+    }
+
+    $ev->libevent->del();
+    if(!$del){
+        //todo complete callbacks
+        $ev->libevent = new Event(ngx_libevent_base(), $c->fd, $events, 'ngx_epoll_process_events');
+        $ev->libevent->add();
+    }
+
+    ngx_log_debug3(NGX_LOG_DEBUG_EVENT, $ev->log, 0,
+                   "epoll del event: fd:%d op:%d ev:%08XD",
+                   $c->fd, $del, $events);
+
+
+    $ev->active = 0;
+
+    return NGX_OK;
+}
+
+
+function ngx_epoll_add_connection(ngx_connection_t $c)
+{
+//struct epoll_event  ee;
+
+    $events = Event::WRITE|Event::READ|Event::PERSIST|Event::ET;
+    //$prev = Event::WRITE|Event::PERSIST;
+    //ee.data.ptr = (void *) ((uintptr_t) c | c->read->instance);
+
+    $event = new Event(ngx_libevent_base(), $c->fd, $events, 'ngx_epoll_process_events');
+    $event->add();
+    //todo is right to do so ?
+    $c->read->libevent = $event;
+    $c->write->libevent = $event;
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, $c->log, 0,
+                   "epoll add connection: fd:%d ev:%08XD", $c->fd, $events);
+
+//    if (epoll_ctl(ep, EPOLL_CTL_ADD, c->fd, &ee) == -1) {
+//    ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno,
+//                      "epoll_ctl(EPOLL_CTL_ADD, %d) failed", c->fd);
+//        return NGX_ERROR;
+//    }
+
+    $c->read->active = 1;
+    $c->write->active = 1;
+
+    return NGX_OK;
+}
+
+
+function ngx_epoll_del_connection(ngx_connection_t $c,  $flags)
+{
+//    int                 op;
+//    struct epoll_event  ee;
+
+    /*
+     * when the file descriptor is closed the epoll automatically deletes
+     * it from its queue so we do not need to delete explicitly the event
+     * before the closing the file descriptor
+     */
+
+    if ($flags & NGX_CLOSE_EVENT) {
+        $c->read->active = 0;
+        $c->write->active = 0;
+        return NGX_OK;
+    }
+
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, $c->log, 0,
+                   "epoll del connection: fd:%d", $c->fd);
+
+//    op = EPOLL_CTL_DEL;
+//    ee.events = 0;
+//    ee.data.ptr = NULL;
+
+//    if (epoll_ctl(ep, op, c->fd, &ee) == -1) {
+//    ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno,
+//                      "epoll_ctl(%d, %d) failed", op, c->fd);
+//        return NGX_ERROR;
+//    }
+    $c->read->libevent->del();
+    $c->write->libevent->del();
+
+    $c->read->active = 0;
+    $c->write->active = 0;
+
+    return NGX_OK;
+}
+
+function ngx_epoll_process_events(ngx_connection_t $c, $timer, $flags)
+{
+//    int                events;
+//    uint32_t           revents;
+//    ngx_int_t          instance, i;
+//    ngx_uint_t         level;
+//    ngx_err_t          err;
+//    ngx_event_t       *rev, *wev;
+//    ngx_queue_t       *queue;
+//    ngx_connection_t  *c;
+
+    /* NGX_TIMER_INFINITE == INFTIM */
+
+//    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, $cycle->log, 0,
+//                   "epoll timer: %M", $timer);
+//
+//    events = epoll_wait(ep, event_list, (int) nevents, timer);
+
+//    err = (events == -1) ? ngx_errno : 0;
+
+    if ($flags & NGX_UPDATE_TIME || ngx_event_timer_alarm()) {
+        ngx_time_update();
+    }
+
+//    if (err) {
+//        if (err == NGX_EINTR) {
+//
+//            if (ngx_event_timer_alarm) {
+//                ngx_event_timer_alarm = 0;
+//                return NGX_OK;
+//            }
+//
+//            level = NGX_LOG_INFO;
+//
+//        } else {
+//            level = NGX_LOG_ALERT;
+//        }
+//
+//        ngx_log_error(level, cycle->log, err, "epoll_wait() failed");
+//        return NGX_ERROR;
+//    }
+
+//    if (events == 0) {
+//        if (timer != NGX_TIMER_INFINITE) {
+//            return NGX_OK;
+//        }
+//
+//        ngx_log_error(NGX_LOG_ALERT, cycle->log, 0,
+//                      "epoll_wait() returned no events without timeout");
+//        return NGX_ERROR;
+//    }
+
+//    for (i = 0; i < events; i++) {
+//        c = event_list[i].data.ptr;
+//
+//        instance = (uintptr_t) c & 1;
+//        c = (ngx_connection_t *) ((uintptr_t) c & (uintptr_t) ~1);
+
+        $rev = $c->read;
+//
+//        if ($c->fd == -1 ) {
+//
+//            /*
+//             * the stale event from a file descriptor
+//             * that was just closed in this iteration
+//             */
+//
+////            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+////                           "epoll: stale event %p", c);
+//            continue;
+//        }
+//
+//        revents = event_list[i].events;
+//
+//        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+//                       "epoll: fd:%d ev:%04XD d:%p",
+//                       c->fd, revents, event_list[i].data.ptr);
+
+//        if (revents & (EPOLLERR|EPOLLHUP)) {
+//            ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+//                           "epoll_wait() error on fd:%d ev:%04XD",
+//                           c->fd, revents);
+//        }
+
+
+
+//        if ((revents & (EPOLLERR|EPOLLHUP))
+//            && (revents & (EPOLLIN|EPOLLOUT)) == 0)
+//        {
+//            /*
+//             * if the error events were returned without EPOLLIN or EPOLLOUT,
+//             * then add these flags to handle the events at least in one
+//             * active handler
+//             */
+//
+//            revents |= EPOLLIN|EPOLLOUT;
+//        }
+
+        if (($revents & Event::READ) && $rev->active) {
+
+//#if (NGX_HAVE_EPOLLRDHUP)
+//            if (revents & EPOLLRDHUP) {
+//                rev->pending_eof = 1;
+//            }
+//#endif
+
+            rev->ready = 1;
+
+            if (flags & NGX_POST_EVENTS) {
+                queue = rev->accept ? &ngx_posted_accept_events
+                : &ngx_posted_events;
+
+                ngx_post_event(rev, queue);
+
+            } else {
+                rev->handler(rev);
+            }
+        }
+
+        wev = c->write;
+
+        if ((revents & EPOLLOUT) && wev->active) {
+
+            if (c->fd == -1 || wev->instance != instance) {
+
+                /*
+                 * the stale event from a file descriptor
+                 * that was just closed in this iteration
+                 */
+
+                ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+                               "epoll: stale event %p", c);
+                continue;
+            }
+
+            wev->ready = 1;
+
+            if (flags & NGX_POST_EVENTS) {
+                ngx_post_event(wev, &ngx_posted_events);
+
+            } else {
+                wev->handler(wev);
+            }
+        }
+    }
+
+    return NGX_OK;
+}
+

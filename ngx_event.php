@@ -220,6 +220,8 @@ class ngx_event_t {
 /**   unsigned  **/    public  $write;
 
 /**   unsigned  **/    public  $accept;
+    /***** instead of epoll , i use libevent******/
+    /**   unsigned  **/    public  $libevent;
 
     /* used to detect the stale events in kqueue and epoll */
 /**   unsigned  **/    public  $instance;
@@ -228,7 +230,7 @@ class ngx_event_t {
      * the event was passed or would be passed to a kernel;
      * in aio mode - operation was posted.
      */
-/**   unsigned  **/    private  $active;
+/**   unsigned  **/    public  $active;
 
 /**   unsigned  **/    private  $disabled;
 
