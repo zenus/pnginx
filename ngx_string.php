@@ -458,3 +458,41 @@ function ngx_sprintf_num($s,  $ui64, $zero,
 }
 
 
+function ngx_filename_cmp($s1, $s2, $n)
+{
+//    ngx_uint_t  c1, c2;
+
+    $ps1=0;
+    $ps2=0;
+
+    while ($n) {
+
+        $c1 = $s1[$ps1++];
+        $c2 = $s2[$ps2++];
+
+        if ($c1 == $c2) {
+
+            if ($c1) {
+                $n--;
+                continue;
+            }
+
+            return 0;
+        }
+
+        /* we need '/' to be the lowest character */
+
+        if ($c1 == 0 || $c2 == 0) {
+            return $c1 - $c2;
+        }
+
+        $c1 = ($c1 == '/') ? 0 : $c1;
+        $c2 = ($c2 == '/') ? 0 : $c2;
+
+        return $c1 - $c2;
+    }
+
+    return 0;
+}
+
+

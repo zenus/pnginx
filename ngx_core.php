@@ -51,3 +51,7 @@ class ngx_open_file_s {
 function ngx_abs($number){
     return abs($number);
 }
+
+function ngx_min($val1, $val2){
+    return min($val1,$val2);
+}

@@ -119,16 +119,16 @@ class ngx_module_t {
 }
 
 class ngx_conf_t {
-  /**  char ***/  private      $name;
-  /**  ngx_array_t **/  private       $args;
-/** ngx_cycle_t **/ private $cycle;
+  /**  char ***/  public      $name;
+  /**  ngx_array_t **/  public       $args;
+/** ngx_cycle_t **/ public $cycle;
 ///** ngx_pool_t **/ private $pool;
 ///** ngx_pool_t **/ private $temp_pool;
-/** ngx_conf_file_t **/ private $conf_file;
-/** ngx_log_t **/ private $log;
-/** void **/ private $ctx;
-/** ngx_uint_t **/ private $module_type; 
-/** ngx_uint_t **/ private $cmd_type; 
+/** ngx_conf_file_t **/ public $conf_file;
+/** ngx_log_t **/ public $log;
+/** void **/ public $ctx;
+/** ngx_uint_t **/ public $module_type;
+/** ngx_uint_t **/ public $cmd_type;
 /** ngx_conf_handler_pt **/ private $handler; 
 /** char **/ private $handler_conf;
     public function __set($property,$value){
@@ -201,19 +201,19 @@ function ngx_conf_commands(){
 }
 
 class ngx_core_module_t {
- /***   ngx_str_t **/   private         $name;
- /**   void  **/        private     $create_conf; /****(*create_conf)(ngx_cycle_t *cycle); ***/
-  /***  char **/        private    $init_conf; /*** *(*init_conf)(ngx_cycle_t *cycle, void *conf); *
+ /***   ngx_str_t **/   public         $name;
+ /**   void  **/        public     $create_conf; /****(*create_conf)(ngx_cycle_t *cycle); ***/
+  /***  char **/        public   $init_conf; /*** *(*init_conf)(ngx_cycle_t *cycle, void *conf); *
  * @param $property
  * @param $value
  */
-    public function __set($property,$value){
-
-        $this->$property = $value;
-    }
-    public function __get($property){
-        return $this->$property;
-    }
+//    public function __set($property,$value){
+//
+//        $this->$property = $value;
+//    }
+//    public function __get($property){
+//        return $this->$property;
+//    }
 
 }
 

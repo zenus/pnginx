@@ -547,3 +547,20 @@ function ngx_epoll_process_events(ngx_connection_t $c, $timer, $flags)
     return NGX_OK;
 }
 
+function ngx_epoll_done(ngx_cycle_t $cycle)
+{
+    if (ngx_libevent_base()->stop()) {
+        ngx_libevent_base()->exit();
+        ngx_log_error(NGX_LOG_ALERT, $cycle->log, EventUtil::getLastSocketError(),
+                      "epoll close() failed");
+    }
+
+    //ep = -1;
+
+
+    //ngx_free(event_list);
+
+//    $event_list = NULL;
+//    $nevents = 0;
+}
+
