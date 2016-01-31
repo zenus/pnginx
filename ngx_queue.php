@@ -62,4 +62,26 @@ function ngx_queue_sort(ngx_queue_t $queue,
     }
 }
 
+function ngx_queue_split(ngx_queue_t &$h, $q, ngx_queue_t &$n){
+    $kk = 0;
+    for ($h->rewind(); $h->valid(); $h->next()) {
+        $v = $h->current();
+        $k = $h->key();
+        if($v == $q){
+           $kk = $k;
+        }
+        if($kk > 0){
+            $h->offsetUnset($k);
+            $n->push($v);
+        }
+    }
+}
+
+function ngx_queue_add(ngx_queue_t &$h, ngx_queue_t $n){
+    for($n->rewind(); $n->valid(); $n->current()){
+        $h->push($n->current());
+    }
+}
+
+
 

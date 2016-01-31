@@ -61,6 +61,20 @@
 //    return null;
 //}
 
+//
+//$arr = posix_getrlimit();
+//var_dump($arr);
 
-$arr = posix_getrlimit();
-var_dump($arr);
+$mylist = new SplDoublyLinkedList();
+
+$mylist->push(1);
+$mylist->push(2);
+$mylist->push(3);
+$mylist->push(4);
+$mylist->push(5);
+
+var_dump($mylist);
+$t = $mylist->bottom();
+echo $t."\r\n";
+var_dump($mylist);
+die;
